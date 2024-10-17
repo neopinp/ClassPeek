@@ -1,0 +1,20 @@
+{
+  "name": "classpeek",
+  "version": "1.0.0",
+  "description": "The purpose of ClassPeek is to create an interactive platform for students and instructors to share and manage educational content, facilitating discussions and collaboration around courses. The application will provide features such as course management, file sharing, and discussion boards in a user-friendly, dynamic web environment.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run serve",
+    "build": "cd frontend && npm run build && cd ../backend && npm run build",
+    "start": "cd backend && npm run start"
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
