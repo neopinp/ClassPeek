@@ -4,10 +4,10 @@ The purpose of ClassPeek is to create an interactive platform for students and i
 ## Installation
 First, make sure that you have VSCode and node.js installed on your device. If already, make sure that your node.js installation is at the latest (at the time of creating this, 20.18.0) and for npm as well. Make sure that you're in the root directory for the file where you cloned the repository(i.e. .../Classpeek), then run these in the terminal to install the dependicies for Classpeek on your device.
 ```
-npm install -g typescript
-npm install -g @vue/cli
-npm install express cors
-npm install -D concurrently
+npm install -g typescript (run in root)
+npm install -g @vue/cli (run in root)
+npm install express cors (run in /backend)
+npm install -D concurrently (run in root)
 ```
 
 These commands install prisma so we can interact with our PostgreSQL database. First **make sure that you are running this from the backend!**
@@ -39,6 +39,6 @@ npm run serve (cd frontend, runs frontend)
 
 ### Backend
 ```
-npm run dev (cd backend, runs backend)
+npm run dev ((run in /backend))
 npx prisma generate (Needed everytime you change the schema)
 ```
