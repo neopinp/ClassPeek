@@ -3,7 +3,6 @@ The purpose of ClassPeek is to create an interactive platform for students and i
 
 ## Installation
 First, make sure that you have VSCode and node.js installed on your device. If already, make sure that your node.js installation is at the latest (at the time of creating this, 20.18.0) and for npm as well. 
-Assuming I've setup the packages.json correctly, you should be able to run npm install in the root folder, frontend, and backend folder to install the dependencies. If not, follow the below steps.
 Make sure that you're in the root directory for the file where you cloned the repository(i.e. .../Classpeek), then run these in the terminal to install the dependicies for Classpeek on your device.
 ```
 npm install -g typescript (run in root)
