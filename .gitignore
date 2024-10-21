@@ -6,7 +6,6 @@ frontend/.env
 # Backend
 backend/node_modules/
 backend/dist/
-backend/.env
 
 # Common
 .DS_Store
