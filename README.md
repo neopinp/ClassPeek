@@ -10,6 +10,13 @@ npm install express cors
 npm install -D concurrently
 ```
 
+These commands install prisma so we can interact with our PostgreSQL database. First **make sure that you are running this from the backend!**
+```
+cd backend
+npm install prisma @prisma/client typescript
+npx prisma generate
+```
+
 ## Running the server
 Each of the commands starts up the applcation on your localhost (127.0.0.1) address. The front end runs on the 8080 port, and the backend runs on the 3000 port.
 
@@ -33,4 +40,5 @@ npm run serve (cd frontend, runs frontend)
 ### Backend
 ```
 npm run dev (cd backend, runs backend)
+npx prisma generate (Needed everytime you change the schema)
 ```
