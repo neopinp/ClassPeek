@@ -10,3 +10,4 @@ backend/.env
 
 # Common
 .DS_Store
+node_modules
