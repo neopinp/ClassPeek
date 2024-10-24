@@ -47,7 +47,6 @@ nav {
   position: relative;
 }
 
-
 nav ul {
   list-style: none;
   display: flex;
@@ -67,10 +66,15 @@ nav ul li a.router-link-exact-active {
   text-decoration: underline;
 }
 
+
 #profileIcon {
   position: absolute;
   right: 20px;
   top: 50%;
   transform: translateY(-50%)
 }
+#profileIcon.router-link-exact-active {
+  color: green;
+}
+
 </style>
