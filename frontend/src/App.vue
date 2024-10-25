@@ -9,6 +9,9 @@
           <router-link to="/about">About</router-link>
         </li>
         <li>
+          <router-link to="/info">Info</router-link>
+        </li>
+        <li>
           <router-link to="/courses">Courses</router-link>
         </li>
         <li>
@@ -41,6 +44,10 @@ export default defineComponent({
 </script>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 nav {
   background-color: #42b983;
   padding: 1rem;
