@@ -14,7 +14,7 @@
       <div class="rightSide">
         <article>
           <h1>Guest</h1>
-          <p>Bio</p>
+          <p>Sign In to Edit Profile</p>
         </article>
         <input class="addComment" placeholder="Add Comment..." />
         <footer>
