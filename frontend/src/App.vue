@@ -62,6 +62,7 @@ nav ul li a {
 nav ul li a.router-link-exact-active {
   text-decoration: underline;
 }
+
 #profileIcon {
   position: absolute;
   right: 20px;

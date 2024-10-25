@@ -1,3 +1,6 @@
+/* Profile Page CSS */
+
+/* Guest Icon */
 .user-icon {
   font-size: 100px;
   color: #777;
@@ -8,41 +11,72 @@
   margin: 0 auto;
 }
 
-
-
-
+/* Profile Body */
+.leftSide {
+  height: 100%;
+  margin-right: 20px;
+  width: 15%;
+  margin-left: 5px;
+}
 .ProfilePage {
   margin-top: 50px;
 }
-
 .ProfilePage main {
   height: 460px;
   display: flex;
 }
-
 .ProfilePage article {
   flex: 9;
   background-color: #f1f1f1;
   padding: 10px;
+  height: 100%;
 }
-.ProfilePage section {
-  flex: 1;
-  background: #ccc;
-  padding: 20px;
+.ProfilePage h1, h2, h3, h4, h5, h6 {
+  text-align: center;
 }
-
 .ProfilePage div {
   border: 1px solid black;
-  background: #ddd;
   padding: 20px;
+  border-radius: 10px;
 }
 
-.ProfilePage footer {
-  background-color: #777;
+.introduction {
+  border: 1px solid black;
+  padding: 20px;
+  border-radius: 10px;
+}
+.courses {
+  height: 100%;
+}
+
+/* Right Div */
+
+.rightSide {
+  border-radius: 10px;
+  border: transparent;
+  height: 100%;
+  width: 85%;
+}
+
+/* Comments */
+.addComment {
+  border-radius: 10px;
   padding: 10px;
-  color: white;
+  margin-top: 50px;
+  width: 12%;
+  height: 50px;
+  margin-left: 44%;
 }
-
-.ProfilePage h1,h2,h3,h4,h5,h6 {
+.ProfilePage footer div {
+  display: flex;
+  justify-content: space-between;
+  border: transparent;
+  border-radius: 10px;
+}
+.reviews {
+  background-color: #ccc;
+  flex: 1; 
   text-align: center;
+  margin: 0 10px;  
+  color: black;
 }
