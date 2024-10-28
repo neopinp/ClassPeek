@@ -39,7 +39,7 @@ export default defineComponent({
 }
 
 nav {
-  background-color: #42b983;
+  background-color: #42b982;
   padding: 1rem;
   position: relative;
 }
