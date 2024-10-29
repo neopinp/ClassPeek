@@ -5,7 +5,7 @@
       <p>This is the homepage of our application.</p>
       <br>
       <div>
-        <h4>Icon</h4>
+        <img src="../assets/logo.png" class="logo">
       </div>
       <br>
       <div>
@@ -35,48 +35,9 @@
   
 <script lang="ts">
 import { defineComponent } from 'vue';
-  
+import "./styles/HomePage.css";
 export default defineComponent({
   name: 'HomePage',
 });
 </script>
-  
-<style scoped>
-.homePage {
-  text-align: center;
-  margin-top: 50px;
-}
- .homePage main {
-  margin-top: 50px; /* Add a top margin to avoid content overlay */
-  height: 500px;
-  background: #ccc;
-}
-
-
- .homePage nav {
-  display: flex;
-}
-
- .homePage nav > section {
-  width:50%;
-}
-
-.homePage section {
-  border: 1px solid black;
-  padding: 20px;
-  margin: 10px;
-}
-
-.homePage div {
-  margin: auto;
-  width: fit-content;
-  border: 1px solid black;
-  background: #ddd;
-  padding: 20px;
-}
-
-.homePage h1,h2,h3,h4,h5,h6 {
-  text-align: center;
-}
-</style>
   

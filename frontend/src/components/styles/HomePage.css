@@ -1,0 +1,44 @@
+/* Home-Page CSS */
+
+.homePage {
+  text-align: center;
+  margin-top: 50px;
+}
+ .homePage main {
+  margin-top: 50px; /* Add a top margin to avoid content overlay */
+  height: 500px;
+  background: #ccc;
+}
+
+
+ .homePage nav {
+  display: flex;
+}
+
+ .homePage nav > section {
+  width:50%;
+}
+
+.homePage section {
+  border: 1px solid black;
+  padding: 20px;
+  margin: 10px;
+}
+
+.homePage div {
+  margin: auto;
+  width: fit-content;
+  border: transparent;
+
+}
+
+.homePage h1,h2,h3,h4,h5,h6 {
+  text-align: center;
+}
+
+.logo {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-color: transparent;
+}
