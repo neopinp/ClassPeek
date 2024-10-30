@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function testConnection() {
+async function test_connection() {
     try {
         await prisma.$connect();
         console.log("Connected to database successfully!");
@@ -13,4 +13,4 @@ async function testConnection() {
     }
 }
 
-testConnection();
+test_connection();

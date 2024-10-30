@@ -11,6 +11,16 @@ Create a file called .env if you don't have one and paste the following line int
 DATABASE_URL="postgresql://testuser:testpassword@10.11.29.118:5432/classpeek?schema=public"
 ```
 
+## Database modifications
+Upon making changes to schema.prisma, run the command to push your changes.
+```
+npx prisma db push
+```
+We can also run these commands to reset the database, or seed it with test data.
+```
+npm run reset-db
+npm run seed
+```
 
 ### Compiles and hot-reloads for development
 ```

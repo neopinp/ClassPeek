@@ -6,6 +6,7 @@ import AboutPage from '@/components/AboutPage.vue'
 import CoursesPage from '@/components/CoursesPage.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
+import APITestPage from '@/components/APITestPage.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -47,6 +48,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'Info - ClassPeek'
     }
+  },
+  {
+    path: '/api-test',
+    name: 'APITestPage',
+    component: APITestPage,
+    meta: { title: 'API Test - ClassPeek' }
   }
 ]
 

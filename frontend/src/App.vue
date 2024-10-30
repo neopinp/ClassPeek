@@ -15,6 +15,9 @@
           <router-link to="/courses">Courses</router-link>
         </li>
         <li>
+          <router-link to="/api-test">API Test</router-link>
+        </li>
+        <li>
           <router-link to="/profile" id="profileIcon">
             <font-awesome-icon :icon="['fas', 'user']" />
           </router-link>
