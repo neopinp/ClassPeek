@@ -9,11 +9,14 @@
           <router-link to="/about">About</router-link>
         </li>
         <li>
+          <router-link to="/info">Info</router-link>
+        </li>
+        <li>
           <router-link to="/courses">Courses</router-link>
         </li>
         <li>
           <router-link to="/profile" id="profileIcon">
-            <font-awesome-icon :icon="faUser"/>
+            <font-awesome-icon :icon="['fas', 'user']" />
           </router-link>
         </li>
       </ul>
@@ -23,26 +26,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: "ProfilePage",
-  components: {
-    FontAwesomeIcon,
-  },
-  setup() {
-    return {
-      faUser,
-    };
-  },
+  name: 'App',
 });
 </script>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 nav {
-  background-color: #42b983;
+  background-color: #42b982;
   padding: 1rem;
   position: relative;
 }
@@ -51,7 +48,7 @@ nav ul {
   list-style: none;
   display: flex;
   gap: 1rem;
-  justify-content: center; 
+  justify-content: center;
   margin: 0;
   padding: 0;
 }
@@ -66,7 +63,6 @@ nav ul li a.router-link-exact-active {
   text-decoration: underline;
 }
 
-
 #profileIcon {
   position: absolute;
   right: 20px;
@@ -76,5 +72,4 @@ nav ul li a.router-link-exact-active {
 #profileIcon.router-link-exact-active {
   color: green;
 }
-
 </style>
