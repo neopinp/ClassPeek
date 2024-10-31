@@ -14,10 +14,18 @@
         <li>
           <router-link to="/courses">Courses</router-link>
         </li>
-        <li>
+        <li id="profileDropdown" @click="toggleDropdown">
           <router-link to="/profile" id="profileIcon">
             <font-awesome-icon :icon="['fas', 'user']" />
           </router-link>
+          <ul v-if="isDropdownOpen" class="dropdown-menu">
+            <li @click="viewProfile">View Profile</li>
+            <li v-if="isAuthenticated" @click="logout">Logout</li>
+            <li v-else @click="signIn">Sign In</li>
+            <li v-if="!isAuthenticated" @click="createAccount">
+              Create Account
+            </li>
+          </ul>
         </li>
       </ul>
     </nav>
@@ -26,10 +34,39 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-  name: 'App',
+  name: "App",
+  data() {
+    return {
+      isDropdownOpen: false as boolean,
+      isAuthenticated: false as boolean,
+    };
+  },
+  methods: {
+    toggleDropdown() {
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    viewProfile() {
+      this.isDropdownOpen = false;
+    },
+    editProfile() {
+      this.isDropdownOpen = false;
+    },
+    logout() {
+      this.isAuthenticated = true;
+      this.isDropdownOpen = false;
+    },
+    signIn() {
+      this.isAuthenticated = true;
+      this.isDropdownOpen = false;
+    },
+    createAccount() {
+      alert("Redirecting to account creation page...:");
+      this.isDropdownOpen = false;
+    }
+  },
 });
 </script>
 
@@ -67,9 +104,37 @@ nav ul li a.router-link-exact-active {
   position: absolute;
   right: 20px;
   top: 50%;
-  transform: translateY(-50%)
+  transform: translateY(-50%);
 }
 #profileIcon.router-link-exact-active {
   color: green;
 }
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  margin: 0;
+  padding: 0; 
+  z-index: 1000;
+  width: 150px;
+  display: flex;
+  flex-direction: column; 
+
+}
+.dropdown-menu li {
+  padding: 10px 20px;
+  cursor: pointer;
+  display: block; 
+}
+
+.dropdown-menu li:hover {
+  background-color: #f0f0f0;
+}
+
 </style>
