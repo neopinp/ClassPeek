@@ -19,9 +19,20 @@
             <font-awesome-icon :icon="['fas', 'user']" />
           </router-link>
           <ul v-if="isDropdownOpen" class="dropdown-menu">
-            <li @click="viewProfile">View Profile</li>
+            <li
+              v-if="isAuthenticated && userRole === 'user'"
+              @click="editProfile"
+            >
+              Edit Profile (Example User)
+            </li>
+            <li
+              v-if="isAuthenticated && userRole === 'staff'"
+              @click="editProfile"
+            >
+              Edit Profile (Staff)
+            </li>
             <li v-if="isAuthenticated" @click="logout">Logout</li>
-            <li v-else @click="signIn">Sign In</li>
+            <li v-else @click="redirectToSignIn">Sign In</li>
             <li v-if="!isAuthenticated" @click="createAccount">
               Create Account
             </li>
@@ -42,6 +53,7 @@ export default defineComponent({
     return {
       isDropdownOpen: false as boolean,
       isAuthenticated: false as boolean,
+      userRole: "guest" as "guest" | "user" | "staff",
     };
   },
   methods: {
@@ -52,20 +64,37 @@ export default defineComponent({
       this.isDropdownOpen = false;
     },
     editProfile() {
+      if (this.userRole === "user" || this.userRole === "staff") {
+        this.$router.push("/profiled/edit");
+      } else {
+        alert("Please sign in to edit your profile");
+      }
       this.isDropdownOpen = false;
     },
     logout() {
-      this.isAuthenticated = true;
+      this.isAuthenticated = false;
+      this.userRole = "guest";
+      this.isDropdownOpen = false;
+      this.$router.push("/signin");
+    },
+    redirectToSignIn() {
+      this.$router.push("/signin");
       this.isDropdownOpen = false;
     },
     signIn() {
-      this.isAuthenticated = true;
+      this.isAuthenticated = false;
+      this.userRole = "user";
       this.isDropdownOpen = false;
+      this.$router.push("/profile");
     },
     createAccount() {
-      alert("Redirecting to account creation page...:");
+      this.$router.push("/signup");
       this.isDropdownOpen = false;
-    }
+    },
+  },
+  setRole(role: "guest" | "user" | "staff") {
+    this.userRole = role;
+    this.isAuthenticated = role !== "guest";
   },
 });
 </script>
@@ -120,21 +149,19 @@ nav ul li a.router-link-exact-active {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   list-style: none;
   margin: 0;
-  padding: 0; 
+  padding: 0;
   z-index: 1000;
   width: 150px;
   display: flex;
-  flex-direction: column; 
-
+  flex-direction: column;
 }
 .dropdown-menu li {
   padding: 10px 20px;
   cursor: pointer;
-  display: block; 
+  display: block;
 }
 
 .dropdown-menu li:hover {
   background-color: #f0f0f0;
 }
-
 </style>

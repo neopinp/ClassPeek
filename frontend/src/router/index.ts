@@ -6,6 +6,10 @@ import AboutPage from '@/components/AboutPage.vue'
 import CoursesPage from '@/components/CoursesPage.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
+import SignInPage from '@/components/SignInPage.vue'
+import SignUpPage from '@/components/SignUpPage.vue'
+import EditProfilePage from '@/components/EditProfilePage.vue'
+
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -46,6 +50,30 @@ const routes: Array<RouteRecordRaw> = [
     component: InfoPage,
     meta: {
       title: 'Info - ClassPeek'
+    }
+  },
+  {
+    path: '/signin',
+    name: 'SignInPage',
+    component: SignInPage,
+    meta: {
+      title: 'Sign In - ClassPeek'
+    }
+  },
+  {
+    path: '/signup',
+    name: 'SignUpPage',
+    component: SignUpPage, 
+    meta: {
+      title: 'Sign In - ClassPeek'
+    }
+  },
+  {
+    path: '/profile/edit',
+    name: "EditProfilePage",
+    component: EditProfilePage, 
+    meta: {
+      title: 'Edit Profile - ClassPeek'
     }
   }
 ]
