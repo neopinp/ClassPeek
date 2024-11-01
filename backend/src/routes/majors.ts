@@ -43,17 +43,47 @@ router.post('/majors', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/majors/:id', async (req, res) => {
-  try {
-    await prisma.major.delete({
-      where: { id: parseInt(req.params.id)}
-    });
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Error deleting major, are there still courses attached to it?' 
-    });
-  }
+router.delete('/majors/:id', (req, res) => {
+  const deleteMajor = async () => {
+    try {
+      // First check how many courses are associated
+      const major = await prisma.major.findUnique({
+        where: { id: parseInt(req.params.id) },
+        include: {
+          courses: {
+            select: {
+              id: true,
+              course_code: true,
+              title: true
+            }
+          }
+        }
+      });
+
+      if (!major) {
+        return res.status(404).json({ error: 'Major not found' });
+      }
+
+      if (major.courses.length > 0) {
+        return res.status(400).json({
+          error: 'Cannot delete major with associated courses',
+          message: `This major has ${major.courses.length} course${major.courses.length === 1 ? '' : 's'} associated with it:`,
+          courses: major.courses.map(course => `${course.course_code} - ${course.title}`)
+        });
+      }
+
+      // If no courses are associated, proceed with deletion
+      await prisma.major.delete({
+        where: { id: parseInt(req.params.id) }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete major' });
+    }
+  };
+
+  deleteMajor();
 });
 
 export default router;

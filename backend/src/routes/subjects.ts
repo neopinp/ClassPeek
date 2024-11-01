@@ -43,17 +43,47 @@ router.post('/subjects', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/subjects/:id', async (req, res) => {
-  try {
-    await prisma.subject.delete({
-      where: { id: parseInt(req.params.id)}
-    });
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Error deleting subject, are there still courses attached to it?' 
-    });
-  }
+router.delete('/subjects/:id', (req, res) => {
+  const deleteSubject = async () => {
+    try {
+      // First check how many courses are associated
+      const subject = await prisma.subject.findUnique({
+        where: { id: parseInt(req.params.id) },
+        include: {
+          courses: {
+            select: {
+              id: true,
+              course_code: true,
+              title: true
+            }
+          }
+        }
+      });
+
+      if (!subject) {
+        return res.status(404).json({ error: 'Subject not found' });
+      }
+
+      if (subject.courses.length > 0) {
+        return res.status(400).json({
+          error: 'Cannot delete subject with associated courses',
+          message: `This subject has ${subject.courses.length} course${subject.courses.length === 1 ? '' : 's'} associated with it:`,
+          courses: subject.courses.map(course => `${course.course_code} - ${course.title}`)
+        });
+      }
+
+      // If no courses are associated, proceed with deletion
+      await prisma.subject.delete({
+        where: { id: parseInt(req.params.id) }
+      });
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete subject' });
+    }
+  };
+
+  deleteSubject();
 });
 
 export default router;

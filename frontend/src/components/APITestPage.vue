@@ -145,6 +145,34 @@
         </table>
       </div>
     </section>
+    <!-- Majors Section -->
+    <section class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">Majors</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-2 border">Name</th>
+              <th class="p-2 border">Description</th>
+              <th class="p-2 border">Course Count</th>
+              <th class="p-2 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="major in majors" :key="major.id">
+              <td class="p-2 border">{{ major.name }}</td>
+              <td class="p-2 border">{{ major.description || 'No description' }}</td>
+              <td class="p-2 border">{{ major.courses?.length || 0 }}</td>
+              <td class="p-2 border">
+                <button @click="deleteMajor(major.id)" class="bg-red-500 text-white px-2 py-1 rounded">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -159,11 +187,13 @@ export default defineComponent({
   
   // The context where the async methods attached fetched data to
   // this is where the data is defined and worked with in the HTML template
+  // for example, for course in courses, and course.corse_code, course.title, etc.
   data() {
     return {
       // Data arrays for different entities
       courses: [] as any[],
       subjects: [] as any[],
+      majors: [] as any[],
       users: [] as any[],
       professors: [] as any[],
       professorPages: [] as any[],
@@ -191,6 +221,15 @@ export default defineComponent({
         console.error('Error fetching courses:', error);
       } finally {
         this.loading.courses = false;
+      }
+    },
+
+    async fetchMajors() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/majors`);
+        this.majors = response.data;
+      } catch (error) {
+        console.error('Error fetching majors:', error);
       }
     },
 
@@ -297,14 +336,34 @@ export default defineComponent({
         try {
           await axios.delete(`${API_BASE_URL}/subjects/${subjectId}`);
           await this.fetchSubjects();
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error deleting subject:', error);
-          alert('Error deleting subject. Make sure there are no courses associated with it.');
+          if (error.response?.data?.courses) {
+            alert(`${error.response.data.message}\n\n${error.response.data.courses.join('\n')}`);
+          } else {
+            alert('Error deleting subject. Make sure there are no courses associated with it.');
+          }
         }
       }
     },
 
-    // Create/Update Methods
+    async deleteMajor(majorId: number) {
+      if (confirm('Are you sure you want to delete this major?')) {
+        try {
+          await axios.delete(`${API_BASE_URL}/majors/${majorId}`);
+          await this.fetchMajors();
+        } catch (error: any) {
+          console.error('Error deleting major:', error);
+          if (error.response?.data?.courses) {
+            alert(`${error.response.data.message}\n\n${error.response.data.courses.join('\n')}`);
+          } else {
+            alert('Error deleting major. Make sure there are no courses associated with it.');
+          }
+        }
+      }
+    },
+
+    // Example Create/Update Methods
     async createCourse(courseData: any) {
       try {
         const response = await axios.post(`${API_BASE_URL}/courses`, courseData);
@@ -337,7 +396,8 @@ export default defineComponent({
       this.fetchCourses(),
       this.fetchUsers(),
       this.fetchProfessorData(),
-      this.fetchSubjects()
+      this.fetchSubjects(),
+      this.fetchMajors()
     ]);
   }
 });
