@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Helper function to get base course code
+const getBaseCourseCode = (courseCode: string) => courseCode.split('-')[0];
+
 router.get('/courses', async (req: Request, res: Response) => {
   try {
     const courses = await prisma.course.findMany({
@@ -21,21 +24,61 @@ router.get('/courses', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/courses/:id', async (req: Request, res: Response) => {
-  try {
-    const course = await prisma.course.findUnique({
-      where: { id: parseInt(req.params.id) },
-      include: {
-        professor: true,
-        subject: true,
-        majors: true,
-        prerequisites: true
+router.get('/courses/:id', (req: Request, res: Response) => {
+  const fetchCourse = async () => {
+    try {
+      const course = await prisma.course.findUnique({
+        where: { id: parseInt(req.params.id) },
+        include: {
+          professor: {
+            select: {
+              name: true
+            }
+          },
+          subject: {
+            select: {
+              name: true,
+              code: true
+            }
+          },
+          prerequisites: {
+            select: {
+              id: true,
+              course_code: true,
+              title: true
+            }
+          },
+          required_for: true
+        }
+      });
+
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
       }
-    });
-    res.json(course);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch course' });
-  }
+
+      // Group prerequisites by base course code
+      const groupedPrerequisites = course.prerequisites.reduce((acc: any[], prereq) => {
+        const baseCode = getBaseCourseCode(prereq.course_code);
+        if (!acc.some(p => getBaseCourseCode(p.course_code) === baseCode)) {
+          acc.push({
+            id: prereq.id,
+            course_code: baseCode,
+            title: prereq.title.split('(')[0].trim()
+          });
+        }
+        return acc;
+      }, []);
+
+      res.json({
+        ...course,
+        prerequisites: groupedPrerequisites
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch course' });
+    }
+  };
+
+  fetchCourse();
 });
 
 router.post('/courses', async (req: Request, res: Response) => {
