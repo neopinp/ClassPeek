@@ -18,7 +18,7 @@
           <h4>Majors</h4>
           <ol>
             <!-- Placeholder hyperlinks given a list of majors -->
-            <li id="majorli" v-for="major in maristMajors" :key="major">
+            <li id="homepage-majorli" v-for="major in maristMajors" :key="major">
               {{ major }}
             </li>
           </ol>
@@ -28,11 +28,11 @@
 
         <section style="background-color:Yellow">
           <h4>Professors</h4>
-          <ul>
-            <li>
-              <p>Example Professor</p>
+          <ol>
+            <li id="homepage-professorli" v-for="professor in maristProfessors" :key="professor">
+              {{ professor }}
             </li>
-          </ul>
+          </ol>
         </section>
       </nav>
     </main>
@@ -89,7 +89,29 @@ export default defineComponent({
         "Biology Teacher Education",
         "Chemistry Teacher Education",
         "Chemistry"
-      ]
+      ],
+      maristProfessors: [
+        "Dr. John Smith",
+        "Prof. Jane Doe",
+        "Dr. Michael Johnson",
+        "Prof. Emily White",
+        "Dr. Robert Brown",
+        "Prof. Linda Green",
+        "Dr. Sarah Clark",
+        "Prof. David Miller",
+        "Dr. Susan Lewis",
+        "Prof. James Walker",
+        "Dr. Patricia Robinson",
+        "Prof. Mark Young",
+        "Dr. Jennifer Hall",
+        "Prof. Charles Allen",
+        "Dr. Mary King",
+        "Prof. Paul Wright",
+        "Dr. Barbara Scott",
+        "Prof. Laura Adams",
+        "Dr. Richard Baker",
+        "Prof. Elizabeth Nelson",
+      ],
     };
   }
 });
