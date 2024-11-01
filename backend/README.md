@@ -16,10 +16,11 @@ Upon making changes to schema.prisma, run the command to push your changes.
 ```
 npx prisma db push
 ```
-We can also run these commands to reset the database, or seed it with test data.
+We can also run these commands to reset the database, or seed it with test data, or both.
 ```
 npm run reset-db
 npm run seed
+npm run reset-and-seed
 ```
 
 ### Compiles and hot-reloads for development

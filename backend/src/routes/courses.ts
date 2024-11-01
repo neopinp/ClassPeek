@@ -1,11 +1,11 @@
 // src/routes/courses.ts
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/courses', async (req, res) => {
+router.get('/courses', async (req: Request, res: Response) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
@@ -21,7 +21,7 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-router.get('/courses/:id', async (req, res) => {
+router.get('/courses/:id', async (req: Request, res: Response) => {
   try {
     const course = await prisma.course.findUnique({
       where: { id: parseInt(req.params.id) },
@@ -38,7 +38,7 @@ router.get('/courses/:id', async (req, res) => {
   }
 });
 
-router.post('/courses', async (req, res) => {
+router.post('/courses', async (req: Request, res: Response) => {
   try {
     const course = await prisma.course.create({
       data: req.body,
@@ -54,7 +54,7 @@ router.post('/courses', async (req, res) => {
   }
 });
 
-router.put('/courses/:id', async (req, res) => {
+router.put('/courses/:id', async (req: Request, res: Response) => {
   try {
     const course = await prisma.course.update({
       where: { id: parseInt(req.params.id) },
@@ -71,7 +71,7 @@ router.put('/courses/:id', async (req, res) => {
   }
 });
 
-router.delete('/courses/:id', async (req, res) => {
+router.delete('/courses/:id', async (req: Request, res: Response) => {
   try {
     await prisma.course.delete({
       where: { id: parseInt(req.params.id) }

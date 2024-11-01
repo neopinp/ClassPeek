@@ -1,12 +1,12 @@
 // src/routes/users.ts
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/users', async (req, res) => {
+router.get('/users', async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       include: {
@@ -20,7 +20,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-router.post('/users', async (req, res) => {
+router.post('/users', async (req: Request, res: Response) => {
   try {
     const { password, ...userData } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);

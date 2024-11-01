@@ -8,7 +8,8 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "reset-db": "ts-node prisma/reset_db.ts",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "reset-and-seed": "ts-node prisma/reset_db.ts && ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
