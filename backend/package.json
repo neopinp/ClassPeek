@@ -6,7 +6,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "reset-db": "ts-node prisma/reset_db.ts",
+    "seed": "ts-node prisma/seed.ts",
+    "reset-and-seed": "ts-node prisma/reset_db.ts && ts-node prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,11 +17,15 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^5.21.1",
+    "bcrypt": "^5.1.1",
+    "cookie-session": "^2.1.0",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "prisma": "^5.21.1"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-session": "^2.0.49",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.7.5",

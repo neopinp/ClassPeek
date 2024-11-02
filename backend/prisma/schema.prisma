@@ -13,8 +13,151 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example of how a table is created
-model TestModel {
-  id    Int   @id @default(autoincrement())
-  name  String
+enum UserType {
+  STUDENT
+  PROFESSOR
+}
+
+model User {
+  id            Int              @id @default(autoincrement())
+  user_type     UserType
+  name          String          @db.VarChar(25)
+  dob           DateTime
+  
+  credentials   User_Credentials?
+  profile       Profile?
+  
+  // Professor-specific relationships
+  professor_page ProfessorPage?
+  courses_taught Course[]
+  
+  comments      Comment[]
+  
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+}
+
+model User_Credentials {
+  id            Int      @id @default(autoincrement())
+  school_email  String   @db.VarChar(50)
+  password      String   @db.VarChar(255)
+  
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       Int      @unique
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model Profile {
+  id            Int      @id @default(autoincrement())
+  blurb         String?  @db.VarChar(255)
+  description   String?  @db.Text
+  
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       Int      @unique
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model ProfessorPage {
+  id              Int      @id @default(autoincrement())
+  bio             String?  @db.Text
+  office_hours    String?  @db.VarChar(255)
+  office_location String?  @db.VarChar(255)
+  
+  // File storage for profile image
+  image_key       String?  @db.VarChar(255)  // Unique identifier for the image in storage
+  image_url       String?  @db.Text          // URL to access the image
+  image_filename  String?  @db.VarChar(255)  // Original filename
+  
+  professor       User     @relation(fields: [professor_id], references: [id])
+  professor_id    Int      @unique
+  
+  comments        Comment[]
+  
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+}
+
+model Course {
+  id            Int      @id @default(autoincrement())
+  course_code   String   @unique @db.VarChar(15)
+  title         String   @db.VarChar(255)
+  description   String   @db.Text
+  credits       Int
+  
+  // File storage for syllabus
+  syllabus_key      String?  @db.VarChar(255)  // Unique identifier in storage
+  syllabus_url      String?  @db.Text          // URL to access the file
+  syllabus_filename String?  @db.VarChar(255)  // Original filename
+  syllabus_updated  DateTime? // When the syllabus was last updated
+  
+  // Relationships
+  professor     User     @relation(fields: [professor_id], references: [id])
+  professor_id  Int
+
+  subject       Subject  @relation(fields: [subject_id], references: [id])
+  subject_id    Int
+  
+  majors        Major[]  // Which majors require this course
+  
+  prerequisites     Course[]  @relation("CoursePrerequisites")
+  required_for      Course[]  @relation("CoursePrerequisites")
+  
+  comments      Comment[]
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([professor_id])
+}
+
+model Subject {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(50)    // e.g., "Computer Science", "Mathematics"
+  code          String   @unique @db.VarChar(10)    // e.g., "CS", "MATH"
+  description   String?  @db.Text
+  
+  courses       Course[]
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model Major {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique @db.VarChar(100)   // e.g., "Computer Science"
+  description   String?  @db.Text
+  
+  courses       Course[] // Required courses for this major
+  
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model Comment {
+  id                Int       @id @default(autoincrement())
+  content           String    @db.Text
+  
+  user              User      @relation(fields: [user_id], references: [id])
+  user_id           Int
+  
+  course            Course?   @relation(fields: [course_id], references: [id])
+  course_id         Int?
+  professor_page    ProfessorPage? @relation(fields: [professor_page_id], references: [id])
+  professor_page_id Int?
+  
+  parent_comment    Comment?  @relation("CommentReplies", fields: [parent_id], references: [id])
+  parent_id         Int?
+  replies           Comment[] @relation("CommentReplies")
+  
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([user_id])
+  @@index([course_id])
+  @@index([professor_page_id])
+  @@index([parent_id])
 }
