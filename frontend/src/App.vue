@@ -14,6 +14,9 @@
         <li>
           <router-link to="/courses">Courses</router-link>
         </li>
+        <li>
+          <router-link to="/api-test">API Test</router-link>
+        </li>
         <li id="profileDropdown" @click="toggleDropdown">
           <router-link to="/profile" id="profileIcon">
             <font-awesome-icon :icon="['fas', 'user']" />

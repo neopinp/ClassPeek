@@ -1,26 +1,36 @@
 import express from 'express';
 import cors from 'cors';
+import cookieSession from 'cookie-session';
+import courseRoutes from './routes/courses';
+import subjectRoutes from './routes/subjects';
+import majorRoutes from './routes/majors';
+import userRoutes from './routes/users';
+import professorRoutes from './routes/professors';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8080',
+  credentials: true
+}));
+
 app.use(express.json());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['development-static-key-123'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
-// Routes
-app.get('/', (req, res) => {
-  res.send('Welcome to the ClassPeek Backend!');
-});
+// Route handlers (i.e. our apis)
+app.use('/api', courseRoutes);
+app.use('/api', subjectRoutes);
+app.use('/api', majorRoutes);
+app.use('/api', userRoutes);
+app.use('/api', professorRoutes);
 
-
-// TODO - Create routes to retrieve information about courses, subjects, and majors
-// (Course ID, Course Description, Credits, and Prerequsite Courses)
-// Consider api/courses, api/courses/id, etc
-
-
-
-// Start Server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
+
+export default app;
