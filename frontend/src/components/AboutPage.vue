@@ -1,7 +1,15 @@
 <template>
     <div class="aboutPage">
-      <h1>About ClassPeek</h1>
-      <p>ClassPeek is an application designed to help students and teachers manage classes efficiently.</p>
+      <div class="about-top-section">
+        <img src="../assets/logo.png" class="aboutLogo">
+        <div class="about-text">
+          <p>'A Sneak Peek Into Your Future'</p>
+        </div>
+      </div>
+      <div class="mission-section">
+          <p>'To provide a community founded on education where students can thrive and gain the power to shape their own path'</p>
+        </div>
+
     </div>
   </template>
   
@@ -11,12 +19,7 @@
   export default defineComponent({
     name: 'AboutPage',
   });
+  import "./styles/AboutPage.css"
   </script>
   
-  <style scoped>
-  .aboutPage {
-    text-align: center;
-    margin-top: 50px;
-  }
-  </style>
   
