@@ -152,6 +152,40 @@ export default defineComponent({
 
 
             return Object.values(groupedCourses);
+        },
+
+        handleRouteQuery() {
+            const majorName = this.$route.query.select as string;
+            if (majorName && this.majors.length > 0) {
+                const major = this.majors.find(m => m.name === majorName);
+                if (major) {
+                this.selectedMajors = [major];
+                this.$nextTick(() => {
+                    const element = document.getElementById(`major-${major.id}`);
+                    if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+                }
+            }
+        }
+    },
+
+    watch: {
+        majors: {
+        handler(newMajors) {
+            if (newMajors.length > 0) {
+            this.handleRouteQuery();
+            }
+        },
+        immediate: true
+        },
+
+        '$route.query': {
+        handler() {
+            this.handleRouteQuery();
+        },
+        immediate: true
         }
     },
     mounted() {

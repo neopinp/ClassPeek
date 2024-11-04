@@ -17,7 +17,7 @@
           <ol>
             <li id="homepage-li" v-for="major in majors" :key="major.id">
               <router-link 
-                :to="{ name: 'MajorsPage', query: { select: major.id } }"
+                :to="{ name: 'MajorsPage', query: { select: major.name } }"
                 class="text-blue-600 hover:underline"
               >
                 {{ major.name }}
