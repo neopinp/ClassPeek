@@ -36,6 +36,7 @@
 
 /* Input styling with 3D effect */
 .signup-form input[type="email"],
+.signup-form input[type="username"],
 .signup-form input[type="password"] {
   padding: 0.75rem;
   margin-bottom: 1rem;
