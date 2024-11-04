@@ -9,7 +9,7 @@
           <router-link to="/about">About</router-link>
         </li>
         <li>
-          <router-link to="/courses">Courses</router-link>
+          <router-link to="/subjects">Subjects</router-link>
         </li>
         <li>
           <router-link to="/api-test">API Test</router-link>
@@ -102,6 +102,7 @@ export default defineComponent({
 <style>
 * {
   box-sizing: border-box;
+  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
 nav {

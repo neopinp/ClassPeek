@@ -41,7 +41,12 @@
           <h4>Subjects</h4>
           <ol>
             <li id="homepage-li" v-for="subject in subjects" :key="subject.id">
-              <td class="p-2 border">{{ subject.name }}</td>
+              <router-link 
+                :to="{ name: 'SubjectsPage', query: { select: subject.code }}"
+                class="text-blue-600 hover:underline"
+              >
+                {{ subject.name }}
+              </router-link>
             </li>
           </ol>
         </section>

@@ -3,7 +3,7 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
-import CoursesPage from '@/components/CoursesPage.vue'
+import SubjectsPage from '@/components/SubjectsPage.vue'
 import APITestPage from '@/components/APITestPage.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
@@ -28,10 +28,10 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'About - ClassPeek' }
   },
   {
-    path: '/courses',
-    name: 'CoursesPage',
-    component: CoursesPage,
-    meta: { title: 'Courses - ClassPeek' }
+    path: '/subjects',
+    name: 'SubjectsPage',
+    component: SubjectsPage,
+    meta: { title: 'Subjects - ClassPeek' }
   },
   {
     path: '/profile',
