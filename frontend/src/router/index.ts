@@ -12,6 +12,8 @@ import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
 
+import MajorsPage from '@/components/MajorsPage.vue'
+
 const API_BASE_URL = 'http://localhost:3000/api';
 
 const routes: Array<RouteRecordRaw> = [
@@ -32,6 +34,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'SubjectsPage',
     component: SubjectsPage,
     meta: { title: 'Subjects - ClassPeek' }
+  },
+  {
+    path: '/majors',
+    name: 'MajorsPage',
+    component: MajorsPage,
+    meta: { title: 'Majors - ClassPeek' }
   },
   {
     path: '/profile',

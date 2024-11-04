@@ -12,6 +12,9 @@
           <router-link to="/subjects">Subjects</router-link>
         </li>
         <li>
+          <router-link to="/majors">Majors</router-link>
+        </li>
+        <li>
           <router-link to="/api-test">API Test</router-link>
         </li>
         <li id="profileDropdown" @click="toggleDropdown">

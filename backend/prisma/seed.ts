@@ -173,31 +173,31 @@ async function seed() {
     prisma.major.create({
       data: {
         name: 'Computer Science',
-        description: 'Bachelor of Science in Computer Science'
+        description: 'Bachelor of Science focusing on software development, algorithms, and computing systems. Prepares students for careers in software engineering, system architecture, and technology innovation.'
       }
     }),
     prisma.major.create({
       data: {
-        name: 'Mathematics',
-        description: 'Bachelor of Science in Mathematics'
+        name: 'Applied Mathematics',
+        description: 'Bachelor of Science emphasizing practical applications of mathematical concepts in data science, financial modeling, and computational methods. Prepares students for careers in data analytics, quantitative research, and financial engineering.'
       }
     }),
     prisma.major.create({
       data: {
-        name: 'Physics',
-        description: 'Bachelor of Science in Physics'
+        name: 'Applied Physics',
+        description: 'Bachelor of Science concentrating on practical applications of physics in engineering, technology, and research. Prepares students for careers in engineering physics, research and development, and technological innovation.'
       }
     }),
     prisma.major.create({
       data: {
-        name: 'Chemistry',
-        description: 'Bachelor of Science in Chemistry'
+        name: 'Applied Chemistry',
+        description: 'Bachelor of Science focusing on industrial applications of chemistry in pharmaceuticals, materials science, and environmental studies. Prepares students for careers in pharmaceutical research, materials development, and environmental consulting.'
       }
     }),
     prisma.major.create({
       data: {
-        name: 'Biology',
-        description: 'Bachelor of Science in Biology'
+        name: 'Applied Biology',
+        description: 'Bachelor of Science emphasizing practical applications of biology in biotechnology, healthcare, and environmental management. Prepares students for careers in biotechnology, healthcare research, and environmental conservation.'
       }
     })
   ]);
@@ -244,7 +244,7 @@ async function seed() {
         credits: 4,
         professor_id: profMary.id,
         subject_id: math.id,
-        majors: { connect: [{ id: mathMajor.id }, { id: csMajor.id }] }
+        majors: { connect: [{ id: mathMajor.id }] }
       }
     }),
     prisma.course.create({
@@ -255,7 +255,7 @@ async function seed() {
         credits: 4,
         professor_id: profMary.id,
         subject_id: math.id,
-        majors: { connect: [{ id: mathMajor.id }, { id: csMajor.id }] }
+        majors: { connect: [{ id: mathMajor.id }] }
       }
     })
   ]);
@@ -403,7 +403,7 @@ async function seed() {
         credits: 4,
         professor_id: profMary.id,
         subject_id: math.id,
-        majors: { connect: [{ id: mathMajor.id }, { id: csMajor.id }] },
+        majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
       }
     }),
@@ -415,7 +415,7 @@ async function seed() {
         credits: 3,
         professor_id: profMary.id,
         subject_id: math.id,
-        majors: { connect: [{ id: mathMajor.id }, { id: csMajor.id }] },
+        majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
       }
     }),
@@ -427,7 +427,7 @@ async function seed() {
         credits: 3,
         professor_id: profMary.id,
         subject_id: math.id,
-        majors: { connect: [{ id: mathMajor.id }, { id: csMajor.id }] },
+        majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
       }
     }),
