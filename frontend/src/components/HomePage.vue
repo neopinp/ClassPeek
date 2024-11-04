@@ -25,7 +25,14 @@
           <h4>Professors</h4>
           <ol>
             <li id="homepage-li" v-for="professor in professors" :key="professor.id">
-              <td class="p-2 border">{{ professor.name }}</td>
+              <td class="p-2 border">
+                <router-link 
+                  :to="{ name: 'Info', params: { type: 'professor', id: professor.id }}"
+                  class="text-blue-600 hover:underline"
+                >
+                  {{ professor.name }}
+                </router-link>
+              </td>
             </li>
           </ol>
         </section>
