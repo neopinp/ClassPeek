@@ -1,29 +1,61 @@
 <template>
-  <div class="InfoPage">
+  <div class="info-page">
     <main>
-      <section>
-        <div>
-          <div>
-            <h4>Img</h4>
+      <section class="sidebar">
+        <div class="profile-card">
+          <div class="image-container">
+            <img 
+              v-if="data?.image_url" 
+              :src="data.image_url" 
+              :alt="getTitle()"
+              class="profile-image"
+            />
+            <div v-else class="image-placeholder">
+              <span>No Image Available</span>
+            </div>
           </div>
-          <h4>Title</h4>
+          <h4 class="title">{{ getTitle() }}</h4>
         </div>
-        <br>
-        <div>
-          <h4>Add Info</h4>
+        <div class="info-card">
+          <h4>Additional Information</h4>
+          <div v-if="isProfessor" class="professor-info">
+            <p><strong>Office:</strong> {{ data?.professor_page?.office_location || 'Not specified' }}</p>
+            <p><strong>Office Hours:</strong> {{ data?.professor_page?.office_hours || 'Not specified' }}</p>
+          </div>
+          <div v-else class="course-info">
+            <p><strong>Credits:</strong> {{ data?.credits }}</p>
+            <p><strong>Course Code:</strong> {{ data?.course_code }}</p>
+            <p><strong>Professor:</strong> {{ data?.professor?.name }}</p>
+          </div>
         </div>
       </section>
-      <article>
-        <h2>Topic</h2>
-        <p>Informational Text</p>
+      
+      <article class="main-content">
+        <h2>{{ getTopicTitle() }}</h2>
+        <div class="content-body">
+          <p>{{ getMainContent() }}</p>
+          
+          <div v-if="!isProfessor && data?.prerequisites?.length" class="prerequisites">
+            <h3>Prerequisites:</h3>
+            <ul>
+              <li v-for="prereq in data.prerequisites" :key="prereq.id">
+                {{ prereq.course_code }} - {{ prereq.title }}
+              </li>
+            </ul>
+          </div>
+        </div>
       </article>
     </main>
-    <footer>
-      <h2>Comment Section</h2>
-      <ol>
-        <li>Comment 1</li>
-        <li>Comment 2</li>
-        <li>Comment 3</li>
+    
+    <footer class="comments-section">
+      <h2>Comments</h2>
+      <ol class="comments-list">
+        <li v-for="comment in data?.comments" :key="comment.id" class="comment-item">
+          {{ comment.content }}
+        </li>
+        <li v-if="!data?.comments?.length" class="no-comments">
+          No comments yet
+        </li>
       </ol>
     </footer>
   </div>
@@ -31,46 +63,262 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import axios from 'axios';
+import { useRoute } from 'vue-router';
+
+const API_BASE_URL = 'http://localhost:3000/api';
 
 export default defineComponent({
   name: "InfoPage",
+
+  data() {
+    return {
+      data: null as any,
+      loading: false,
+      error: null as string | null,
+      type: '' as 'professor' | 'course'
+    };
+  },
+
+  computed: {
+    isProfessor(): boolean {
+      return this.type === 'professor';
+    }
+  },
+
+  methods: {
+    getTitle() {
+      if (!this.data) return '';
+      return this.isProfessor ? this.data.name : this.data.title;
+    },
+
+    getTopicTitle() {
+      if (!this.data) return '';
+      return this.isProfessor ? 'Professor Bio' : 'Course Description';
+    },
+
+    getMainContent() {
+      if (!this.data) return '';
+      return this.isProfessor ? this.data.professor_page?.bio : this.data.description;
+    },
+
+    async fetchData() {
+      const route = useRoute();
+      this.loading = true;
+      try {
+        this.type = route.params.type as 'professor' | 'course';
+        const id = route.params.id;
+        
+        const response = await axios.get(
+          `${API_BASE_URL}/${this.type}s/${id}`
+        );
+        
+        this.data = response.data;
+        // Update document title
+        document.title = `${this.getTitle()} - ClassPeek`;
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        this.error = 'Failed to load data';
+      } finally {
+        this.loading = false;
+      }
+    }
+  },
+
+  mounted() {
+    this.fetchData();
+  }
 });
 </script>
 
 <style scoped>
-.InfoPage {
+.info-page {
   margin-top: 50px;
-}
-.InfoPage main {
-  height: 460px;
+  min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  background: #f5f7fa;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
+  padding: 0;
+  margin: 50px 0 0 0;
+  font-size: 16px;
+  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
-.InfoPage article {
-  flex: 9;
-  background-color: #f1f1f1;
-  padding: 10px;
+
+.info-page main {
+  display: flex;
+  min-height: 460px;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 0;
 }
-.InfoPage section {
+
+.sidebar {
   flex: 1;
-  background: #ccc;
+  min-width: 250px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-card, .info-card {
+  background: white;
+  border-radius: 8px;
   padding: 20px;
+  /* Deeper, layered shadow effect */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.05),
+    0 8px 16px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-.InfoPage div {
-  border: 1px solid black;
-  background: #ddd;
-  padding: 20px;
+
+.profile-card:hover, .info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.12),
+    0 8px 16px rgba(0, 0, 0, 0.08),
+    0 16px 24px rgba(0, 0, 0, 0.06);
 }
-.InfoPage footer {
-  background-color: #777;
-  padding: 10px;
-  color: white;
+
+.image-container {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+  /* Add subtle inner shadow */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.InfoPage h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.title {
+  font-size: 1.2em;
+  font-weight: 600;
   text-align: center;
+  margin-top: 10px;
+}
+
+.main-content {
+  flex: 3;
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  /* Deeper shadow with slight color tint */
+  box-shadow: 
+    0 4px 6px rgba(50, 50, 93, 0.11),
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.04);
+}
+
+.main-content h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.content-body {
+  line-height: 1.6;
+}
+
+.prerequisites {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  /* Inset shadow effect */
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+
+.prerequisites h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.prerequisites ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.prerequisites li {
+  padding: 5px 0;
+  color: #666;
+}
+
+.comments-section {
+  background-color: #f8f9fa;
+  padding: 30px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.comments-section h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+.comments-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.comment-item {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  /* Subtle lift effect */
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 4px 6px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.comment-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+
+.no-comments {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.professor-info, .course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.professor-info p, .course-info p {
+  margin: 0;
+  color: #666;
+}
+
+strong {
+  color: #2c3e50;
 }
 </style>

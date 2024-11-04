@@ -3,15 +3,16 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
-import CoursesPage from '@/components/CoursesPage.vue'
+import SubjectsPage from '@/components/SubjectsPage.vue'
 import APITestPage from '@/components/APITestPage.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
+import axios from 'axios'
 
-
+const API_BASE_URL = 'http://localhost:3000/api';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -27,10 +28,10 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'About - ClassPeek' }
   },
   {
-    path: '/courses',
-    name: 'CoursesPage',
-    component: CoursesPage,
-    meta: { title: 'Courses - ClassPeek' }
+    path: '/subjects',
+    name: 'SubjectsPage',
+    component: SubjectsPage,
+    meta: { title: 'Subjects - ClassPeek' }
   },
   {
     path: '/profile',
@@ -39,10 +40,27 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Profile - ClassPeek' }
   },
   {
-    path: '/info',
-    name: 'InfoPage',
+    path: '/info/:type/:id',
+    name: 'Info',
     component: InfoPage,
-    meta: { title: 'Info - ClassPeek' }
+    meta: { title: 'Info - ClassPeek' },
+    beforeEnter: async (to, from, next) => {
+      try {
+        // Fetch the data to get the name
+        const response = await axios.get(
+          `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
+        );
+        
+        // Set meta title based on type and name
+        const name = to.params.type === 'professor' ? response.data.name : response.data.title;
+        to.meta.title = `${name} - ClassPeek`;
+        
+        next();
+      } catch (error) {
+        console.error('Error fetching data for meta:', error);
+        next();
+      }
+    }
   },
   {
     path: '/api-test',
