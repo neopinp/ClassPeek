@@ -14,6 +14,8 @@ import axios from 'axios'
 
 import MajorsPage from '@/components/MajorsPage.vue'
 import CourseForm from '@/components/CourseForm.vue'
+import MajorForm from '@/components/MajorForm.vue'
+import SubjectForm from '@/components/SubjectForm.vue'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -53,6 +55,18 @@ const routes: Array<RouteRecordRaw> = [
     name: 'CourseForm',
     component: CourseForm,
     meta: { title: 'Course Form - ClassPeek' }
+  },
+  {
+    path: '/major-form/:id?',
+    name: 'MajorForm',
+    component: MajorForm,
+    meta: { title: 'Major Form - ClassPeek' }
+  },
+  {
+    path: '/subject-form/:id?',
+    name: 'SubjectForm',
+    component: SubjectForm,
+    meta: { title: 'Subject Form - Classpeek'}
   },
   {
     path: '/info/:type/:id',
