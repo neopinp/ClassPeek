@@ -13,6 +13,7 @@ import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
 
 import MajorsPage from '@/components/MajorsPage.vue'
+import CourseForm from '@/components/CourseForm.vue'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -46,6 +47,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ProfilePage',
     component: ProfilePage,
     meta: { title: 'Profile - ClassPeek' }
+  },
+  {
+    path: '/course-form/:id?',
+    name: 'CourseForm',
+    component: CourseForm,
+    meta: { title: 'Course Form - ClassPeek' }
   },
   {
     path: '/info/:type/:id',
