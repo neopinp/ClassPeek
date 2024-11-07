@@ -15,6 +15,15 @@
           <router-link to="/majors">Majors</router-link>
         </li>
         <li>
+          <router-link to="/course-form">Course Form</router-link>
+        </li>
+        <li>
+          <router-link to="/major-form">Major Form</router-link>
+        </li>
+        <li>
+          <router-link to="/subject-form">Subject Form</router-link>
+        </li>
+        <li>
           <router-link to="/api-test">API Test</router-link>
         </li>
         <li id="profileDropdown" @click="toggleDropdown">

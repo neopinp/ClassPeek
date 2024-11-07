@@ -51,6 +51,9 @@
               <td>{{ course.subject?.name }}</td>
               <td>
                 <button @click="viewCourseDetails(course.id)" class="bg-blue-500 text-white px-2 py-1 rounded mr-2">View</button>
+                <button @click="$router.push(`/course-form/${course.id}`)" class="bg-yellow-500 text-white px-2 py-1 rounded mr-2">
+                  Edit
+                </button>
                 <button @click="deleteCourse(course.id)" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
               </td>
             </tr>

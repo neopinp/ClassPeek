@@ -48,7 +48,8 @@ router.get('/courses/:id', (req: Request, res: Response) => {
               title: true
             }
           },
-          required_for: true
+          required_for: true,
+          majors: true
         }
       });
 
