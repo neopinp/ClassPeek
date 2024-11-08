@@ -67,17 +67,27 @@
 
           <!-- Comments List -->
           <div class="comments-list space-y-4">
-            <div v-for="comment in data?.comments" :key="comment.id" 
+            <div v-for="comment in comments" :key="comment.id" 
                 class="comment-item bg-gray-50 p-4 rounded-lg shadow-sm"
             >
               <div class="flex justify-between items-start">
                 <div>
                   <span class="font-semibold">{{ comment.user.name }}</span>
-                  <span class="text-sm text-gray-500 ml-2">
-                    {{ formatDate(comment.createdAt) }}
-                  </span>
+                  <div class="text-sm text-gray-500">
+                    <span :title="formatDate(comment.created_at)">
+                      {{ formatRelativeTime(comment.created_at) }}
+                    </span>
+                    <span 
+                      v-if="comment.updated_at !== comment.created_at" 
+                      class="ml-2 italic"
+                      :title="formatDate(comment.updated_at)"
+                    >
+                      (edited {{ formatRelativeTime(comment.updated_at) }})
+                    </span>
+                  </div>
                 </div>
-                <div v-if="isCurrentUser(comment.userId)" class="flex gap-2">
+                <!-- Using user.id for permission checking -->
+                <div v-if="isCurrentUser(comment.user.id)" class="flex gap-2">
                   <button
                     @click="startEdit(comment)"
                     class="text-blue-600 hover:text-blue-800 text-sm"
@@ -95,7 +105,7 @@
 
               <!-- Edit Form -->
               <div v-if="editingComment && editingComment.id === comment.id" 
-                   class="mt-3"
+                  class="mt-3"
               >
                 <textarea
                   v-model="editingComment.content"
@@ -120,11 +130,22 @@
               <div v-else class="mt-2 text-gray-700">
                 {{ comment.content }}
               </div>
+
+              <!-- User Type Badge - Optional -->
+              <span 
+                class="inline-block mt-2 text-xs px-2 py-1 rounded"
+                :class="{
+                  'bg-blue-100 text-blue-800': comment.user.user_type === 'PROFESSOR',
+                  'bg-green-100 text-green-800': comment.user.user_type === 'STUDENT'
+                }"
+              >
+                {{ comment.user.user_type }}
+              </span>
             </div>
 
             <!-- No Comments State -->
-            <div v-if="!data?.comments?.length" 
-                 class="text-center py-6 text-gray-500 italic"
+            <div v-if="!comments.length" 
+                class="text-center py-6 text-gray-500 italic"
             >
               No comments yet
             </div>
@@ -142,11 +163,12 @@ import axios from 'axios';
 interface Comment {
   id: number;
   content: string;
-  userId: number;
-  createdAt: string | Date;
+  created_at: string;
+  updated_at: string;
   user: {
+    id: number;
     name: string;
-    userType: 'STUDENT' | 'PROFESSOR';
+    user_type: 'STUDENT' | 'PROFESSOR';
   };
 }
 
@@ -162,7 +184,8 @@ export default defineComponent({
       error: null as string | null,
       type: '' as 'professor' | 'course',
       newComment: '',
-      editingComment: null as Comment | null
+      editingComment: null as Comment | null,
+      comments: [] as Comment[]
     };
   },
 
@@ -209,6 +232,10 @@ export default defineComponent({
         );
         
         this.data = response.data;
+        console.log('API Response:', response.data);
+        
+        // Fetch comments separately
+        await this.fetchComments();
         document.title = `${this.getTitle()} - ClassPeek`;
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -218,8 +245,105 @@ export default defineComponent({
       }
     },
 
-    formatDate(date: string | Date) {
-      return new Date(date).toLocaleDateString();
+    sortComments(comments: Comment[]) {
+      return [...comments].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+
+    async fetchComments() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/comments`, {
+          params: {
+            [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
+          }
+        });
+        
+        // Log the first comment's date for debugging
+        if (response.data.length > 0) {
+          console.log('First comment date:', response.data[0].createdAt);
+        }
+
+        this.comments = response.data.sort((a: Comment, b: Comment) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    },
+
+    formatDate(dateString: string) {
+      try {
+        const date = new Date(dateString);
+        
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+          console.error('Invalid date string:', dateString);
+          return 'Invalid date';
+        }
+
+        return new Intl.DateTimeFormat('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).format(date);
+      } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Invalid date';
+      }
+    },
+
+    formatRelativeTime(dateString: string): string {
+      try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMilliseconds = now.getTime() - date.getTime();
+        const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+        
+        // Less than 1 minute
+        if (diffInSeconds < 60) {
+          return 'just now';
+        }
+        
+        // Less than 1 hour
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) {
+          return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        }
+        
+        // Less than 1 day
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+          return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        }
+        
+        // Less than 7 days
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+          return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        }
+
+        // Less than 30 days
+        if (diffInDays < 30) {
+          const diffInWeeks = Math.floor(diffInDays / 7);
+          return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+        }
+
+        // Less than 12 months
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) {
+          return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+        }
+
+        const diffInYears = Math.floor(diffInDays / 365);
+        return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+      } catch (error) {
+        console.error('Error formatting relative time:', error);
+        return this.formatDate(dateString);
+      }
     },
 
     isCurrentUser(userId: number) {
@@ -258,7 +382,7 @@ export default defineComponent({
           `${API_BASE_URL}/comments/${this.editingComment.id}`,
           { content: this.editingComment.content }
         );
-        await this.fetchData(); // Refresh data
+        await this.fetchComments();
         this.editingComment = null;
       } catch (error) {
         console.error('Error updating comment:', error);
@@ -274,7 +398,7 @@ export default defineComponent({
 
       try {
         await axios.delete(`${API_BASE_URL}/comments/${commentId}`);
-        await this.fetchData(); // Refresh data
+        await this.fetchComments();
       } catch (error) {
         console.error('Error deleting comment:', error);
       }

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export class CommentService {
   async createComment(data: {
     content: string;
-    userId?: number; // Made optional for now
+    userId?: number;
     courseId?: number;
     professorPageId?: number;
     parentId?: number;
@@ -13,21 +13,28 @@ export class CommentService {
     return prisma.comment.create({
       data: {
         content: data.content,
-        // Temporary: Use a placeholder user until user system is implemented
-        user: { connect: { id: 1 } }, // You'll need at least one user in the database
+        user: { connect: { id: 1 } }, // Temporary user
         ...(data.courseId && { course: { connect: { id: data.courseId } } }),
         ...(data.professorPageId && {
           professor_page: { connect: { id: data.professorPageId } },
         }),
         ...(data.parentId && { parent_comment: { connect: { id: data.parentId } } }),
       },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        created_at: true,
+        updated_at: true,
         user: {
           select: {
+            id: true,
             name: true,
             user_type: true,
           },
         },
+        course_id: true,
+        professor_page_id: true,
+        parent_id: true,
       },
     });
   }
@@ -47,21 +54,34 @@ export class CommentService {
         professor_page_id: professorPageId,
         parent_id: parentId,
       },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        created_at: true,
+        updated_at: true,
         user: {
           select: {
+            id: true,
             name: true,
             user_type: true,
           },
         },
         replies: {
-          include: {
+          select: {
+            id: true,
+            content: true,
+            created_at: true,
+            updated_at: true,
             user: {
               select: {
+                id: true,
                 name: true,
                 user_type: true,
               },
             },
+          },
+          orderBy: {
+            created_at: 'desc',
           },
         },
       },
@@ -75,9 +95,14 @@ export class CommentService {
     return prisma.comment.update({
       where: { id: commentId },
       data: { content },
-      include: {
+      select: {
+        id: true,
+        content: true,
+        created_at: true,
+        updated_at: true,
         user: {
           select: {
+            id: true,
             name: true,
             user_type: true,
           },
