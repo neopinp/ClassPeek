@@ -46,34 +46,49 @@
         </div>
 
         <!-- Comments Section -->
-        <div class="comments-section mt-8">
-          <h3 class="text-xl font-semibold mb-4">Comments</h3>
-          
-          <!-- Comment Form -->
-          <div class="comment-form mb-6">
-            <textarea
-              v-model="newComment"
-              class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Write a comment..."
-              rows="3"
-            ></textarea>
+        <div class="comments-section mt-8 max-w-4xl">
+        <h3 class="text-xl font-semibold mb-4">Comments</h3>
+        
+        <!-- Main Comment Form -->
+        <div class="comment-form mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <textarea
+            v-model="newComment"
+            class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
+            placeholder="Write a comment..."
+            rows="3"
+          ></textarea>
+          <div class="mt-2 flex justify-end">
             <button
               @click="submitComment"
-              class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
-              Post Comment
+              <span>Post Comment</span>
             </button>
           </div>
+        </div>
 
-          <!-- Comments List -->
-          <div class="comments-list space-y-4">
-            <div v-for="comment in comments" :key="comment.id" 
-                class="comment-item bg-gray-50 p-4 rounded-lg shadow-sm"
-            >
+        <!-- Comments List -->
+        <div class="comments-list space-y-6">
+          <div v-for="comment in comments" :key="comment.id" 
+              class="comment-thread"
+          >
+            <!-- Main Comment -->
+            <div class="comment-item bg-white p-5 rounded-lg shadow-sm border border-gray-200">
               <div class="flex justify-between items-start">
                 <div>
-                  <span class="font-semibold">{{ comment.user.name }}</span>
-                  <div class="text-sm text-gray-500">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold">{{ comment.user.name }}</span>
+                    <span 
+                      class="text-xs px-2 py-1 rounded-full"
+                      :class="{
+                        'bg-blue-100 text-blue-800': comment.user.user_type === 'PROFESSOR',
+                        'bg-green-100 text-green-800': comment.user.user_type === 'STUDENT'
+                      }"
+                    >
+                      {{ comment.user.user_type }}
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-500 mt-1">
                     <span :title="formatDate(comment.created_at)">
                       {{ formatRelativeTime(comment.created_at) }}
                     </span>
@@ -86,17 +101,16 @@
                     </span>
                   </div>
                 </div>
-                <!-- Using user.id for permission checking -->
                 <div v-if="isCurrentUser(comment.user.id)" class="flex gap-2">
                   <button
                     @click="startEdit(comment)"
-                    class="text-blue-600 hover:text-blue-800 text-sm"
+                    class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
                   >
                     Edit
                   </button>
                   <button
                     @click="deleteComment(comment.id)"
-                    class="text-red-600 hover:text-red-800 text-sm"
+                    class="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
                   >
                     Delete
                   </button>
@@ -105,52 +119,125 @@
 
               <!-- Edit Form -->
               <div v-if="editingComment && editingComment.id === comment.id" 
-                  class="mt-3"
+                  class="mt-4"
               >
                 <textarea
                   v-model="editingComment.content"
-                  class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows="3"
                 ></textarea>
-                <div class="mt-2 flex gap-2">
-                  <button
-                    @click="saveEdit"
-                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  >
-                    Save
-                  </button>
+                <div class="mt-2 flex gap-2 justify-end">
                   <button
                     @click="cancelEdit"
-                    class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                    class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
                   >
                     Cancel
                   </button>
+                  <button
+                    @click="saveEdit"
+                    class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
-              <div v-else class="mt-2 text-gray-700">
+              <div v-else class="mt-3 text-gray-700">
                 {{ comment.content }}
               </div>
 
-              <!-- User Type Badge - Optional -->
-              <span 
-                class="inline-block mt-2 text-xs px-2 py-1 rounded"
-                :class="{
-                  'bg-blue-100 text-blue-800': comment.user.user_type === 'PROFESSOR',
-                  'bg-green-100 text-green-800': comment.user.user_type === 'STUDENT'
-                }"
-              >
-                {{ comment.user.user_type }}
-              </span>
-            </div>
+              <!-- Reply Button -->
+              <div class="mt-4 flex justify-between items-center">
+                <button
+                  @click="startReply(comment)"
+                  class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  Reply
+                </button>
+              </div>
 
-            <!-- No Comments State -->
-            <div v-if="!comments.length" 
-                class="text-center py-6 text-gray-500 italic"
-            >
-              No comments yet
+              <!-- Reply Form -->
+              <div v-if="replyingTo === comment.id" 
+                  class="mt-4 pl-4 border-l-2 border-gray-200"
+              >
+                <textarea
+                  v-model="replyContent"
+                  class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Write a reply..."
+                  rows="2"
+                ></textarea>
+                <div class="mt-2 flex gap-2 justify-end">
+                  <button
+                    @click="cancelReply"
+                    class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    @click="submitReply(comment.id)"
+                    class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Post Reply
+                  </button>
+                </div>
+              </div>
+
+              <!-- Replies -->
+              <div v-if="comment.replies && comment.replies.length > 0" 
+                  class="mt-4 space-y-3 pl-6 border-l-2 border-gray-200"
+              >
+                <div v-for="reply in comment.replies" 
+                    :key="reply.id"
+                    class="reply-item bg-gray-50 p-4 rounded-lg"
+                >
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="font-semibold">{{ reply.user.name }}</span>
+                        <span 
+                          class="text-xs px-2 py-0.5 rounded-full"
+                          :class="{
+                            'bg-blue-100 text-blue-800': reply.user.user_type === 'PROFESSOR',
+                            'bg-green-100 text-green-800': reply.user.user_type === 'STUDENT'
+                          }"
+                        >
+                          {{ reply.user.user_type }}
+                        </span>
+                      </div>
+                      <div class="text-sm text-gray-500 mt-1">
+                        {{ formatRelativeTime(reply.created_at) }}
+                      </div>
+                    </div>
+                    <div v-if="isCurrentUser(reply.user.id)" class="flex gap-2">
+                      <button
+                        @click="startEdit(reply)"
+                        class="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        @click="deleteComment(reply.id)"
+                        class="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <div class="mt-2 text-gray-700">
+                    {{ reply.content }}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- No Comments State -->
+          <div v-if="!comments.length" 
+              class="text-center py-8 bg-white rounded-lg border border-gray-200"
+          >
+            <span class="text-gray-500 italic">No comments yet. Be the first to comment!</span>
+          </div>
         </div>
+      </div>
       </article>
     </main>
   </div>
@@ -160,16 +247,20 @@
 import { defineComponent } from "vue";
 import axios from 'axios';
 
+interface User {
+  id: number;
+  name: string;
+  user_type: 'STUDENT' | 'PROFESSOR';
+}
+
 interface Comment {
   id: number;
   content: string;
   created_at: string;
   updated_at: string;
-  user: {
-    id: number;
-    name: string;
-    user_type: 'STUDENT' | 'PROFESSOR';
-  };
+  user: User;
+  parent_id?: number | null;
+  replies?: Comment[];
 }
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -185,6 +276,8 @@ export default defineComponent({
       type: '' as 'professor' | 'course',
       newComment: '',
       editingComment: null as Comment | null,
+      replyingTo: null as number | null,
+      replyContent: '',
       comments: [] as Comment[]
     };
   },
@@ -200,6 +293,7 @@ export default defineComponent({
   },
 
   methods: {
+    // Existing Info Page Methods
     getTitle() {
       if (!this.data) return '';
       return this.isProfessor ? this.data.name : this.data.title;
@@ -215,26 +309,20 @@ export default defineComponent({
       return this.isProfessor ? this.data.professor_page?.bio : this.data.description;
     },
 
+    // Data Fetching Methods
     async fetchData() {
       this.loading = true;
       try {
         this.type = this.$route.params.type as 'professor' | 'course';
         const id = this.$route.params.id;
 
-        // Validate type
         if (!['professor', 'course'].includes(this.type)) {
           this.error = 'Invalid type';
           return;
         }
         
-        const response = await axios.get(
-          `${API_BASE_URL}/${this.type}s/${id}`
-        );
-        
+        const response = await axios.get(`${API_BASE_URL}/${this.type}s/${id}`);
         this.data = response.data;
-        console.log('API Response:', response.data);
-        
-        // Fetch comments separately
         await this.fetchComments();
         document.title = `${this.getTitle()} - ClassPeek`;
       } catch (error) {
@@ -245,12 +333,6 @@ export default defineComponent({
       }
     },
 
-    sortComments(comments: Comment[]) {
-      return [...comments].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    },
-
     async fetchComments() {
       try {
         const response = await axios.get(`${API_BASE_URL}/comments`, {
@@ -259,24 +341,22 @@ export default defineComponent({
           }
         });
         
-        // Log the first comment's date for debugging
-        if (response.data.length > 0) {
-          console.log('First comment date:', response.data[0].createdAt);
-        }
-
-        this.comments = response.data.sort((a: Comment, b: Comment) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        this.comments = this.sortComments(response.data);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
     },
 
+    // Comment Sorting and Formatting Methods
+    sortComments(comments: Comment[]) {
+      return [...comments].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    },
+
     formatDate(dateString: string) {
       try {
         const date = new Date(dateString);
-        
-        // Check if the date is valid
         if (isNaN(date.getTime())) {
           console.error('Invalid date string:', dateString);
           return 'Invalid date';
@@ -303,36 +383,28 @@ export default defineComponent({
         const diffInMilliseconds = now.getTime() - date.getTime();
         const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
         
-        // Less than 1 minute
-        if (diffInSeconds < 60) {
-          return 'just now';
-        }
+        if (diffInSeconds < 60) return 'just now';
         
-        // Less than 1 hour
         const diffInMinutes = Math.floor(diffInSeconds / 60);
         if (diffInMinutes < 60) {
           return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
         }
         
-        // Less than 1 day
         const diffInHours = Math.floor(diffInMinutes / 60);
         if (diffInHours < 24) {
           return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
         }
         
-        // Less than 7 days
         const diffInDays = Math.floor(diffInHours / 24);
         if (diffInDays < 7) {
           return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
         }
 
-        // Less than 30 days
         if (diffInDays < 30) {
           const diffInWeeks = Math.floor(diffInDays / 7);
           return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
         }
 
-        // Less than 12 months
         const diffInMonths = Math.floor(diffInDays / 30);
         if (diffInMonths < 12) {
           return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
@@ -346,11 +418,13 @@ export default defineComponent({
       }
     },
 
+    // User Permission Methods
     isCurrentUser(userId: number) {
       // TODO: Replace with actual user authentication check
-      return true; // For development
+      return true;
     },
 
+    // Comment CRUD Methods
     async submitComment() {
       if (!this.newComment.trim() || !this.entityId) return;
 
@@ -361,15 +435,25 @@ export default defineComponent({
         };
 
         await axios.post(`${API_BASE_URL}/comments`, commentData);
-        
         this.newComment = '';
-        await this.fetchData(); // Refresh the entire data
+        await this.fetchComments();
       } catch (error) {
         console.error('Error submitting comment:', error);
-        // TODO: Add user feedback for error
       }
     },
 
+    async deleteComment(commentId: number) {
+      if (!confirm('Are you sure you want to delete this comment?')) return;
+
+      try {
+        await axios.delete(`${API_BASE_URL}/comments/${commentId}`);
+        await this.fetchComments();
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+      }
+    },
+
+    // Comment Edit Methods
     startEdit(comment: Comment) {
       this.editingComment = { ...comment };
     },
@@ -393,14 +477,33 @@ export default defineComponent({
       this.editingComment = null;
     },
 
-    async deleteComment(commentId: number) {
-      if (!confirm('Are you sure you want to delete this comment?')) return;
+    // Reply Methods
+    startReply(comment: Comment) {
+      this.replyingTo = comment.id;
+      this.replyContent = '';
+    },
+
+    cancelReply() {
+      this.replyingTo = null;
+      this.replyContent = '';
+    },
+
+    async submitReply(parentId: number) {
+      if (!this.replyContent.trim() || !this.entityId) return;
 
       try {
-        await axios.delete(`${API_BASE_URL}/comments/${commentId}`);
+        const commentData = {
+          content: this.replyContent,
+          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId,
+          parentId
+        };
+
+        await axios.post(`${API_BASE_URL}/comments`, commentData);
+        this.replyContent = '';
+        this.replyingTo = null;
         await this.fetchComments();
       } catch (error) {
-        console.error('Error deleting comment:', error);
+        console.error('Error submitting reply:', error);
       }
     }
   },
