@@ -4,6 +4,65 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function seed() {
+  const testUsers = await Promise.all([
+    prisma.user.create({
+      data: {
+        name: 'Test Student',
+        user_type: UserType.STUDENT,
+        dob: new Date('2000-01-01'),
+        credentials: {
+          create: {
+            school_email: 'test.student@university.edu',
+            password: await bcrypt.hash('password123', 10)
+          }
+        },
+        profile: {
+          create: {
+            blurb: 'Test student account for development',
+            description: 'This is a test account used for development and testing purposes.'
+          }
+        }
+      }
+    }),
+    prisma.user.create({
+      data: {
+        name: 'Jane Doe',
+        user_type: UserType.STUDENT,
+        dob: new Date('2001-05-15'),
+        credentials: {
+          create: {
+            school_email: 'jane.doe@university.edu',
+            password: await bcrypt.hash('password123', 10)
+          }
+        },
+        profile: {
+          create: {
+            blurb: 'Computer Science Major',
+            description: 'Passionate about software development and artificial intelligence.'
+          }
+        }
+      }
+    }),
+    prisma.user.create({
+      data: {
+        name: 'Bob Smith',
+        user_type: UserType.STUDENT,
+        dob: new Date('2000-08-22'),
+        credentials: {
+          create: {
+            school_email: 'bob.smith@university.edu',
+            password: await bcrypt.hash('password123', 10)
+          }
+        },
+        profile: {
+          create: {
+            blurb: 'Mathematics Major',
+            description: 'Interested in pure mathematics and theoretical computer science.'
+          }
+        }
+      }
+    })
+  ]);
   // ===== PROFESSORS =====
   const professors = await Promise.all([
     prisma.user.create({

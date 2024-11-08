@@ -44,27 +44,111 @@
             </ul>
           </div>
         </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section mt-8">
+          <h3 class="text-xl font-semibold mb-4">Comments</h3>
+          
+          <!-- Comment Form -->
+          <div class="comment-form mb-6">
+            <textarea
+              v-model="newComment"
+              class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Write a comment..."
+              rows="3"
+            ></textarea>
+            <button
+              @click="submitComment"
+              class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Post Comment
+            </button>
+          </div>
+
+          <!-- Comments List -->
+          <div class="comments-list space-y-4">
+            <div v-for="comment in data?.comments" :key="comment.id" 
+                class="comment-item bg-gray-50 p-4 rounded-lg shadow-sm"
+            >
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="font-semibold">{{ comment.user.name }}</span>
+                  <span class="text-sm text-gray-500 ml-2">
+                    {{ formatDate(comment.createdAt) }}
+                  </span>
+                </div>
+                <div v-if="isCurrentUser(comment.userId)" class="flex gap-2">
+                  <button
+                    @click="startEdit(comment)"
+                    class="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteComment(comment.id)"
+                    class="text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+              <!-- Edit Form -->
+              <div v-if="editingComment && editingComment.id === comment.id" 
+                   class="mt-3"
+              >
+                <textarea
+                  v-model="editingComment.content"
+                  class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                ></textarea>
+                <div class="mt-2 flex gap-2">
+                  <button
+                    @click="saveEdit"
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    @click="cancelEdit"
+                    class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              <div v-else class="mt-2 text-gray-700">
+                {{ comment.content }}
+              </div>
+            </div>
+
+            <!-- No Comments State -->
+            <div v-if="!data?.comments?.length" 
+                 class="text-center py-6 text-gray-500 italic"
+            >
+              No comments yet
+            </div>
+          </div>
+        </div>
       </article>
     </main>
-    
-    <footer class="comments-section">
-      <h2>Comments</h2>
-      <ol class="comments-list">
-        <li v-for="comment in data?.comments" :key="comment.id" class="comment-item">
-          {{ comment.content }}
-        </li>
-        <li v-if="!data?.comments?.length" class="no-comments">
-          No comments yet
-        </li>
-      </ol>
-    </footer>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+
+interface Comment {
+  id: number;
+  content: string;
+  userId: number;
+  createdAt: string | Date;
+  user: {
+    name: string;
+    userType: 'STUDENT' | 'PROFESSOR';
+  };
+}
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -76,13 +160,19 @@ export default defineComponent({
       data: null as any,
       loading: false,
       error: null as string | null,
-      type: '' as 'professor' | 'course'
+      type: '' as 'professor' | 'course',
+      newComment: '',
+      editingComment: null as Comment | null
     };
   },
 
   computed: {
     isProfessor(): boolean {
       return this.type === 'professor';
+    },
+
+    entityId(): number | null {
+      return this.data?.id || null;
     }
   },
 
@@ -103,18 +193,22 @@ export default defineComponent({
     },
 
     async fetchData() {
-      const route = useRoute();
       this.loading = true;
       try {
-        this.type = route.params.type as 'professor' | 'course';
-        const id = route.params.id;
+        this.type = this.$route.params.type as 'professor' | 'course';
+        const id = this.$route.params.id;
+
+        // Validate type
+        if (!['professor', 'course'].includes(this.type)) {
+          this.error = 'Invalid type';
+          return;
+        }
         
         const response = await axios.get(
           `${API_BASE_URL}/${this.type}s/${id}`
         );
         
         this.data = response.data;
-        // Update document title
         document.title = `${this.getTitle()} - ClassPeek`;
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -122,11 +216,81 @@ export default defineComponent({
       } finally {
         this.loading = false;
       }
+    },
+
+    formatDate(date: string | Date) {
+      return new Date(date).toLocaleDateString();
+    },
+
+    isCurrentUser(userId: number) {
+      // TODO: Replace with actual user authentication check
+      return true; // For development
+    },
+
+    async submitComment() {
+      if (!this.newComment.trim() || !this.entityId) return;
+
+      try {
+        const commentData = {
+          content: this.newComment,
+          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
+        };
+
+        await axios.post(`${API_BASE_URL}/comments`, commentData);
+        
+        this.newComment = '';
+        await this.fetchData(); // Refresh the entire data
+      } catch (error) {
+        console.error('Error submitting comment:', error);
+        // TODO: Add user feedback for error
+      }
+    },
+
+    startEdit(comment: Comment) {
+      this.editingComment = { ...comment };
+    },
+
+    async saveEdit() {
+      if (!this.editingComment) return;
+
+      try {
+        await axios.put(
+          `${API_BASE_URL}/comments/${this.editingComment.id}`,
+          { content: this.editingComment.content }
+        );
+        await this.fetchData(); // Refresh data
+        this.editingComment = null;
+      } catch (error) {
+        console.error('Error updating comment:', error);
+      }
+    },
+
+    cancelEdit() {
+      this.editingComment = null;
+    },
+
+    async deleteComment(commentId: number) {
+      if (!confirm('Are you sure you want to delete this comment?')) return;
+
+      try {
+        await axios.delete(`${API_BASE_URL}/comments/${commentId}`);
+        await this.fetchData(); // Refresh data
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+      }
     }
   },
 
   mounted() {
     this.fetchData();
+  },
+
+  watch: {
+    '$route'(to, from) {
+      if (to.params.id !== from.params.id || to.params.type !== from.params.type) {
+        this.fetchData();
+      }
+    }
   }
 });
 </script>
@@ -305,6 +469,52 @@ export default defineComponent({
   text-align: center;
   color: #666;
   font-style: italic;
+}
+
+.comment-form textarea {
+  background: white;
+  border: 1px solid #ddd;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.comment-form textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.comment-form button {
+  transition: all 0.2s;
+}
+
+.comment-form button:hover {
+  transform: translateY(-1px);
+}
+
+.comment-item {
+  position: relative;
+  padding: 20px;
+}
+
+.comment-item button {
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.comment-item button:hover {
+  transform: translateY(-1px);
+}
+
+.comment-item textarea {
+  background: white;
+  border: 1px solid #ddd;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.comment-item textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  outline: none;
 }
 
 .professor-info, .course-info {
