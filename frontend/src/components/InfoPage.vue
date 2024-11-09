@@ -234,14 +234,19 @@ export default defineComponent({
       try {
         this.type = this.$route.params.type as 'professor' | 'course';
         const id = this.$route.params.id;
-
+        
         if (!['professor', 'course'].includes(this.type)) {
           this.error = 'Invalid type';
           return;
         }
+
+        const response = await axios.get(
+          `${API_BASE_URL}/${this.type}s/${id}`
+        );
         
-        const response = await axios.get(`${API_BASE_URL}/${this.type}s/${id}`);
         this.data = response.data;
+        console.log('Fetched data:', this.data); // Debug log
+        
         await this.fetchComments();
         document.title = `${this.getTitle()} - ClassPeek`;
       } catch (error) {
@@ -254,13 +259,34 @@ export default defineComponent({
 
     async fetchComments() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/comments`, {
-          params: {
-            [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
-          }
-        });
+        if (!this.data) {
+          console.log('No data available for comments');
+          return;
+        }
+
+        let params = {};
         
-        this.comments = this.sortComments(response.data);
+        if (this.isProfessor) {
+          if (this.data.professor_page?.id) {
+            params = { professorPageId: this.data.professor_page.id };
+            console.log('Fetching professor comments for page:', this.data.professor_page.id);
+          } else {
+            console.error('Professor page ID not found:', this.data);
+            return;
+          }
+        } else {
+          if (this.data.id) {
+            params = { courseId: this.data.id };
+            console.log('Fetching course comments for course:', this.data.id);
+          } else {
+            console.error('Course ID not found:', this.data);
+            return;
+          }
+        }
+
+        const response = await axios.get(`${API_BASE_URL}/comments`, { params });
+        this.comments = response.data;
+        console.log('Fetched comments:', this.comments);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
@@ -350,8 +376,13 @@ export default defineComponent({
       try {
         const commentData = {
           content: this.newComment,
-          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
+          ...(this.isProfessor 
+            ? { professorPageId: this.data.professor_page?.id }
+            : { courseId: this.data.id }
+          )
         };
+
+        console.log('Submitting comment with data:', commentData); // Debug log
 
         await axios.post(`${API_BASE_URL}/comments`, commentData);
         this.newComment = '';

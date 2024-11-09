@@ -48,47 +48,58 @@ export class CommentService {
     professorPageId?: number;
     parentId?: number | null;
   }) {
-    return prisma.comment.findMany({
-      where: {
-        course_id: courseId,
-        professor_page_id: professorPageId,
-        parent_id: parentId,
-      },
-      select: {
-        id: true,
-        content: true,
-        created_at: true,
-        updated_at: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            user_type: true,
-          },
+    try {
+      console.log('Comment service params:', { courseId, professorPageId, parentId });
+
+      if (professorPageId) {
+        // First check if the professor page exists
+        const profPage = await prisma.professorPage.findFirst({
+          where: { id: professorPageId },
+        });
+
+        if (!profPage) {
+          console.error(`No professor page found with ID: ${professorPageId}`);
+          throw new Error(`Professor page not found with ID: ${professorPageId}`);
+        }
+      }
+
+      return prisma.comment.findMany({
+        where: {
+          course_id: courseId,
+          professor_page_id: professorPageId,
+          parent_id: parentId,
         },
-        replies: {
-          select: {
-            id: true,
-            content: true,
-            created_at: true,
-            updated_at: true,
-            user: {
-              select: {
-                id: true,
-                name: true,
-                user_type: true,
-              },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              user_type: true,
             },
           },
-          orderBy: {
-            created_at: 'desc',
+          replies: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  user_type: true,
+                },
+              },
+            },
+            orderBy: {
+              created_at: 'desc',
+            },
           },
         },
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+        orderBy: {
+          created_at: 'desc',
+        },
+      });
+    } catch (error) {
+      console.error('Error in getComments:', error);
+      throw error;
+    }
   }
 
   async updateComment(commentId: number, content: string) {
