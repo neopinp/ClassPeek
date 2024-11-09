@@ -5,8 +5,8 @@
       <label for="email">Email:</label>
       <input type="email" id="email" v-model="email" required />
 
-      <label for="username">Username:</label>
-      <input type="username" id="username" v-model="userData.username" required />
+      <label for="name">Username:</label>
+      <input type="name" id="name" v-model="userData.name" required />
 
       <label for="password">Password:</label>
       <input type="password" id="password" v-model="password" required />
@@ -30,9 +30,9 @@ export default defineComponent({
   data() {
     return {
       userData: {
-        usertype: "STUDENT",
-        username: '',
-        dob:'2024-11-01'
+        password: "",
+        name: '',
+        email:'',
       },
       email:"",
       password:'',
@@ -44,9 +44,11 @@ export default defineComponent({
       if (this.password !== this.confirmPassword) {
         alert("Passwords do not match!");
         return;
-      }
+      } 
+      this.userData.password = this.password;
+      this.userData.email = this.email;
       try {
-        await axios.post(`${API_BASE_URL}/users`,[this.password,this.userData]);
+        await axios.post(`${API_BASE_URL}/users`,this.userData);
         this.$router.push('/signin');
       } catch (error) {
           alert('Error creating user');
@@ -56,4 +58,3 @@ export default defineComponent({
   }
 });
 </script>
-
