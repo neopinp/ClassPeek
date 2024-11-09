@@ -46,198 +46,117 @@
         </div>
 
         <!-- Comments Section -->
-        <div class="comments-section mt-8 max-w-4xl">
-        <h3 class="text-xl font-semibold mb-4">Comments</h3>
-        
-        <!-- Main Comment Form -->
-        <div class="comment-form mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <textarea
-            v-model="newComment"
-            class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-            placeholder="Write a comment..."
-            rows="3"
-          ></textarea>
-          <div class="mt-2 flex justify-end">
-            <button
-              @click="submitComment"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <span>Post Comment</span>
-            </button>
+        <div class="comments-section">
+          <h3>Comments</h3>
+          
+          <!-- Main Comment Form -->
+          <div class="comment-form">
+            <textarea
+              v-model="newComment"
+              placeholder="Write a comment..."
+            ></textarea>
+            <div class="comment-actions">
+              <button class="btn btn-primary" @click="submitComment">
+                Post Comment
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Comments List -->
-        <div class="comments-list space-y-6">
-          <div v-for="comment in comments" :key="comment.id" 
-              class="comment-thread"
-          >
-            <!-- Main Comment -->
-            <div class="comment-item bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold">{{ comment.user.name }}</span>
-                    <span 
-                      class="text-xs px-2 py-1 rounded-full"
-                      :class="{
-                        'bg-blue-100 text-blue-800': comment.user.user_type === 'PROFESSOR',
-                        'bg-green-100 text-green-800': comment.user.user_type === 'STUDENT'
+          <!-- Comments List -->
+          <div class="comments-list">
+            <div v-for="comment in comments" :key="comment.id" class="comment-thread">
+              <!-- Parent Comment -->
+              <div class="comment-item">
+                <div class="user-info">
+                  <div class="user-header">
+                    <span class="user-name">{{ comment.user.name }}</span>
+                    <span class="user-type-badge" 
+                      :class="{ 
+                        'professor': comment.user.user_type === 'PROFESSOR',
+                        'student': comment.user.user_type === 'STUDENT'
                       }"
                     >
                       {{ comment.user.user_type }}
                     </span>
                   </div>
-                  <div class="text-sm text-gray-500 mt-1">
-                    <span :title="formatDate(comment.created_at)">
-                      {{ formatRelativeTime(comment.created_at) }}
-                    </span>
-                    <span 
-                      v-if="comment.updated_at !== comment.created_at" 
-                      class="ml-2 italic"
-                      :title="formatDate(comment.updated_at)"
-                    >
-                      (edited {{ formatRelativeTime(comment.updated_at) }})
-                    </span>
+                  <span class="timestamp" :title="formatDate(comment.created_at)">
+                    {{ formatRelativeTime(comment.created_at) }}
+                  </span>
+                </div>
+
+                <div class="comment-content">
+                  <div v-if="editingComment?.id === comment.id" class="edit-form">
+                    <textarea v-model="editingComment.content"></textarea>
+                    <div class="comment-actions">
+                      <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+                      <button class="btn btn-primary" @click="saveEdit">Save</button>
+                    </div>
+                  </div>
+                  <div v-else>{{ comment.content }}</div>
+                </div>
+
+                <div class="comment-actions">
+                  <button class="action-button" @click="startReply(comment)">Reply</button>
+                  <div v-if="isCurrentUser(comment.user.id)" class="user-actions">
+                    <button class="edit-button" @click="startEdit(comment)">Edit</button>
+                    <button class="delete-button" @click="deleteComment(comment.id)">Delete</button>
                   </div>
                 </div>
-                <div v-if="isCurrentUser(comment.user.id)" class="flex gap-2">
-                  <button
-                    @click="startEdit(comment)"
-                    class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    @click="deleteComment(comment.id)"
-                    class="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-                  >
-                    Delete
-                  </button>
+
+                <!-- Reply Form -->
+                <div v-if="replyingTo === comment.id" class="reply-form">
+                  <textarea
+                    v-model="replyContent"
+                    placeholder="Write a reply..."
+                  ></textarea>
+                  <div class="comment-actions">
+                    <button class="btn btn-secondary" @click="cancelReply">Cancel</button>
+                    <button class="btn btn-primary" @click="submitReply(comment.id)">Reply</button>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Edit Form -->
-              <div v-if="editingComment && editingComment.id === comment.id" 
-                  class="mt-4"
-              >
-                <textarea
-                  v-model="editingComment.content"
-                  class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  rows="3"
-                ></textarea>
-                <div class="mt-2 flex gap-2 justify-end">
-                  <button
-                    @click="cancelEdit"
-                    class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                <!-- Replies -->
+                <div v-if="comment.replies?.length" class="replies">
+                  <div v-for="reply in comment.replies" 
+                      :key="reply.id"
+                      class="reply-item"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    @click="saveEdit"
-                    class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-              <div v-else class="mt-3 text-gray-700">
-                {{ comment.content }}
-              </div>
-
-              <!-- Reply Button -->
-              <div class="mt-4 flex justify-between items-center">
-                <button
-                  @click="startReply(comment)"
-                  class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                >
-                  Reply
-                </button>
-              </div>
-
-              <!-- Reply Form -->
-              <div v-if="replyingTo === comment.id" 
-                  class="mt-4 pl-4 border-l-2 border-gray-200"
-              >
-                <textarea
-                  v-model="replyContent"
-                  class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Write a reply..."
-                  rows="2"
-                ></textarea>
-                <div class="mt-2 flex gap-2 justify-end">
-                  <button
-                    @click="cancelReply"
-                    class="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    @click="submitReply(comment.id)"
-                    class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Post Reply
-                  </button>
-                </div>
-              </div>
-
-              <!-- Replies -->
-              <div v-if="comment.replies && comment.replies.length > 0" 
-                  class="mt-4 space-y-3 pl-6 border-l-2 border-gray-200"
-              >
-                <div v-for="reply in comment.replies" 
-                    :key="reply.id"
-                    class="reply-item bg-gray-50 p-4 rounded-lg"
-                >
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <div class="flex items-center gap-2">
-                        <span class="font-semibold">{{ reply.user.name }}</span>
-                        <span 
-                          class="text-xs px-2 py-0.5 rounded-full"
+                    <div class="user-info">
+                      <div class="user-header">
+                        <span class="user-name">{{ reply.user.name }}</span>
+                        <span class="user-type-badge"
                           :class="{
-                            'bg-blue-100 text-blue-800': reply.user.user_type === 'PROFESSOR',
-                            'bg-green-100 text-green-800': reply.user.user_type === 'STUDENT'
+                            'professor': reply.user.user_type === 'PROFESSOR',
+                            'student': reply.user.user_type === 'STUDENT'
                           }"
                         >
                           {{ reply.user.user_type }}
                         </span>
                       </div>
-                      <div class="text-sm text-gray-500 mt-1">
+                      <span class="timestamp" :title="formatDate(reply.created_at)">
                         {{ formatRelativeTime(reply.created_at) }}
-                      </div>
+                      </span>
                     </div>
-                    <div v-if="isCurrentUser(reply.user.id)" class="flex gap-2">
-                      <button
-                        @click="startEdit(reply)"
-                        class="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        @click="deleteComment(reply.id)"
-                        class="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
+
+                    <div class="comment-content">
+                      {{ reply.content }}
                     </div>
-                  </div>
-                  <div class="mt-2 text-gray-700">
-                    {{ reply.content }}
+
+                    <div v-if="isCurrentUser(reply.user.id)" class="comment-actions">
+                      <button class="edit-button" @click="startEdit(reply)">Edit</button>
+                      <button class="delete-button" @click="deleteComment(reply.id)">Delete</button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- No Comments State -->
-          <div v-if="!comments.length" 
-              class="text-center py-8 bg-white rounded-lg border border-gray-200"
-          >
-            <span class="text-gray-500 italic">No comments yet. Be the first to comment!</span>
+            <!-- No Comments State -->
+            <div v-if="!comments.length" class="no-comments">
+              Be the first to comment!
+            </div>
           </div>
         </div>
-      </div>
       </article>
     </main>
   </div>
@@ -523,239 +442,382 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.info-page {
-  margin-top: 50px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f5f7fa;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
-  padding: 0;
-  margin: 50px 0 0 0;
-  font-size: 16px;
-  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-}
+  /* ===== Base Page Layout ===== */
+  .info-page {
+    margin: 50px 0 0 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
+    font-size: 16px;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  }
 
-.info-page main {
-  display: flex;
-  min-height: 460px;
-  gap: 20px;
-  padding: 20px;
-  margin-bottom: 0;
-}
+  .info-page main {
+    display: flex;
+    min-height: 460px;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 0;
+  }
 
-.sidebar {
-  flex: 1;
-  min-width: 250px;
-  max-width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+  /* ===== Sidebar Styles ===== */
+  .sidebar {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-.profile-card, .info-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  /* Deeper, layered shadow effect */
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.05),
-    0 8px 16px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+  .profile-card, .info-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 4px 8px rgba(0, 0, 0, 0.05),
+      0 8px 16px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
 
-.profile-card:hover, .info-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.12),
-    0 8px 16px rgba(0, 0, 0, 0.08),
-    0 16px 24px rgba(0, 0, 0, 0.06);
-}
+  .profile-card:hover, .info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.12),
+      0 8px 16px rgba(0, 0, 0, 0.08),
+      0 16px 24px rgba(0, 0, 0, 0.06);
+  }
 
-.image-container {
-  width: 100%;
-  height: 200px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  overflow: hidden;
-  /* Add subtle inner shadow */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  /* Profile Image */
+  .image-container {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
 
-.profile-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+  .profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-.image-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
+  .image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
 
-.title {
-  font-size: 1.2em;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 10px;
-}
+  .title {
+    font-size: 1.2em;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 10px;
+  }
 
-.main-content {
-  flex: 3;
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  /* Deeper shadow with slight color tint */
-  box-shadow: 
-    0 4px 6px rgba(50, 50, 93, 0.11),
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 8px 16px rgba(0, 0, 0, 0.04);
-}
+  /* ===== Main Content Area ===== */
+  .main-content {
+    flex: 3;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 
+      0 4px 6px rgba(50, 50, 93, 0.11),
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 8px 16px rgba(0, 0, 0, 0.04);
+  }
 
-.main-content h2 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #eee;
-}
+  .main-content h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+  }
 
-.content-body {
-  line-height: 1.6;
-}
+  .content-body {
+    line-height: 1.6;
+  }
 
-.prerequisites {
-  margin-top: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  /* Inset shadow effect */
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.05);
-}
+  /* Prerequisites Section */
+  .prerequisites {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.05);
+  }
 
+  .prerequisites h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
 
-.prerequisites h3 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
+  .prerequisites ul {
+    list-style-type: none;
+    padding: 0;
+  }
 
-.prerequisites ul {
-  list-style-type: none;
-  padding: 0;
-}
+  .prerequisites li {
+    padding: 5px 0;
+    color: #666;
+  }
 
-.prerequisites li {
-  padding: 5px 0;
-  color: #666;
-}
+  /* ===== Comments Section ===== */
+  .comments-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: transparent;
+  }
 
-.comments-section {
-  background-color: #f8f9fa;
-  padding: 30px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+  .comments-section h3 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
 
-.comments-section h2 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-}
+  /* Comment Form */
+  .comment-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 4px 6px rgba(0, 0, 0, 0.02);
+    margin-bottom: 2rem;
+  }
 
-.comments-list {
-  list-style-type: none;
-  padding: 0;
-}
+  .comment-form textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    min-height: 100px;
+    font-size: 0.95rem;
+    color: #374151;
+    transition: all 0.2s;
+  }
 
-.comment-item {
-  background: white;
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-  /* Subtle lift effect */
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.05),
-    0 4px 6px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+  .comment-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  }
 
-.comment-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.08),
-    0 6px 12px rgba(0, 0, 0, 0.05);
-}
+  /* Comment Thread and Items */
+  .comment-thread {
+    margin-bottom: 1.5rem;
+  }
 
+  .comment-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 4px 6px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
 
-.no-comments {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-}
+  .comment-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.08),
+      0 6px 12px rgba(0, 0, 0, 0.05);
+  }
 
-.comment-form textarea {
-  background: white;
-  border: 1px solid #ddd;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
+  /* User Information */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-.comment-form textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-  outline: none;
-}
+  .user-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-.comment-form button {
-  transition: all 0.2s;
-}
+  .user-name {
+    font-weight: 600;
+    color: #2c3e50;
+  }
 
-.comment-form button:hover {
-  transform: translateY(-1px);
-}
+  .timestamp {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
 
-.comment-item {
-  position: relative;
-  padding: 20px;
-}
+  /* User Type Badges */
+  .user-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
 
-.comment-item button {
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
+  .user-type-badge.professor {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
 
-.comment-item button:hover {
-  transform: translateY(-1px);
-}
+  .user-type-badge.student {
+    background-color: #dcfce7;
+    color: #166534;
+  }
 
-.comment-item textarea {
-  background: white;
-  border: 1px solid #ddd;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
+  /* Comment Actions */
+  .comment-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+  }
 
-.comment-item textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-  outline: none;
-}
+  .action-button {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+  }
 
-.professor-info, .course-info {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  .action-button:hover {
+    transform: translateY(-1px);
+  }
 
-.professor-info p, .course-info p {
-  margin: 0;
-  color: #666;
-}
+  .edit-button {
+    color: #3b82f6;
+  }
 
-strong {
-  color: #2c3e50;
-}
+  .edit-button:hover {
+    color: #2563eb;
+  }
+
+  .delete-button {
+    color: #ef4444;
+  }
+
+  .delete-button:hover {
+    color: #dc2626;
+  }
+
+  /* Reply Section */
+  .replies {
+    margin-top: 1rem;
+    margin-left: 2rem;
+    padding-left: 1.5rem;
+    border-left: 2px solid #e5e7eb;
+  }
+
+  .reply-item {
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .reply-form {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border-left: 2px solid #3b82f6;
+  }
+
+  .reply-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    min-height: 80px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background-color: #3b82f6;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background-color: #6b7280;
+    color: white;
+  }
+
+  .btn-secondary:hover {
+    background-color: #4b5563;
+    transform: translateY(-1px);
+  }
+
+  /* Empty State */
+  .no-comments {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+    border: 1px solid #e5e7eb;
+  }
+
+  /* Info Cards Content */
+  .professor-info, .course-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .professor-info p, .course-info p {
+    margin: 0;
+    color: #666;
+  }
+
+  strong {
+    color: #2c3e50;
+  }
+
+  /* ===== Responsive Design ===== */
+  @media (max-width: 768px) {
+    .info-page main {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      max-width: none;
+    }
+
+    .replies {
+      margin-left: 1rem;
+      padding-left: 1rem;
+    }
+
+    .comment-item {
+      padding: 1rem;
+    }
+  }
 </style>
