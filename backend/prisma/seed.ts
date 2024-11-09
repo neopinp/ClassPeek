@@ -4,130 +4,151 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function seed() {
-  // ===== PROFESSORS =====
-  const professors = await Promise.all([
+  const testUsers = await Promise.all([
     prisma.user.create({
       data: {
-        name: 'Mary Johnson',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1980-03-20'),
+        name: 'Test Student',
+        user_type: UserType.STUDENT,
+        dob: new Date('2000-01-01'),
         credentials: {
           create: {
-            school_email: 'mary.johnson@university.edu',
+            school_email: 'test.student@university.edu',
             password: await bcrypt.hash('password123', 10)
           }
         },
-        professor_page: {
+        profile: {
           create: {
-            bio: 'PhD in Mathematics, specializing in Abstract Algebra',
-            office_hours: 'TR 1-3PM',
-            office_location: 'HC3020'
+            blurb: 'Test student account for development',
+            description: 'This is a test account used for development and testing purposes.'
           }
         }
       }
     }),
     prisma.user.create({
       data: {
-        name: 'John Smith',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1975-05-15'),
+        name: 'Jane Doe',
+        user_type: UserType.STUDENT,
+        dob: new Date('2001-05-15'),
         credentials: {
           create: {
-            school_email: 'john.smith@university.edu',
+            school_email: 'jane.doe@university.edu',
             password: await bcrypt.hash('password123', 10)
           }
         },
-        professor_page: {
+        profile: {
           create: {
-            bio: 'PhD in Computer Science with focus on algorithms',
-            office_hours: 'MWF 2-4PM',
-            office_location: 'HC4050'
+            blurb: 'Computer Science Major',
+            description: 'Passionate about software development and artificial intelligence.'
           }
         }
       }
     }),
     prisma.user.create({
       data: {
-        name: 'Sarah Chen',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1982-08-10'),
+        name: 'Bob Smith',
+        user_type: UserType.STUDENT,
+        dob: new Date('2000-08-22'),
         credentials: {
           create: {
-            school_email: 'sarah.chen@university.edu',
+            school_email: 'bob.smith@university.edu',
             password: await bcrypt.hash('password123', 10)
           }
         },
-        professor_page: {
+        profile: {
           create: {
-            bio: 'PhD in Physics, research focus on Quantum Computing',
-            office_hours: 'MW 10AM-12PM',
-            office_location: 'SC2010'
-          }
-        }
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: 'Michael Brown',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1978-11-25'),
-        credentials: {
-          create: {
-            school_email: 'michael.brown@university.edu',
-            password: await bcrypt.hash('password123', 10)
-          }
-        },
-        professor_page: {
-          create: {
-            bio: 'PhD in Chemistry, specializing in Organic Chemistry',
-            office_hours: 'TR 9-11AM',
-            office_location: 'SC1050'
-          }
-        }
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: 'Emily Taylor',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1983-04-30'),
-        credentials: {
-          create: {
-            school_email: 'emily.taylor@university.edu',
-            password: await bcrypt.hash('password123', 10)
-          }
-        },
-        professor_page: {
-          create: {
-            bio: 'PhD in Biology, research in Genetics',
-            office_hours: 'MWF 1-3PM',
-            office_location: 'SC3030'
-          }
-        }
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: 'David Wilson',
-        user_type: UserType.PROFESSOR,
-        dob: new Date('1977-09-05'),
-        credentials: {
-          create: {
-            school_email: 'david.wilson@university.edu',
-            password: await bcrypt.hash('password123', 10)
-          }
-        },
-        professor_page: {
-          create: {
-            bio: 'PhD in Computer Science, specializing in Operating Systems and Computer Architecture',
-            office_hours: 'MW 3-5PM',
-            office_location: 'HC4070'
+            blurb: 'Mathematics Major',
+            description: 'Interested in pure mathematics and theoretical computer science.'
           }
         }
       }
     })
   ]);
-  
+  // ===== PROFESSORS =====
+ // ===== PROFESSORS =====
+ const professorData = [
+  {
+    name: 'Mary Johnson',
+    email: 'mary.johnson@university.edu',
+    dob: new Date('1980-03-20'),
+    bio: 'PhD in Mathematics, specializing in Abstract Algebra',
+    officeHours: 'TR 1-3PM',
+    officeLocation: 'HC3020'
+  },
+  {
+    name: 'John Smith',
+    email: 'john.smith@university.edu',
+    dob: new Date('1975-05-15'),
+    bio: 'PhD in Computer Science with focus on algorithms',
+    officeHours: 'MWF 2-4PM',
+    officeLocation: 'HC4050'
+  },
+  {
+    name: 'Sarah Chen',
+    email: 'sarah.chen@university.edu',
+    dob: new Date('1982-08-10'),
+    bio: 'PhD in Physics, research focus on Quantum Computing',
+    officeHours: 'MW 10AM-12PM',
+    officeLocation: 'SC2010'
+  },
+  {
+    name: 'Michael Brown',
+    email: 'michael.brown@university.edu',
+    dob: new Date('1978-11-25'),
+    bio: 'PhD in Chemistry, specializing in Organic Chemistry',
+    officeHours: 'TR 9-11AM',
+    officeLocation: 'SC1050'
+  },
+  {
+    name: 'Emily Taylor',
+    email: 'emily.taylor@university.edu',
+    dob: new Date('1983-04-30'),
+    bio: 'PhD in Biology, research in Genetics',
+    officeHours: 'MWF 1-3PM',
+    officeLocation: 'SC3030'
+  },
+  {
+    name: 'David Wilson',
+    email: 'david.wilson@university.edu',
+    dob: new Date('1977-09-05'),
+    bio: 'PhD in Computer Science, specializing in Operating Systems and Computer Architecture',
+    officeHours: 'MW 3-5PM',
+    officeLocation: 'HC4070'
+  }
+];
+
+const professors = await Promise.all(
+  professorData.map(async (prof) => {
+    // Create the user first
+    const user = await prisma.user.create({
+      data: {
+        name: prof.name,
+        user_type: UserType.PROFESSOR,
+        dob: prof.dob,
+        credentials: {
+          create: {
+            school_email: prof.email,
+            password: await bcrypt.hash('password123', 10)
+          }
+        },
+      },
+    });
+
+    // Create the professor page separately and explicitly connect it
+    const professorPage = await prisma.professorPage.create({
+      data: {
+        bio: prof.bio,
+        office_hours: prof.officeHours,
+        office_location: prof.officeLocation,
+        professor: {
+          connect: { id: user.id }
+        }
+      },
+    });
+
+    // Return both for reference
+    return { user, professorPage };
+  })
+);
 
   // ===== SUBJECTS =====
   const subjects = await Promise.all([
@@ -204,7 +225,15 @@ async function seed() {
 
   // For easier reference in course creation
   const [cs, math, physics, chemistry, biology] = subjects;
-  const [profMary, profJohn, profSarah, profMichael, profEmily, profDavid] = professors;
+  //const [profMary, profJohn, profSarah, profMichael, profEmily, profDavid] = professors;
+  // Updated professor references - since professors now has both user and professorPage
+  const profMary = professors[0].user;
+  const profJohn = professors[1].user;
+  const profSarah = professors[2].user;
+  const profMichael = professors[3].user;
+  const profEmily = professors[4].user;
+  const profDavid = professors[5].user;
+  
   const [csMajor, mathMajor, physicsMajor, chemistryMajor, bioMajor] = majors;
 
   // ===== COURSES =====

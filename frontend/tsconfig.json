@@ -14,7 +14,12 @@
     "sourceMap": true,
     "baseUrl": ".",
     "types": [
-      "webpack-env"
+      "webpack-env",
+      "vue",              // Add Vue type definitions
+      "node",             // Add Node.js type definitions
+      "@types/node",      // Additional Node.js types
+      "vue-router",       // Since you're using vue-router
+      "axios"            // Since you're using axios
     ],
     "paths": {
       "@/*": [
@@ -30,6 +35,7 @@
   },
   "include": [
     "src/**/*.ts",
+    "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",

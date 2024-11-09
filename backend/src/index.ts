@@ -6,6 +6,7 @@ import subjectRoutes from './routes/subjects';
 import majorRoutes from './routes/majors';
 import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
+import commentRoutes from './routes/comments';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +29,7 @@ app.use('/api', subjectRoutes);
 app.use('/api', majorRoutes);
 app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
+app.use('/api', commentRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
