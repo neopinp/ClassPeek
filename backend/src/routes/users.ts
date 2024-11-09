@@ -22,22 +22,18 @@ router.get('/users', async (req: Request, res: Response) => {
 
 router.post('/users', async (req: Request, res: Response) => {
   try {
-    const userData = req.body;
-    const name = userData.name;
-    const dob =  new Date('1980-03-20');
-    const user_type = UserType.STUDENT; 
-    const email = userData.email;
-    const password = await bcrypt.hash(userData.password, 10);
+    const { password, userData } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    
 
     const user = await prisma.user.create({
       data: {
-        name: name,
-        user_type: user_type,  // Using enum to ensure type safety
-        dob: dob,
+        ...userData,
         credentials: {
           create: {
             school_email: userData.email,
-            password: password
+            password: hashedPassword
           }
         }
       },
