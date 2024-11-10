@@ -12,6 +12,11 @@ import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
 
+import MajorsPage from '@/components/MajorsPage.vue'
+import CourseForm from '@/components/CourseForm.vue'
+import MajorForm from '@/components/MajorForm.vue'
+import SubjectForm from '@/components/SubjectForm.vue'
+
 const API_BASE_URL = 'http://localhost:3000/api';
 
 const routes: Array<RouteRecordRaw> = [
@@ -34,10 +39,34 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Subjects - ClassPeek' }
   },
   {
+    path: '/majors',
+    name: 'MajorsPage',
+    component: MajorsPage,
+    meta: { title: 'Majors - ClassPeek' }
+  },
+  {
     path: '/profile',
     name: 'ProfilePage',
     component: ProfilePage,
     meta: { title: 'Profile - ClassPeek' }
+  },
+  {
+    path: '/course-form/:id?',
+    name: 'CourseForm',
+    component: CourseForm,
+    meta: { title: 'Course Form - ClassPeek' }
+  },
+  {
+    path: '/major-form/:id?',
+    name: 'MajorForm',
+    component: MajorForm,
+    meta: { title: 'Major Form - ClassPeek' }
+  },
+  {
+    path: '/subject-form/:id?',
+    name: 'SubjectForm',
+    component: SubjectForm,
+    meta: { title: 'Subject Form - Classpeek'}
   },
   {
     path: '/info/:type/:id',
