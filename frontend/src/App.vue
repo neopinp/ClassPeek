@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" v-on:signIn="signIn">
     <nav>
       <ul>
         <li>
@@ -108,6 +108,12 @@ export default defineComponent({
     this.userRole = role;
     this.isAuthenticated = role !== "guest";
   },
+
+  mounted() {
+    Promise.all([
+      
+    ]);
+  }
 });
 </script>
 
