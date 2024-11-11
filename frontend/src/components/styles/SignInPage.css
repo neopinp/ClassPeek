@@ -76,3 +76,28 @@
   transform: translateY(2px);
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Simulate button press */
 }
+
+.success-toast {
+  position: fixed;
+  top: 4rem; /* Below app bar */
+  right: 1rem;
+  background-color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  border-left: 4px solid #10B981;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 9999; /* Make sure it's above everything */
+  max-width: 300px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

@@ -8,7 +8,6 @@ import majorRoutes from './routes/majors';
 import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
-import { requireAuth } from './middleware/auth.middleware';
 
 const app: Application = express();
 const prisma = new PrismaClient();

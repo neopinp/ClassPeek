@@ -7,19 +7,19 @@ async function seed() {
   const testUsers = await Promise.all([
     prisma.user.create({
       data: {
-        name: 'Test Student',
+        name: 'John Doe',
         user_type: UserType.STUDENT,
         dob: new Date('2000-01-01'),
         credentials: {
           create: {
-            school_email: 'test.student@university.edu',
+            school_email: 'john.doe@university.edu',
             password: await bcrypt.hash('password123', 10)
           }
         },
         profile: {
           create: {
-            blurb: 'Test student account for development',
-            description: 'This is a test account used for development and testing purposes.'
+            blurb: 'Math Major',
+            description: 'Likes math. Dislikes matrices'
           }
         }
       }
@@ -63,7 +63,7 @@ async function seed() {
       }
     })
   ]);
-  // ===== PROFESSORS =====
+
  // ===== PROFESSORS =====
  const professorData = [
   {
@@ -225,7 +225,6 @@ const professors = await Promise.all(
 
   // For easier reference in course creation
   const [cs, math, physics, chemistry, biology] = subjects;
-  //const [profMary, profJohn, profSarah, profMichael, profEmily, profDavid] = professors;
   // Updated professor references - since professors now has both user and professorPage
   const profMary = professors[0].user;
   const profJohn = professors[1].user;

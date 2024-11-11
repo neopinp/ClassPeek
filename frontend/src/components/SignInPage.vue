@@ -1,4 +1,11 @@
 <template>
+  <!-- Success Toast -->
+  <div
+      v-if="showSuccessToast"
+      class="success-toast"
+    >
+      {{ successMessage }}
+    </div>
   <div class="signin-container">
     <h2>Sign In</h2>
     <form @submit.prevent="handleSignIn" class="signin-form">
@@ -23,7 +30,9 @@ export default defineComponent({
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      successMessage: '',
+      showSuccessToast: false,
     };
   },
   methods: {
@@ -36,9 +45,15 @@ export default defineComponent({
 
         // Fetch session after login
         await sessionStore.fetchSession();
+        const message = `Logging in as ${this.email}`
+        this.successMessage = message
+        this.showSuccessToast = true;
 
-        alert("Login successful");
-        this.$router.push("/profile");
+        setTimeout(() => {
+          this.showSuccessToast = false;
+          this.$router.push("/profile");
+        }, 2000)
+        
       } catch (error) {
         alert("Error logging in");
       }

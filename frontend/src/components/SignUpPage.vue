@@ -1,4 +1,11 @@
 <template>
+  <!-- Success Toast -->
+  <div
+    v-if="showSuccessToast"
+    class="success-toast"
+  >
+    {{ successMessage }}
+  </div>
   <div class="signup-container">
     <h2>Create Account</h2>
     <form @submit.prevent="handleSignUp" class="signup-form">
@@ -14,8 +21,8 @@
       <label for="confirmPassword">Confirm Password:</label>
       <input type="password" id="confirmPassword" v-model="confirmPassword" required />
 
-      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
-      <p v-if="successMessage" class="success">{{ successMessage }}</p>
+      <!--<p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="successMessage" class="success">{{ successMessage }}</p>-->
       <button type="submit">Create Account</button>
     </form>
   </div>
@@ -36,7 +43,8 @@ export default defineComponent({
         password: "",
       },
       confirmPassword: "",
-      successMessage: "",
+      successMessage: '',
+      showSuccessToast: false,
       errorMessage: "",
     };
   },
@@ -52,7 +60,11 @@ export default defineComponent({
         await api.post("/auth/signup", this.userData);
 
         this.successMessage = "Account created successfully!";
-        this.$router.push("/signin");
+        this.showSuccessToast = true;
+        setTimeout(() => {
+          this.showSuccessToast = false;
+          this.$router.push("/signin");
+        }, 2000)
       } catch (error) {
         this.errorMessage = "Failed to create an account. Please try again.";
         console.error("Sign-up error:", error);
