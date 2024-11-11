@@ -12,6 +12,8 @@
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/course-form">Course Form</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/major-form">Major Form</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/subject-form">Subject Form</router-link></li>
+
+        <!-- Profile icon -->
         <li id="profileDropdown">
           <div id="profileIcon" @click="toggleDropdown">
             <font-awesome-icon :icon="['fas', 'user']" />
@@ -50,7 +52,12 @@ export default defineComponent({
     },
     viewProfile() {
       this.isDropdownOpen = false;
-      this.$router.push("/profile");
+      // For professors, we direct them to their info page as it is their 'profile'
+      if (this.user.user.user_type === "PROFESSOR") {
+        this.$router.push(`/info/professor/${this.user.user.id}`);
+      } else {
+        this.$router.push("/profile");
+      }
     },
     async logout() {
       sessionStore.logout();

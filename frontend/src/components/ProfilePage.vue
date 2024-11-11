@@ -33,6 +33,7 @@ export default defineComponent({
 
     return {
       user: sessionStore.user,
+      isProfessor: sessionStore.user.user_type === "PROFESSOR",
     };
   },
 });

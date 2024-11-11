@@ -137,6 +137,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
               description: true, // Detailed bio
             },
           },
+          professor_page: req.session?.userType === 'PROFESSOR' ? true : false,
         },
       });
 
@@ -152,6 +153,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
         dob: user.dob,
         bio: user.profile?.blurb || user.profile?.description || null, // Use available bio
         email: user.credentials?.school_email || null,
+        professor_page: user.professor_page || null,
       };
 
       res.json(responseData);
