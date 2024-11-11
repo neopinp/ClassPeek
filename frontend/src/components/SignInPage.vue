@@ -15,10 +15,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import axios from 'axios';
+import api from "../api";
+import sessionStore from "../store/session";
 import "./styles/SignInPage.css";
-
-const API_BASE_URL = 'http://localhost:3000/api';
 
 export default defineComponent({
   data() {
@@ -30,16 +29,20 @@ export default defineComponent({
   methods: {
     async handleSignIn() {
       try {
-        const user : any = await axios.get(`${API_BASE_URL}/users/:${this.email}/:${this.password}`); // To be fixed
-        // Somehow send user info to app component and have it run the sign up method
+        await api.post("/auth/login", {
+          email: this.email,
+          password: this.password,
+        });
+
+        // Fetch session after login
+        await sessionStore.fetchSession();
+
+        alert("Login successful");
+        this.$router.push("/profile");
       } catch (error) {
-        alert('Error finding user');
+        alert("Error logging in");
       }
-      
-      
-    }
+    },
   }
 });
 </script>
-
-

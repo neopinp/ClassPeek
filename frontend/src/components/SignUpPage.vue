@@ -3,17 +3,18 @@
     <h2>Create Account</h2>
     <form @submit.prevent="handleSignUp" class="signup-form">
       <label for="email">Email:</label>
-      <input type="email" id="email" v-model="email" required />
+      <input type="email" id="email" v-model="userData.email" required />
 
       <label for="name">Username:</label>
-      <input type="name" id="name" v-model="userData.name" required />
+      <input type="text" id="name" v-model="userData.name" required />
 
       <label for="password">Password:</label>
-      <input type="password" id="password" v-model="password" required />
+      <input type="password" id="password" v-model="userData.password" required />
 
       <label for="confirmPassword">Confirm Password:</label>
       <input type="password" id="confirmPassword" v-model="confirmPassword" required />
 
+      <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
       <button type="submit">Create Account</button>
     </form>
   </div>
@@ -21,40 +22,40 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import axios from 'axios';
+import api from "../api";
 import "./styles/SignUpPage.css";
 
-const API_BASE_URL = 'http://localhost:3000/api';
-
 export default defineComponent({
+  name: "SignUpPage",
   data() {
     return {
       userData: {
+        email: "",
+        name: "",
         password: "",
-        name: '',
-        email:'',
       },
-      email:"",
-      password:'',
-      confirmPassword: ''
+      confirmPassword: "",
+      errorMessage: "",
     };
   },
   methods: {
     async handleSignUp() {
-      if (this.password !== this.confirmPassword) {
-        alert("Passwords do not match!");
+      // Basic validation for password match
+      if (this.userData.password !== this.confirmPassword) {
+        this.errorMessage = "Passwords do not match!";
         return;
-      } 
-      this.userData.password = this.password;
-      this.userData.email = this.email;
+      }
+
       try {
-        await axios.post(`${API_BASE_URL}/users`,this.userData);
-        this.$router.push('/signin');
+        await api.post("/auth/signup", this.userData);
+
+        alert("Account created successfully. Please log in.");
+        this.$router.push("/signin");
       } catch (error) {
-          alert('Error creating user');
-        }
-      
-    }
-  }
+        this.errorMessage = "Failed to create an account. Please try again.";
+        console.error("Sign-up error:", error);
+      }
+    },
+  },
 });
 </script>

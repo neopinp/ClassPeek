@@ -2,6 +2,9 @@
   <div class="homePage">
     <main>
       <h1>Welcome to ClassPeek!</h1>
+      <!-- Greeting based on user session -->
+      <p v-if="userName">Hi, {{ userName }}</p>
+      <p v-else>Hi, Guest</p>
       <p>This is the homepage of our application.</p>
       <br />
       <div>
@@ -60,6 +63,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import sessionStore from "../store/session";
 import axios from 'axios';
 import './styles/HomePage.css';
 
@@ -68,6 +72,7 @@ export default defineComponent({
   name: 'HomePage',
   data() {
     return {
+      userName: sessionStore.user.name || "Guest",
       majors: [] as any[],
       professors: [] as any[],
       subjects: [] as any[],
@@ -104,6 +109,9 @@ export default defineComponent({
   },
 
   mounted() {
+    sessionStore.fetchSession().then(() => {
+      this.userName = sessionStore.user.name || "Guest"
+    })
     Promise.all([
       this.fetchMajors(),
       this.fetchProfessors(),
