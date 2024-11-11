@@ -8,6 +8,7 @@ import majorRoutes from './routes/majors';
 import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
+import { requireAuth } from './middleware/auth.middleware';
 
 const app: Application = express();
 const prisma = new PrismaClient();
@@ -25,7 +26,14 @@ app.use(cookieSession({
   keys: ['development-static-key-123'],
   maxAge: 24 * 60 * 60 * 1000,
   secure: false,
+  sameSite: 'lax', // Cookies persist for navigation and subdomains.
 }));
+
+// Debugging session
+app.use((req, res, next) => {
+  console.log("Session in middleware:", req.session);
+  next();
+});
 
 // Middleware to track active sessions with user names
 const activeSessions: Record<string, { userId: number; userType: string; userName: string }> = {};

@@ -130,7 +130,7 @@
                             'student': reply.user.user_type === 'STUDENT'
                           }"
                         >
-                          {{ reply.user.user_type }}
+                          {{ reply.user.user_type || "Unknown"}}
                         </span>
                       </div>
                       <span class="timestamp" :title="formatDate(reply.created_at)">
@@ -163,7 +163,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
+import api from "../api";
+import sessionStore from "../store/session";
 import axios from 'axios';
 
 interface User {
@@ -182,10 +184,18 @@ interface Comment {
   replies?: Comment[];
 }
 
-const API_BASE_URL = 'http://localhost:3000/api';
-
 export default defineComponent({
   name: "InfoPage",
+
+  setup() {
+    onMounted(() => {
+      sessionStore.fetchSession();
+    });
+
+    return {
+      user: sessionStore.user,
+    };
+  },
 
   data() {
     return {
@@ -212,7 +222,6 @@ export default defineComponent({
   },
 
   methods: {
-    // Existing Info Page Methods
     getTitle() {
       if (!this.data) return '';
       return this.isProfessor ? this.data.name : this.data.title;
@@ -240,9 +249,7 @@ export default defineComponent({
           return;
         }
 
-        const response = await axios.get(
-          `${API_BASE_URL}/${this.type}s/${id}`
-        );
+        const response = await api.get(`/${this.type}s/${id}`);
         
         this.data = response.data;
         console.log('Fetched data:', this.data); // Debug log
@@ -284,9 +291,10 @@ export default defineComponent({
           }
         }
 
-        const response = await axios.get(`${API_BASE_URL}/comments`, { params });
+        const response = await api.get('/comments', { params });
         this.comments = response.data;
-        console.log('Fetched comments:', this.comments);
+        //console.log('Fetched comments:', this.comments);
+        console.log('Fetched comments with replies:', JSON.stringify(this.comments, null, 2));
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
@@ -365,8 +373,7 @@ export default defineComponent({
 
     // User Permission Methods
     isCurrentUser(userId: number) {
-      // TODO: Replace with actual user authentication check
-      return true;
+      return sessionStore.user.id === userId;
     },
 
     // Comment CRUD Methods
@@ -382,13 +389,28 @@ export default defineComponent({
           )
         };
 
-        console.log('Submitting comment with data:', commentData); // Debug log
-
-        await axios.post(`${API_BASE_URL}/comments`, commentData);
+        await api.post(`/comments`, commentData);
         this.newComment = '';
         await this.fetchComments();
       } catch (error) {
-        console.error('Error submitting comment:', error);
+        // Narrow down the type of `error`
+        if (axios.isAxiosError(error)) {
+          // Handle Axios-specific errors
+          console.error("Axios error:", error.response?.data);
+          if (error.response?.status === 401) {
+            alert("You must be signed in to post a comment.");
+          } else {
+            alert("An error occurred while submitting your comment.");
+          }
+        } else if (error instanceof Error) {
+          // Handle general errors
+          console.error("Error:", error.message);
+          alert("An unexpected error occurred. Please try again.");
+        } else {
+          // Handle unknown errors
+          console.error("Unexpected error:", error);
+          alert("An unknown error occurred.");
+        }
       }
     },
 
@@ -396,10 +418,27 @@ export default defineComponent({
       if (!confirm('Are you sure you want to delete this comment?')) return;
 
       try {
-        await axios.delete(`${API_BASE_URL}/comments/${commentId}`);
+        await api.delete(`/comments/${commentId}`);
         await this.fetchComments();
       } catch (error) {
-        console.error('Error deleting comment:', error);
+        // Narrow down the type of `error`
+        if (axios.isAxiosError(error)) {
+          // Handle Axios-specific errors
+          console.error("Axios error:", error.response?.data);
+          if (error.response?.status === 401) {
+            alert("You must be signed in to delete a comment.");
+          } else {
+            alert("An error occurred while deleting your comment.");
+          }
+        } else if (error instanceof Error) {
+          // Handle general errors
+          console.error("Error:", error.message);
+          alert("An unexpected error occurred. Please try again.");
+        } else {
+          // Handle unknown errors
+          console.error("Unexpected error:", error);
+          alert("An unknown error occurred.");
+        }
       }
     },
 
@@ -412,14 +451,30 @@ export default defineComponent({
       if (!this.editingComment) return;
 
       try {
-        await axios.put(
-          `${API_BASE_URL}/comments/${this.editingComment.id}`,
-          { content: this.editingComment.content }
-        );
+        await api.put(`/comments/${this.editingComment.id}`, {
+          content: this.editingComment.content,
+        });
         await this.fetchComments();
         this.editingComment = null;
       } catch (error) {
-        console.error('Error updating comment:', error);
+        // Narrow down the type of `error`
+        if (axios.isAxiosError(error)) {
+          // Handle Axios-specific errors
+          console.error("Axios error:", error.response?.data);
+          if (error.response?.status === 401) {
+            alert("You must be signed in to edit a comment.");
+          } else {
+            alert("An error occurred while editing your comment.");
+          }
+        } else if (error instanceof Error) {
+          // Handle general errors
+          console.error("Error:", error.message);
+          alert("An unexpected error occurred. Please try again.");
+        } else {
+          // Handle unknown errors
+          console.error("Unexpected error:", error);
+          alert("An unknown error occurred.");
+        }
       }
     },
 
@@ -429,6 +484,11 @@ export default defineComponent({
 
     // Reply Methods
     startReply(comment: Comment) {
+      const userName = comment?.user?.name;
+      if (!userName) {
+        console.error('Invalid comment object or missing user name:', comment);
+        return;
+      }
       this.replyingTo = comment.id;
       this.replyContent = '';
     },
@@ -444,11 +504,12 @@ export default defineComponent({
       try {
         const commentData = {
           content: this.replyContent,
-          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId,
-          parentId
+          parentId,
+          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
         };
 
-        await axios.post(`${API_BASE_URL}/comments`, commentData);
+        await api.post(`/comments`, commentData);
+
         this.replyContent = '';
         this.replyingTo = null;
         await this.fetchComments();

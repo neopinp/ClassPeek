@@ -1,130 +1,94 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 export class CommentService {
-  async createComment(data: {
+  private prisma: PrismaClient;
+
+  constructor() {
+    this.prisma = new PrismaClient
+  }
+
+  async createComment({
+    content,
+    courseId,
+    professorPageId,
+    parentId,
+    userId,
+  }: {
     content: string;
-    userId?: number;
     courseId?: number;
     professorPageId?: number;
-    parentId?: number;
+    parentId?: number | null;
+    userId: number;
   }) {
-    return prisma.comment.create({
-      data: {
-        content: data.content,
-        user: { connect: { id: 1 } }, // Temporary user
-        ...(data.courseId && { course: { connect: { id: data.courseId } } }),
-        ...(data.professorPageId && {
-          professor_page: { connect: { id: data.professorPageId } },
-        }),
-        ...(data.parentId && { parent_comment: { connect: { id: data.parentId } } }),
-      },
-      select: {
-        id: true,
-        content: true,
-        created_at: true,
-        updated_at: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            user_type: true,
-          },
+    try {
+      return await this.prisma.comment.create({
+        data: {
+          content,
+          course_id: courseId || null,
+          professor_page_id: professorPageId || null,
+          parent_id: parentId || null,
+          user_id: userId, // Associate with logged-in user
         },
-        course_id: true,
-        professor_page_id: true,
-        parent_id: true,
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      throw new Error("Failed to create comment");
+    }
   }
 
   async getComments({
     courseId,
     professorPageId,
-    parentId = null,
+    parentId,
   }: {
     courseId?: number;
     professorPageId?: number;
     parentId?: number | null;
   }) {
     try {
-      console.log('Comment service params:', { courseId, professorPageId, parentId });
-
-      if (professorPageId) {
-        // First check if the professor page exists
-        const profPage = await prisma.professorPage.findFirst({
-          where: { id: professorPageId },
-        });
-
-        if (!profPage) {
-          console.error(`No professor page found with ID: ${professorPageId}`);
-          throw new Error(`Professor page not found with ID: ${professorPageId}`);
-        }
-      }
-
-      return prisma.comment.findMany({
+      return await this.prisma.comment.findMany({
         where: {
           course_id: courseId,
           professor_page_id: professorPageId,
           parent_id: parentId,
         },
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              user_type: true,
-            },
-          },
+          user: { select: { id: true, name: true, user_type: true } }, // Include user details
           replies: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  user_type: true,
-                },
-              },
-            },
-            orderBy: {
-              created_at: 'desc',
-            },
-          },
-        },
-        orderBy: {
-          created_at: 'desc',
+              user: true
+            }
+          }
         },
       });
     } catch (error) {
-      console.error('Error in getComments:', error);
-      throw error;
+      console.error("Error fetching comments:", error);
+      throw new Error("Failed to fetch comments");
     }
   }
 
-  async updateComment(commentId: number, content: string) {
-    return prisma.comment.update({
-      where: { id: commentId },
-      data: { content },
-      select: {
-        id: true,
-        content: true,
-        created_at: true,
-        updated_at: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            user_type: true,
-          },
-        },
-      },
-    });
+    // Update a comment
+    async updateComment(id: number, content: string) {
+      try {
+        return await this.prisma.comment.update({
+          where: { id },
+          data: { content },
+        });
+      } catch (error) {
+        console.error("Error updating comment:", error);
+        throw new Error("Failed to update comment");
+      }
+    }
+
+  async deleteComment(id: number) {
+    try {
+      return await this.prisma.comment.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      throw new Error("Failed to delete comment");
+    }
   }
 
-  async deleteComment(commentId: number) {
-    return prisma.comment.delete({
-      where: { id: commentId },
-    });
-  }
 }
