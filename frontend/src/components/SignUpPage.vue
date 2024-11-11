@@ -15,6 +15,7 @@
       <input type="password" id="confirmPassword" v-model="confirmPassword" required />
 
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+      <p v-if="successMessage" class="success">{{ successMessage }}</p>
       <button type="submit">Create Account</button>
     </form>
   </div>
@@ -35,6 +36,7 @@ export default defineComponent({
         password: "",
       },
       confirmPassword: "",
+      successMessage: "",
       errorMessage: "",
     };
   },
@@ -49,7 +51,7 @@ export default defineComponent({
       try {
         await api.post("/auth/signup", this.userData);
 
-        alert("Account created successfully. Please log in.");
+        this.successMessage = "Account created successfully!";
         this.$router.push("/signin");
       } catch (error) {
         this.errorMessage = "Failed to create an account. Please try again.";

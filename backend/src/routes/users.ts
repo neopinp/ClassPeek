@@ -7,6 +7,66 @@ import bcrypt from 'bcrypt';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+router.post('/auth/signup', (req: Request, res: Response) => {
+  const signUpUser = async () => {
+    const { email, name, password } = req.body;
+
+    try {
+      // Ensure all required fields are present
+      if (!email || !name || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      // Check if the user already exists
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          credentials: {
+            school_email: email,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create the new user
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          user_type: UserType.STUDENT, // Default to STUDENT
+          dob: new Date(), // Set a default or handle via the form
+          credentials: {
+            create: {
+              school_email: email,
+              password: hashedPassword,
+            },
+          },
+          profile: {
+            create: {
+              blurb: null, // Default to null or handle via the form
+            },
+          },
+        },
+        include: {
+          profile: true,
+          credentials: true,
+        },
+      });
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  };
+
+  signUpUser();
+});
+
 router.post('/auth/login', (req: Request, res: Response) => {
   const loginUser = async () => {
     const { email, password } = req.body;
