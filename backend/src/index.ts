@@ -1,4 +1,5 @@
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client'; 
 import cors from 'cors';
 import cookieSession from 'cookie-session';
 import courseRoutes from './routes/courses';
@@ -9,6 +10,7 @@ import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
 
 const app: Application = express();
+const prisma = new PrismaClient();
 const PORT: number | string = process.env.PORT || 3000;
 
 app.use(cors({
@@ -25,6 +27,27 @@ app.use(cookieSession({
   secure: false,
 }));
 
+// Middleware to track active sessions with user names
+const activeSessions: Record<string, { userId: number; userType: string; userName: string }> = {};
+app.use(async (req, res, next) => {
+  if (req.session?.userId && req.session?.userType) {
+    // Fetch the user name based on userId
+    const user = await prisma.user.findUnique({
+      where: { id: req.session.userId },
+      select: { name: true }
+    });
+
+    if (user) {
+      activeSessions[req.session.userId] = {
+        userId: req.session.userId,
+        userType: req.session.userType,
+        userName: user.name,
+      };
+    }
+  }
+  next();
+});
+
 // Route handlers (i.e. our apis)
 app.use('/api', courseRoutes);
 app.use('/api', subjectRoutes);
@@ -33,43 +56,96 @@ app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
 app.use('/api', commentRoutes)
 
-// Track active sessions
-const activeSessions = new Map<string, any>();
+// Root Route: Backend Output + User Table
+app.get("/", async (req: Request, res: Response) => {
+  try {
+    // Fetch all users
+    const users = await prisma.user.findMany({
+      include: { profile: true, credentials: true },
+    });
 
-app.use((req: Request, res: Response, next: NextFunction): void => {
-  if (req.session?.userId) {
-    activeSessions.set(req.session.userId, req.session);
+    // Generate HTML output
+    res.send(`
+      <html>
+        <head>
+          <title>Classpeek Backend</title>
+          <style>
+            table {
+              border-collapse: collapse;
+              width: 100%;
+              margin: 20px 0;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #f4f4f4;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Welcome to the Classpeek backend!</h1>
+          <h2>Active Sessions</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>User Name</th>
+                <th>User Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Object.values(activeSessions)
+                .map(
+                  (session) => `
+                  <tr>
+                    <td>${session.userId}</td>
+                    <td>${session.userName}</td>
+                    <td>${session.userType}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+          <h2>All Users</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Blurb</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users
+                .map(
+                  (user) => `
+                  <tr>
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.credentials?.school_email || "N/A"}</td>
+                    <td>${user.profile?.blurb || "N/A"}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).send("Failed to fetch data");
   }
-  next();
 });
 
-// Endpoint to view active sessions (for debugging purposes)
-app.get('/active-sessions', (req: Request, res: Response): void => {
-  res.json(Array.from(activeSessions.entries()));
-});
 
-// Function to list all routes dynamically
-const listRoutes = (app: Application): void => {
-  console.log('Registered Routes:');
-  (app._router.stack as Array<{ route?: { path: string; methods: Record<string, boolean> }; name?: string; handle?: any }>).forEach((middleware) => {
-    if (middleware.route) {
-      const method = Object.keys(middleware.route.methods)[0].toUpperCase();
-      console.log(`${method} ${middleware.route.path}`);
-    } else if (middleware.name === 'router' && middleware.handle?.stack) {
-      middleware.handle.stack.forEach((route: any) => {
-        if (route.route) {
-          const method = Object.keys(route.route.methods)[0].toUpperCase();
-          console.log(`${method} ${route.route.path}`);
-        }
-      });
-    }
-  });
-};
-
-// List routes on server start
+// Output current backend server status to console
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  listRoutes(app);
 });
 
 export default app;
