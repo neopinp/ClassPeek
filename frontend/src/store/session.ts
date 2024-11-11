@@ -7,7 +7,7 @@ const sessionStore = reactive({
     id: null,
     name: "Guest",
     user_type: "STUDENT",
-    bio: null,
+    blurb: null,
     email: null,
   },
 
@@ -23,7 +23,7 @@ const sessionStore = reactive({
         id: null,
         name: "Guest",
         user_type: "STUDENT",
-        bio: null,
+        blurb: null,
         email: null,
       };
     }
@@ -37,7 +37,7 @@ const sessionStore = reactive({
         id: null,
         name: "Guest",
         user_type: "STUDENT",
-        bio: null,
+        blurb: null,
         email: null,
       };
     } catch (error) {

@@ -4,7 +4,7 @@
       <section class="leftSide">
         <font-awesome-icon :icon="['fas', 'user']" class="user-icon" />
         <h4 class="introduction">{{ user.name || "Guest" }}</h4>
-        <p v-if="user.bio">{{ user.bio }}</p>
+        <p v-if="user.blurb">{{ user.blurb }}</p>
         <p v-else>No bio available.</p>
       </section>
       <div class="rightSide">
