@@ -151,7 +151,8 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
         name: user.name,
         user_type: user.user_type,
         dob: user.dob,
-        bio: user.profile?.blurb || user.profile?.description || null, // Use available bio
+        blurb: user.profile?.blurb || null,
+        description: user.profile?.description || null,
         email: user.credentials?.school_email || null,
         professor_page: user.professor_page || null,
       };
@@ -200,37 +201,32 @@ router.get('/users/:id?', (req: Request, res: Response) => {
   fetchUsers();
 });
 
+router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
+  const updateUserProfile = async () => {
+    const { blurb, description } = req.body;
+    const userId = req.session?.userId;
 
-router.post('/users', async (req: Request, res: Response) => {
-  try {
-    const userData = req.body;
-    const name = userData.name;
-    const dob =  new Date('1980-03-20');
-    const user_type = UserType.STUDENT; 
-    const email = userData.email;
-    const password = await bcrypt.hash(userData.password, 10);
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-    const user = await prisma.user.create({
-      data: {
-        name: name,
-        user_type: user_type,  // Using enum to ensure type safety
-        dob: dob,
-        credentials: {
-          create: {
-            school_email: email,
-            password: password
-          }
-        }
-      },
-      include: {
-        profile: true,
-        credentials: true
-      }
-    });
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create user' });
+    if (!blurb || !description) {
+      return res.status(400).json({ error: "Both blurb and description are required" });
+    }
+
+    try {
+      const updatedProfile = await prisma.profile.update({
+        where: { user_id: userId },
+        data: { blurb, description },
+      });
+
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
   }
+  updateUserProfile();
 });
 
 export default router;
