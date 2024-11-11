@@ -252,7 +252,6 @@ export default defineComponent({
         const response = await api.get(`/${this.type}s/${id}`);
         
         this.data = response.data;
-        console.log('Fetched data:', this.data); // Debug log
         
         await this.fetchComments();
         document.title = `${this.getTitle()} - ClassPeek`;
@@ -293,7 +292,7 @@ export default defineComponent({
 
         const response = await api.get('/comments', { params });
         this.comments = response.data;
-        //console.log('Fetched comments:', this.comments);
+
         console.log('Fetched comments with replies:', JSON.stringify(this.comments, null, 2));
       } catch (error) {
         console.error('Error fetching comments:', error);

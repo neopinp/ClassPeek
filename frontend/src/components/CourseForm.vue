@@ -187,9 +187,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3000/api';
+import api from '../api';
 
 interface Professor {
   id: number;
@@ -280,9 +278,9 @@ export default defineComponent({
       try {
         this.loading = true;
         const [professorsRes, subjectsRes, majorsRes] = await Promise.all([
-          axios.get<Professor[]>(`${API_BASE_URL}/professors`),
-          axios.get<Subject[]>(`${API_BASE_URL}/subjects`),
-          axios.get<Major[]>(`${API_BASE_URL}/majors`)
+          api.get<Professor[]>('/professors'),
+          api.get<Subject[]>('/subjects'),
+          api.get<Major[]>('/majors')
         ]);
         
         this.professors = professorsRes.data;
@@ -298,7 +296,7 @@ export default defineComponent({
 
     async fetchAvailablePrereqs() {
       try {
-        const response = await axios.get<Course[]>(`${API_BASE_URL}/courses`);
+        const response = await api.get<Course[]>('/courses')
         // Filter out the current course if we're editing
         this.availablePrereqs = response.data.filter(course => 
           course.id !== parseInt(this.$route.params.id as string)
@@ -311,7 +309,7 @@ export default defineComponent({
     async loadCourse(id: string) {
       try {
         this.loading = true;
-        const response = await axios.get<Course>(`${API_BASE_URL}/courses/${id}`);
+        const response = await api.get<Course>(`/courses/${id}`);
         const course = response.data;
         
         this.formData = {
@@ -373,12 +371,15 @@ export default defineComponent({
           }
         };
 
-        const url = `${API_BASE_URL}/courses${this.isEditing ? '/' + this.$route.params.id : ''}`;
+        const endpoint = `/courses${this.isEditing ? `/${this.$route.params.id}` : ''}`;
         const method = this.isEditing ? 'put' : 'post';
-        
-        const response = await axios[method](url, submitData);
-        console.log('Response:', response.data);
-        
+
+        const response = await api({
+          method,
+          url: endpoint,
+          data: submitData,
+        });
+
         // Show success message and prepare for redirect
         const courseId = this.isEditing ? this.$route.params.id : response.data.id;
         const message = this.isEditing 

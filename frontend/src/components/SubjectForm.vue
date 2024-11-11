@@ -84,16 +84,7 @@
   
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import axios from 'axios';
-  
-  const API_BASE_URL = 'http://localhost:3000/api';
-  
-  interface Subject {
-    id: number;
-    name: string;
-    code: string;
-    description: string | null;
-  }
+  import api from '../api';
   
   interface SubjectFormData {
     name: string;
@@ -129,8 +120,8 @@
             code: this.formData.code.toUpperCase(), // Ensure code is uppercase
             description: this.formData.description,
           };
-  
-          const response = await axios.post(`${API_BASE_URL}/subjects`, submitData);
+
+          const response = await api.post('/subjects', submitData)
           console.log('Response:', response.data);
           
           // Show success message

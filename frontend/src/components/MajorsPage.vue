@@ -43,9 +43,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3000/api';
+import api from '../api';
 
 interface Professor {
     id: number;
@@ -102,7 +100,7 @@ export default defineComponent({
         async fetchMajors() {
             try {
                 this.loading = true;
-                const response = await axios.get(`${API_BASE_URL}/majors`);
+                const response = await api.get('/majors');
                 this.majors = response.data;
             } catch (error) {
                 console.error('Error fetching majors:', error);

@@ -64,10 +64,9 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import sessionStore from "../store/session";
-import axios from 'axios';
+import api from '../api';
 import './styles/HomePage.css';
 
-const API_BASE_URL = 'http://localhost:3000/api';
 export default defineComponent({
   name: 'HomePage',
   data() {
@@ -82,7 +81,7 @@ export default defineComponent({
   methods: {
     async fetchMajors() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/majors`);
+        const response = await api.get('/majors');
         this.majors = response.data;
       } catch (error) {
         console.error('Error fetching majors:', error);
@@ -91,7 +90,7 @@ export default defineComponent({
 
     async fetchProfessors() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/professors`);
+        const response = await api.get('/professors');
         this.professors = response.data;
       } catch (error) {
         console.error('Error fetching professors:', error);
@@ -100,7 +99,7 @@ export default defineComponent({
 
     async fetchSubjects() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/subjects`);
+        const response = await api.get('/subjects');
         this.subjects = response.data;
       } catch (error) {
         console.error('Error fetching subjects:', error);

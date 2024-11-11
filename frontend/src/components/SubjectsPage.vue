@@ -61,9 +61,7 @@
   
   <script lang="ts">
   import { defineComponent } from 'vue';
-  import axios from 'axios';
-  
-  const API_BASE_URL = 'http://localhost:3000/api';
+  import api from '../api';
   
   interface Professor {
     id: number;
@@ -124,7 +122,7 @@
       async fetchSubjects() {
         try {
           this.loading = true;
-          const response = await axios.get(`${API_BASE_URL}/subjects`);
+          const response = await api.get('/subjects');
           this.subjects = response.data;
         } catch (error) {
           console.error('Error fetching subjects:', error);

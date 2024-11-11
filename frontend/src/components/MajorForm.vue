@@ -69,15 +69,7 @@
   
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import axios from 'axios';
-  
-  const API_BASE_URL = 'http://localhost:3000/api';
-  
-  interface Major {
-    id: number;
-    name: string;
-    description: string | null;
-  }
+  import api from '../api';
   
   interface MajorFormData {
     name: string;
@@ -111,7 +103,7 @@
             description: this.formData.description,
           };
   
-          const response = await axios.post(`${API_BASE_URL}/majors`, submitData);
+          const response = await api.post('/majors', submitData)
           console.log('Response:', response.data);
           
           // Show success message

@@ -23,9 +23,6 @@
         <li>
           <router-link to="/subject-form">Subject Form</router-link>
         </li>
-        <li>
-          <router-link to="/api-test">API Test</router-link>
-        </li>
         <li id="profileDropdown">
           <div id="profileIcon" @click="toggleDropdown">
             <font-awesome-icon :icon="['fas', 'user']" />
