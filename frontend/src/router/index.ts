@@ -1,6 +1,7 @@
 // index.ts
 
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import sessionStore from '@/store/session'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
 import SubjectsPage from '@/components/SubjectsPage.vue'

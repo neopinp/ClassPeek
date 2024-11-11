@@ -15,6 +15,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import api from "../api";
+import sessionStore from "../store/session";
 import "./styles/SignInPage.css";
 
 export default defineComponent({
@@ -25,12 +27,22 @@ export default defineComponent({
     };
   },
   methods: {
-    handleSignIn() {
-      console.log("Signing in with:", this.email, this.password);
-      this.$router.push('/profile');
-    }
+    async handleSignIn() {
+      try {
+        await api.post("/auth/login", {
+          email: this.email,
+          password: this.password,
+        });
+
+        // Fetch session after login
+        await sessionStore.fetchSession();
+
+        alert("Login successful");
+        this.$router.push("/profile");
+      } catch (error) {
+        alert("Error logging in");
+      }
+    },
   }
 });
 </script>
-
-

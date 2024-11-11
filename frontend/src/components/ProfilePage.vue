@@ -3,33 +3,37 @@
     <main>
       <section class="leftSide">
         <font-awesome-icon :icon="['fas', 'user']" class="user-icon" />
-        <h4 class="introduction">Name/Title</h4>
-        <br />
-        <div class="courses">
-          <h4>Courses</h4>
-        </div>
+        <h4 class="introduction">{{ user.name || "Guest" }}</h4>
+        <p v-if="user.blurb">{{ user.blurb }}</p>
+        <p v-else>No bio available.</p>
       </section>
       <div class="rightSide">
         <article>
-          <h1>Guest</h1>
-          <p>Sign In to Edit Profile</p>
+          <h1>{{ user.name || "Guest" }}</h1>
+          <p v-if="!user.name">Sign In to Edit Profile</p>
+          <p v-else>Welcome, {{ user.name }}.</p>
         </article>
-        <footer>
-          <div>
-            <div class="reviews">Review 1</div>
-            <div class="reviews">Review 2</div>
-            <div class="reviews">Review 3</div>
-          </div>
-        </footer>
       </div>
     </main>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, onMounted } from "vue";
+import sessionStore from "../store/session";
 import "./styles/ProfilePage.css";
+
 export default defineComponent({
   name: "ProfilePage",
+  setup() {
+    onMounted(() => {
+      // Ensure session is up-to-date on page load
+      sessionStore.fetchSession();
+    });
+
+    return {
+      user: sessionStore.user,
+    };
+  },
 });
 </script>

@@ -1,37 +1,222 @@
 // src/routes/users.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
+import { requireAuth } from '../middleware/auth.middleware';
 import bcrypt from 'bcrypt';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-router.get('/users', async (req: Request, res: Response) => {
-  try {
-    const users = await prisma.user.findMany({
-      include: {
-        profile: true,
-        credentials: true
+router.post('/auth/signup', (req: Request, res: Response) => {
+  const signUpUser = async () => {
+    const { email, name, password } = req.body;
+
+    try {
+      // Ensure all required fields are present
+      if (!email || !name || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
       }
-    });
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
+
+      // Check if the user already exists
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          credentials: {
+            school_email: email,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create the new user
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          user_type: UserType.STUDENT, // Default to STUDENT
+          dob: new Date(), // Set a default or handle via the form
+          credentials: {
+            create: {
+              school_email: email,
+              password: hashedPassword,
+            },
+          },
+          profile: {
+            create: {
+              blurb: null, // Default to null or handle via the form
+            },
+          },
+        },
+        include: {
+          profile: true,
+          credentials: true,
+        },
+      });
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  };
+
+  signUpUser();
 });
+
+router.post('/auth/login', (req: Request, res: Response) => {
+  const loginUser = async () => {
+    const { email, password } = req.body;
+
+    try {
+      const user = await prisma.user.findFirst({
+        where: { credentials: { school_email: email } },
+        include: { credentials: true }
+      });
+
+      if (!user || !user.credentials) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.credentials.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Set session data
+      if (req.session) {
+        req.session.userId = user.id;
+        req.session.userType = user.user_type;
+      }
+
+      res.json({ message: 'Login successful', user });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to log in' });
+    }
+  };
+
+  loginUser();
+});
+
+router.post('/auth/logout', (req: Request, res: Response) => {
+  const logoutUser = async () => {
+    try {
+      if (req.session) {
+        req.session = null; // Clear the session
+      }
+      res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to log out' });
+    }
+  };
+
+  logoutUser();
+});
+
+router.get('/users/me', requireAuth, (req: Request, res: Response) => {
+  const fetchUser = async () => {
+    try {
+      const userId = req.session?.userId;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized: No session found' });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          credentials: {
+            select: { school_email: true },
+          },
+          profile: {
+            select: {
+              blurb: true, // Short bio
+              description: true, // Detailed bio
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Prepare the response data
+      const responseData = {
+        id: user.id,
+        name: user.name,
+        user_type: user.user_type,
+        dob: user.dob,
+        bio: user.profile?.blurb || user.profile?.description || null, // Use available bio
+        email: user.credentials?.school_email || null,
+      };
+
+      res.json(responseData);
+    } catch (error) {
+      console.error('Error fetching logged-in user:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  fetchUser();
+});
+
+router.get('/users/:id?', (req: Request, res: Response) => {
+  const fetchUsers = async () => {
+    try {
+      const { id } = req.params;
+
+      if (id) {
+        // Fetch a single user by ID
+        const user = await prisma.user.findUnique({
+          where: { id: parseInt(id) },
+          include: { credentials: true },
+        });
+
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        return res.json(user);
+      } else {
+        // Fetch all users
+        const users = await prisma.user.findMany({
+          include: { credentials: true },
+        });
+
+        return res.json(users);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  fetchUsers();
+});
+
 
 router.post('/users', async (req: Request, res: Response) => {
   try {
-    const { password, ...userData } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const userData = req.body;
+    const name = userData.name;
+    const dob =  new Date('1980-03-20');
+    const user_type = UserType.STUDENT; 
+    const email = userData.email;
+    const password = await bcrypt.hash(userData.password, 10);
 
     const user = await prisma.user.create({
       data: {
-        ...userData,
+        name: name,
+        user_type: user_type,  // Using enum to ensure type safety
+        dob: dob,
         credentials: {
           create: {
-            school_email: userData.email,
-            password: hashedPassword
+            school_email: email,
+            password: password
           }
         }
       },
