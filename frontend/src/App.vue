@@ -2,27 +2,16 @@
   <div id="app">
     <nav>
       <ul>
-        <li>
-          <router-link to="/">Home</router-link>
-        </li>
-        <li>
-          <router-link to="/about">About</router-link>
-        </li>
-        <li>
-          <router-link to="/subjects">Subjects</router-link>
-        </li>
-        <li>
-          <router-link to="/majors">Majors</router-link>
-        </li>
-        <li>
-          <router-link to="/course-form">Course Form</router-link>
-        </li>
-        <li>
-          <router-link to="/major-form">Major Form</router-link>
-        </li>
-        <li>
-          <router-link to="/subject-form">Subject Form</router-link>
-        </li>
+        <!-- Shared links -->
+        <li><router-link to="/">Home</router-link></li>
+        <li><router-link to="/about">About</router-link></li>
+        <li><router-link to="/subjects">Subjects</router-link></li>
+        <li><router-link to="/majors">Majors</router-link></li>
+
+        <!-- Protected links -->
+        <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/course-form">Course Form</router-link></li>
+        <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/major-form">Major Form</router-link></li>
+        <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/subject-form">Subject Form</router-link></li>
         <li id="profileDropdown">
           <div id="profileIcon" @click="toggleDropdown">
             <font-awesome-icon :icon="['fas', 'user']" />

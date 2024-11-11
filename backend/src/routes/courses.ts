@@ -1,6 +1,7 @@
 // src/routes/courses.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { restrictTo } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -82,23 +83,24 @@ router.get('/courses/:id', (req: Request, res: Response) => {
   fetchCourse();
 });
 
-router.post('/courses', async (req: Request, res: Response) => {
-  try {
-    const course = await prisma.course.create({
-      data: req.body,
-      include: {
-        professor: true,
-        subject: true,
-        majors: true
-      }
-    });
-    res.status(201).json(course);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create course' });
-  }
+// PROFESSOR restricted actions
+router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+    try {
+      const course = await prisma.course.create({
+        data: req.body,
+        include: {
+          professor: true,
+          subject: true,
+          majors: true
+        }
+      });
+      res.status(201).json(course);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create course' });
+    }
 });
 
-router.put('/courses/:id', async (req: Request, res: Response) => {
+router.put('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
     const course = await prisma.course.update({
       where: { id: parseInt(req.params.id) },
@@ -115,7 +117,7 @@ router.put('/courses/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/courses/:id', async (req: Request, res: Response) => {
+router.delete('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
     await prisma.course.delete({
       where: { id: parseInt(req.params.id) }

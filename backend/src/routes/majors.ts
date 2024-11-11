@@ -1,6 +1,7 @@
 // src/routes/majors.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { restrictTo } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -32,7 +33,8 @@ router.get('/majors/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/majors', async (req: Request, res: Response) => {
+// PROFESSOR restricted actions
+router.post('/majors', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
     const major = await prisma.major.create({
       data: req.body
@@ -43,7 +45,7 @@ router.post('/majors', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/majors/:id', (req, res) => {
+router.delete('/majors/:id', restrictTo(["PROFESSOR"]), (req, res) => {
   const deleteMajor = async () => {
     try {
       // First check how many courses are associated

@@ -1,5 +1,5 @@
 <template>
-    <div class="max-w-4xl mx-auto p-6">
+    <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="max-w-4xl mx-auto p-6">
       <div class="bg-white rounded-lg shadow-lg p-8">
         <header class="mb-8">
           <h1 class="text-2xl font-bold text-gray-800">
@@ -68,7 +68,9 @@
 </template>
   
 <script lang="ts">
-  import { defineComponent } from 'vue';
+  import { defineComponent, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import sessionStore from '../store/session';
   import api from '../api';
   
   interface MajorFormData {
@@ -78,6 +80,19 @@
   
   export default defineComponent({
     name: 'MajorForm',
+
+    setup() {
+      const router = useRouter();
+      onMounted(() => {
+        if (sessionStore.user.user_type !== "PROFESSOR") {
+          alert("Not a professor, resource access blocked.");
+          router.back(); // Redirect to the previous page
+        }
+      });
+      return {
+        sessionStore
+      } 
+    },
     
     data() {
       return {
