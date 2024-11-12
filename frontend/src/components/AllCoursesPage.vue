@@ -1,10 +1,20 @@
 <template>
-  <div class="my-courses-page">
-    <h1>My Courses</h1>
+  <div class="all-courses-page">
+    <!-- Search and Filter Section -->
+    <div class="search-section">
+      <input 
+        type="text" 
+        v-model="searchQuery" 
+        placeholder="Search courses..."
+        class="search-input"
+      />
+    </div>
+    <!-- Courses Section -->
+    <h1>All Courses</h1>
     <div v-if="loading" class="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="courses-list">
-      <div v-for="course in courses" :key="course.id" class="course-card">
+      <div v-for="course in filteredCourses" :key="course.id" class="course-card">
         <h3 class="course-title">{{ course.title }}</h3>
         <p class="course-code"><strong>Code:</strong> {{ course.course_code }}</p>
         <p class="course-description"><strong>Description:</strong> {{ course.description || "No description avaliable."}} </p>
@@ -42,17 +52,27 @@ interface Course {
 }
 
 export default defineComponent({
-  name: "MyCoursesPage",
+  name: "AllCoursesPage",
   data() {
     return {
       courses: [] as Course[],
+      searchQuery: '',
       loading: false,
       error: null as string | null,
     };
   },
   computed: {
-    isCurrentProfessor(): boolean {
+    isProfessor(): boolean {
       return sessionStore.user.user_type === "PROFESSOR";
+    },
+    filteredCourses(): Course[] {
+      if (!this.searchQuery) return this.courses;
+
+      const query = this.searchQuery.toLowerCase();
+      return this.courses.filter(course =>
+        course.title.toLowerCase().includes(query) ||
+        course.course_code.toLowerCase().includes(query)
+      );
     },
   },
   methods: {
@@ -60,13 +80,13 @@ export default defineComponent({
       try {
         this.loading = true;
         this.error = null;
-        // Use the existing route to fetch the professor's data
-        const response = await api.get(`/professors/${sessionStore.user.id}`);
-        const professorData = response.data;
 
-        // Ensure we only use the courses_taught field
-        if (professorData?.courses_taught) {
-          this.courses = professorData.courses_taught.map((course: { id: any; title: any; course_code: any; description: any; }) => ({
+        const response = await api.get(`/courses`);
+        const coursesData = response.data;
+
+        // Ensure we process the courses correctly
+        if (coursesData && Array.isArray(coursesData)) {
+          this.courses = coursesData.map((course: { id: any; title: any; course_code: any; description: any; }) => ({
             id: course.id,
             title: course.title,
             course_code: course.course_code,
@@ -93,7 +113,7 @@ export default defineComponent({
     },
   },
   mounted() {
-    if (this.isCurrentProfessor) {
+    if (this.isProfessor) {
       this.fetchCourses();
     } else {
       this.error = "Unauthorized: Only professors can access this page.";
@@ -103,15 +123,53 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.my-courses-page {
+.all-courses-page {
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
 }
 
+.search-section {
+  margin-bottom: 30px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
 .courses-list {
   display: grid;
   gap: 20px;
+}
+
+.course-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.12),
+      0 8px 16px rgba(0, 0, 0, 0.08);
+  }
+
+.course-card h3 {
+  margin-bottom: 10px;
 }
 
 .course-title {
@@ -132,25 +190,6 @@ export default defineComponent({
   font-size: 14px;
   color: #718096;
   line-height: 1.5;
-}
-
-.course-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.course-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 4px 8px rgba(0, 0, 0, 0.12),
-      0 8px 16px rgba(0, 0, 0, 0.08);
-  }
-
-.course-card h3 {
-  margin-bottom: 10px;
 }
 
 .actions {

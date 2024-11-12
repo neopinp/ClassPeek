@@ -1,23 +1,21 @@
 // index.ts
 
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import sessionStore from '@/store/session'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
 import SubjectsPage from '@/components/SubjectsPage.vue'
-import APITestPage from '@/components/APITestPage.vue'
+import MajorsPage from '@/components/MajorsPage.vue'
+import MyCoursesPage from '@/components/MyCoursesPage.vue'
+import AllCoursesPage from '@/components/AllCoursesPage.vue'
+import CourseForm from '@/components/CourseForm.vue'
+import MajorForm from '@/components/MajorForm.vue'
+import SubjectForm from '@/components/SubjectForm.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
-
-import MajorsPage from '@/components/MajorsPage.vue'
-import CourseForm from '@/components/CourseForm.vue'
-import MajorForm from '@/components/MajorForm.vue'
-import SubjectForm from '@/components/SubjectForm.vue'
-import MyCoursesPage from '@/components/MyCoursesPage.vue'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -59,6 +57,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'My Courses - ClassPeek'}
   },
   {
+    path: '/all-courses',
+    name: 'AllCoursesPage',
+    component: AllCoursesPage,
+    meta: { title: 'All Courses - ClassPeek'}
+  },
+  {
     path: '/course-form/:id?',
     name: 'CourseForm',
     component: CourseForm,
@@ -98,12 +102,6 @@ const routes: Array<RouteRecordRaw> = [
         next();
       }
     }
-  },
-  {
-    path: '/api-test',
-    name: 'APITestPage',
-    component: APITestPage,
-    meta: { title: 'API Test - ClassPeek' } 
   },
   {
     path: '/signin',
