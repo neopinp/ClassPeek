@@ -13,7 +13,7 @@
                     <h3>{{ major.name }}</h3>
                     <span class="course-count">{{ major.courses?.length || 0 }} courses</span>
                 </div>
-                <p class="major-name">{{ major.description }}</p>
+                <p class="major-description">{{ major.description }}</p>
 
                 <!-- Courses List (shows when major is selected) -->
                 <div v-if="selectedMajors.some(m => m.id === major.id)" class="courses-list">
@@ -275,7 +275,7 @@ export default defineComponent({
     font-size: 0.9em;
 }
 
-.major-name {
+.major-description {
     color: #4a5568;
     margin: 0;
 }

@@ -25,6 +25,7 @@
             <span class="course-count">{{ subject.courses?.length || 0 }} courses</span>
           </div>
           <p class="subject-name">{{ subject.name }}</p>
+          <p class="subject-description">{{ subject.description }}</p>
   
           <!-- Courses List (shows when subject is selected) -->
           <div v-if="selectedSubjects.some(s => s.id === subject.id)" class="courses-list">
@@ -79,6 +80,7 @@
     id: number;
     code: string;
     name: string;
+    description: string;
     courses?: Course[];
   }
   
