@@ -1,5 +1,5 @@
 <template>
-  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="course-form-page">
+  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="form-page">
     <div class="form-card">
       <h2 class="form-title">{{ isEditing ? "Edit Course" : "Create Course" }}</h2>
 
@@ -110,7 +110,7 @@
             multiple
           >
             <option v-for="prerequisite in courses" :key="prerequisite.id" :value="prerequisite.id">
-              {{ prerequisite.title }}
+              {{ prerequisite.title }} - {{ prerequisite.course_code }}
             </option>
           </select>
         </div>
@@ -127,14 +127,9 @@
       </form>
     </div>
 
-    <!-- Success Toast -->
-    <div v-if="showSuccessToast" class="toast success-toast">
-      {{ successMessage }}
-    </div>
-
-    <!-- Error -->
-    <div v-if="error" class="toast error-toast">
-      <p>{{ error }}</p>
+    <!-- Toast Notification -->
+    <div v-if="toast.visible" class="toast" :class="toast.type === 'success' ? 'success-toast' : 'error-toast'">
+      {{ toast.message }}
     </div>
   </div>
   <div v-else class="access-denied">
@@ -144,9 +139,14 @@
 
 
 <script lang="ts">
-  import { defineComponent } from 'vue';
+  import { defineComponent, reactive } from 'vue';
   import sessionStore from '@/store/session';
   import api from '@/api';
+
+  interface ToastMessage {
+    type: "success" | "error";
+    message: string;
+  }
 
   interface Professor {
     id: number;
@@ -166,6 +166,7 @@
   interface Course {
     id: number;
     title: string;
+    course_code: string;
   }
 
   export default defineComponent({
@@ -184,16 +185,17 @@
           subject_id: null as number | null,
           majors: [] as number[],
           prerequisites: [] as number[],
-          //major_id: [] as number[],
         },
         professors: [] as Professor[],
         subjects: [] as Subject[],
         majors: [] as Major[],
         courses: [] as Course[],
         loading: false,
-        error: null as string | null,
-        showSuccessToast: false,
-        successMessage: null as string | null,
+        toast: reactive({
+          visible: false,
+          type: "success" as "success" | "error",
+          message: "",
+        }),
       };
     },
     computed: {
@@ -228,7 +230,7 @@
               id: currentCourse.id, // Include the current course ID
               ...currentCourse,
               prerequisites: currentCourse.prerequisites?.map((prereq: { id: number }) => prereq.id) || [],
-              majors: currentCourse.majors?.map((major: { id: number }) => major.id)[0] || "",
+              majors: currentCourse.majors?.map((major: { id: number }) => major.id) || "",
             };
 
             // Exclude the current course from prerequisites
@@ -238,7 +240,6 @@
           }
         } catch (error) {
           console.error('Error fetching reference data:', error);
-          this.error = 'Failed to load reference data.';
         } finally {
           this.loading = false;
         }
@@ -247,7 +248,6 @@
       async handleSubmit() {
         try {
           this.loading = true;
-          this.error = null;
 
           // Normalize the payload
           const payload = {
@@ -275,22 +275,10 @@
           const response = await api[method](url, payload);
           console.log("Course saved:", response.data);
 
-          this.successMessage = `Successfully ${this.isEditing ? "updated" : "created"} course!`;
-          this.showSuccessToast = true;
-
-          setTimeout(() => {
-            this.showSuccessToast = false;
-            this.$router.push("/all-courses"); // Navigate to all courses or desired page
-          }, 2000);
+          this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`);
         } catch (error: any) {
           console.error("Error saving course:", error);
-
-          // Extract and display the error message
-          if (error.response && error.response.data && error.response.data.error) {
-            this.error = error.response.data.error;
-          } else {
-            this.error = "An unexpected error occurred. Please try again.";
-          }
+          this.showToast("error", error.response?.data?.error || "An unexpected error occurred. Please try again.");
         } finally {
           this.loading = false;
         }
@@ -298,6 +286,16 @@
 
       handleCancel() {
         this.$router.push('/my-courses');
+      },
+
+      showToast(type: "success" | "error", message: string) {
+        this.toast.type = type;
+        this.toast.message = message;
+        this.toast.visible = true;
+
+        setTimeout(() => {
+          this.toast.visible = false;
+        }, 4000); // Hide toast after 4 seconds
       },
     },
     mounted() {
@@ -307,151 +305,5 @@
 </script>
 
 <style scoped>
-/* Base styles for the form page */
-.course-form-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f9fafb;
-  padding: 20px;
-}
-
-/* Form card styles */
-.form-card {
-  background-color: #ffffff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
-}
-
-/* Form title */
-.form-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #2d3748;
-}
-
-/* Form group styles */
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #4a5568;
-}
-
-.form-input,
-.form-textarea,
-select {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: #ffffff;
-  transition: border-color 0.3s;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-select:focus {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
-  outline: none;
-}
-
-.form-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* Actions section */
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.btn {
-  padding: 12px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-}
-
-.btn-primary {
-  background-color: #3182ce;
-  color: #ffffff;
-}
-
-.btn-primary:hover {
-  background-color: #2b6cb0;
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background-color: #e2e8f0;
-  color: #2d3748;
-}
-
-.btn-secondary:hover {
-  background-color: #cbd5e0;
-  transform: translateY(-2px);
-}
-
-/* Toast notification styles */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #38a169;
-  color: #ffffff;
-  padding: 16px 24px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.5s ease-out;
-}
-
-.toast.success-toast {
-  background-color: #38a169;
-}
-
-.toast.error-toast {
-  background-color: #e53e3e;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Access denied message */
-.access-denied {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 500;
-  color: #e53e3e;
-}
+  @import 'styles/Forms.css';
 </style>

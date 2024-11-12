@@ -16,6 +16,7 @@ import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
+import api from '../api'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -88,9 +89,10 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: async (to, from, next) => {
       try {
         // Fetch the data to get the name
-        const response = await axios.get(
-          `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
-        );
+        //const response = await axios.get(
+        //  `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
+        //);
+        const response = await api.get(`${to.params.type}s/${to.params.id}`);
         
         // Set meta title based on type and name
         const name = to.params.type === 'professor' ? response.data.name : response.data.title;
