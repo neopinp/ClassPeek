@@ -17,6 +17,7 @@ import MajorsPage from '@/components/MajorsPage.vue'
 import CourseForm from '@/components/CourseForm.vue'
 import MajorForm from '@/components/MajorForm.vue'
 import SubjectForm from '@/components/SubjectForm.vue'
+import MyCoursesPage from '@/components/MyCoursesPage.vue'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -50,6 +51,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ProfilePage',
     component: ProfilePage,
     meta: { title: 'Profile - ClassPeek' }
+  },
+  {
+    path: '/my-courses',
+    name: 'MyCoursesPage',
+    component: MyCoursesPage,
+    meta: { title: 'My Courses - ClassPeek'}
   },
   {
     path: '/course-form/:id?',

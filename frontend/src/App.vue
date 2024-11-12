@@ -9,6 +9,7 @@
         <li><router-link to="/majors">Majors</router-link></li>
 
         <!-- Protected links -->
+        <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/my-courses">My Courses</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/course-form">Course Form</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/major-form">Major Form</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/subject-form">Subject Form</router-link></li>
