@@ -127,9 +127,14 @@
       </form>
     </div>
 
-    <!-- Toast Notification -->
-    <div v-if="toast.visible" class="toast" :class="toast.type === 'success' ? 'success-toast' : 'error-toast'">
-      {{ toast.message }}
+    <!-- Success Toast -->
+    <div v-if="showSuccessToast" class="toast success-toast show">
+      {{ successMessage }}
+    </div>
+
+    <!-- Error Toast -->
+    <div v-if="showErrorToast" class="toast error-toast show">
+      {{ errorMessage }}
     </div>
   </div>
   <div v-else class="access-denied">
@@ -142,11 +147,6 @@
   import { defineComponent, reactive } from 'vue';
   import sessionStore from '@/store/session';
   import api from '@/api';
-
-  interface ToastMessage {
-    type: "success" | "error";
-    message: string;
-  }
 
   interface Professor {
     id: number;
@@ -191,11 +191,10 @@
         majors: [] as Major[],
         courses: [] as Course[],
         loading: false,
-        toast: reactive({
-          visible: false,
-          type: "success" as "success" | "error",
-          message: "",
-        }),
+        showSuccessToast: false,
+        successMessage: '',
+        showErrorToast: false,
+        errorMessage: ''
       };
     },
     computed: {
@@ -288,14 +287,24 @@
         this.$router.push('/my-courses');
       },
 
-      showToast(type: "success" | "error", message: string) {
-        this.toast.type = type;
-        this.toast.message = message;
-        this.toast.visible = true;
+      showToast(type: 'success' | 'error', message: string) {
+        if (type === 'success') {
+          this.successMessage = message;
+          this.showSuccessToast = true;
 
-        setTimeout(() => {
-          this.toast.visible = false;
-        }, 4000); // Hide toast after 4 seconds
+          setTimeout(() => {
+            this.showSuccessToast = false;
+            // TODO: Route this to created course
+            this.$router.push(`/all-courses`)
+          }, 3000); // Toast disappears after 3 seconds
+        } else if (type === 'error') {
+          this.errorMessage = message;
+          this.showErrorToast = true;
+
+          setTimeout(() => {
+            this.showErrorToast = false;
+          }, 3000); // Toast disappears after 3 seconds
+        }
       },
     },
     mounted() {
