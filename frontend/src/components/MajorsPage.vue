@@ -195,7 +195,7 @@ export default defineComponent({
 <style>
 .directory-page {
     padding: 20px;
-    max-width: 1200px;
+    width: 80%;
     margin: 0 auto;
     scroll-behavior: smooth;
 }
