@@ -85,37 +85,111 @@ router.get('/courses/:id', (req: Request, res: Response) => {
 
 // PROFESSOR restricted actions
 router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+  const createCourse = async () => {
     try {
+      // Log the incoming payload for debugging
+      console.log("Incoming course payload:", req.body);
+  
+      // Extract necessary fields from the request body and attempt to create the course
+      const { title, course_code, description, credits, professor, subject, prerequisites, majors } = req.body;
       const course = await prisma.course.create({
-        data: req.body,
+        data: {
+          title,
+          course_code,
+          description,
+          credits,
+          professor: {
+            connect: { id: professor.connect.id }
+          },
+          subject: {
+            connect: { id: subject?.connect?.id }
+          },
+          prerequisites: prerequisites?.length > 0
+            ? { connect: prerequisites.map((prereq: { id: number }) => ({ id: prereq.id })) }
+            : undefined,
+          majors: majors?.length > 0
+            ? { connect: majors.map((major: { id: number }) => ({ id: major.id })) }
+            : undefined
+        },
         include: {
           professor: true,
           subject: true,
           majors: true
         }
       });
+  
+      // Respond with the created course
       res.status(201).json(course);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to create course' });
-    }
-});
-
-router.put('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
-  try {
-    const course = await prisma.course.update({
-      where: { id: parseInt(req.params.id) },
-      data: req.body,
-      include: {
-        professor: true,
-        subject: true,
-        majors: true
+    } catch (error: any) {
+      console.error("Error creating course:", error);
+        res.status(500).json({ error: "Failed to create course." });
       }
-    });
-    res.json(course);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update course' });
-  }
-});
+    }
+    createCourse();
+  });
+
+  router.put('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+    const updateCourse = async () => {
+      try {
+        const { title, course_code, description, credits, professor, subject, prerequisites, majors } = req.body;
+    
+        const courseId = parseInt(req.params.id);
+    
+        // Log incoming payload for debugging
+        console.log("Updating course with payload:", req.body);
+    
+        // Fetch existing course with prerequisites and majors
+        const existingCourse = await prisma.course.findUnique({
+          where: { id: courseId },
+          include: {
+            prerequisites: { select: { id: true } },
+            majors: { select: { id: true } },
+          },
+        });
+    
+        if (!existingCourse) {
+          return res.status(404).json({ error: 'Course not found.' });
+        }
+    
+        // Update the course and handle prerequisites and majors
+        const updatedCourse = await prisma.course.update({
+          where: { id: courseId },
+          data: {
+            title,
+            course_code,
+            description,
+            credits,
+            professor: professor?.connect?.id
+              ? { connect: { id: professor.connect.id } }
+              : undefined,
+            subject: subject?.connect?.id
+              ? { connect: { id: subject.connect.id } }
+              : undefined,
+            prerequisites: {
+              disconnect: existingCourse.prerequisites?.map((prereq) => ({ id: prereq.id })) || [],
+              connect: prerequisites?.map((prereq: { id: any; }) => ({ id: prereq.id })) || [],
+            },
+            majors: {
+              disconnect: existingCourse.majors?.map((major) => ({ id: major.id })) || [],
+              connect: majors?.map((major: { id: any; }) => ({ id: major.id })) || [],
+            },
+          },
+          include: {
+            professor: true,
+            subject: true,
+            majors: true,
+            prerequisites: true,
+          },
+        });
+    
+        res.json(updatedCourse);
+      } catch (error: any) {
+        console.error("Error updating course:", error);
+        res.status(500).json({ error: 'Failed to update course.' });
+      }
+    }
+    updateCourse();
+  });
 
 router.delete('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {

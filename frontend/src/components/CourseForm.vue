@@ -1,459 +1,457 @@
 <template>
-  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="max-w-4xl mx-auto p-6">
-    <!-- Success Toast -->
-    <div
-      v-if="showSuccessToast"
-      class="success-toast"
-    >
-      {{ successMessage }}
-    </div>
-    <div class="bg-white rounded-lg shadow-lg p-8">
-      <header class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">
-          {{ isEditing ? 'Edit Course' : 'Create New Course' }}
-        </h1>
-      </header>
-      
-      <div v-if="error" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-        {{ error }}
-      </div>
-      
-      <form @submit.prevent="handleSubmit" class="space-y-6">
-        <!-- Basic Course Information -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-1">
-            <label class="block font-medium text-gray-700 mb-2">Course Code</label>
-            <input
-              v-model="formData.course_code"
-              type="text"
-              class="w-full p-2 border rounded-md"
-              required
-              maxlength="15"
-              placeholder="e.g., CS101"
-              :disabled="loading"
-            />
-          </div>
-          
-          <div class="col-span-1">
-            <label class="block font-medium text-gray-700 mb-2">Credits</label>
-            <input
-              v-model.number="formData.credits"
-              type="number"
-              class="w-full p-2 border rounded-md"
-              required
-              min="0"
-              :disabled="loading"
-            />
-          </div>
-        </div>
+  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="course-form-page">
+    <div class="form-card">
+      <h2 class="form-title">{{ isEditing ? "Edit Course" : "Create Course" }}</h2>
 
-        <div>
-          <label class="block font-medium text-gray-700 mb-2">Title</label>
+      <form @submit.prevent="handleSubmit">
+        <!-- Title Field -->
+        <div class="form-group">
+          <label for="title">Course Title</label>
           <input
-            v-model="formData.title"
+            id="title"
             type="text"
-            class="w-full p-2 border rounded-md"
-            required
-            maxlength="255"
-            placeholder="e.g., Introduction to Computer Science"
-            :disabled="loading"
+            v-model="formData.title"
+            placeholder="Enter course title"
+            class="form-input"
           />
         </div>
 
-        <div>
-          <label class="block font-medium text-gray-700 mb-2">Description</label>
+        <!-- Course Code Field -->
+        <div class="form-group">
+          <label for="course-code">Course Code</label>
+          <input
+            id="course-code"
+            type="text"
+            v-model="formData.course_code"
+            placeholder="Enter course code"
+            class="form-input"
+          />
+        </div>
+
+        <!-- Description Field -->
+        <div class="form-group">
+          <label for="description">Description</label>
           <textarea
+            id="description"
             v-model="formData.description"
-            class="w-full p-2 border rounded-md"
-            required
-            rows="4"
-            placeholder="Enter course description..."
-            :disabled="loading"
+            placeholder="Enter course description"
+            class="form-textarea"
           ></textarea>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block font-medium text-gray-700 mb-2">Professor</label>
-            <select
-              v-model="formData.professor_id"
-              class="w-full p-2 border rounded-md"
-              required
-              :disabled="loading"
-            >
-              <option value="">Select a professor</option>
-              <option
-                v-for="professor in professors"
-                :key="professor.id"
-                :value="professor.id"
-              >
-                {{ professor.name }}
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block font-medium text-gray-700 mb-2">Subject</label>
-            <select
-              v-model="formData.subject_id"
-              class="w-full p-2 border rounded-md"
-              required
-              :disabled="loading"
-            >
-              <option value="">Select a subject</option>
-              <option
-                v-for="subject in subjects"
-                :key="subject.id"
-                :value="subject.id"
-              >
-                {{ subject.name }} ({{ subject.code }})
-              </option>
-            </select>
-          </div>
-        </div>
-        
-        <!-- Prerequisites Section -->
-        <div>
-          <label class="block font-medium text-gray-700 mb-2">Prerequisites</label>
-          <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-md">
-            <div
-              v-for="course in availablePrereqs"
-              :key="course.id"
-              class="flex items-center space-x-2"
-            >
-              <input
-                type="checkbox"
-                :value="course.id"
-                v-model="selectedPrereqIds"
-                :id="'prereq-' + course.id"
-                :disabled="loading"
-                class="rounded"
-              />
-              <label :for="'prereq-' + course.id" class="text-sm">
-                {{ course.course_code }} - {{ course.title }}
-              </label>
-            </div>
-          </div>
+        <!-- Credits Field -->
+        <div class="form-group">
+          <label for="credits">Credits</label>
+          <input
+            id="credits"
+            type="number"
+            v-model.number="formData.credits"
+            placeholder="Enter number of credits"
+            class="form-input"
+          />
         </div>
 
-        <!-- Majors Section -->
-        <div>
-          <label class="block font-medium text-gray-700 mb-2">Related Majors</label>
-          <div class="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-md">
-            <div
-              v-for="major in majors"
-              :key="major.id"
-              class="flex items-center space-x-2"
-            >
-              <input
-                type="checkbox"
-                :value="major.id"
-                v-model="selectedMajorIds"
-                :id="'major-' + major.id"
-                :disabled="loading"
-                class="rounded"
-              />
-              <label :for="'major-' + major.id" class="text-sm">
-                {{ major.name }}
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex justify-end space-x-4 pt-4">
-          <button
-            type="button"
-            @click="$router.back()"
-            class="px-4 py-2 border rounded-md hover:bg-gray-50"
-            :disabled="loading"
+        <!-- Subject Dropdown -->
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <select
+            id="subject"
+            v-model="formData.subject_id"
+            class="form-input"
           >
-            Cancel
+            <option value="" disabled>Select a subject</option>
+            <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+              {{ subject.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Professor Dropdown -->
+        <div class="form-group">
+          <label for="professor">Professor</label>
+          <select
+            id="professor"
+            v-model="formData.professor_id"
+            class="form-input"
+          >
+            <option value="" disabled>Select a professor</option>
+            <option v-for="professor in professors" :key="professor.id" :value="professor.id">
+              {{ professor.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Related Majors -->
+        <div class="form-group">
+          <label for="majors">Related Majors</label>
+          <select
+            id="majors"
+            v-model="formData.majors"
+            class="form-input"
+          >
+            <option disabled value="">Select a related major</option>
+            <option 
+              v-for="major in majors" 
+              :key="major.id" 
+              :value="major.id"
+            >
+              {{ major.name }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Prerequisites -->
+        <div class="form-group">
+          <label for="prerequisites">Prerequisites</label>
+          <select
+            id="prerequisites"
+            v-model="formData.prerequisites"
+            class="form-input"
+            multiple
+          >
+            <option v-for="prerequisite in courses" :key="prerequisite.id" :value="prerequisite.id">
+              {{ prerequisite.title }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            {{ isEditing ? "Save Changes" : "Create Course" }}
           </button>
-          <button
-            type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            :disabled="loading"
-          >
-            {{ loading ? 'Saving...' : (isEditing ? 'Update Course' : 'Create Course') }}
+          <button type="button" class="btn btn-secondary" @click="handleCancel">
+            Cancel
           </button>
         </div>
       </form>
     </div>
+
+    <!-- Success Toast -->
+    <div v-if="showSuccessToast" class="toast success-toast">
+      {{ successMessage }}
+    </div>
+
+    <!-- Error -->
+    <div v-if="error" class="toast error-toast">
+      <p>{{ error }}</p>
+    </div>
+  </div>
+  <div v-else class="access-denied">
+    <p>You do not have permission to access this page.</p>
   </div>
 </template>
 
 
 <script lang="ts">
-import { defineComponent, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import sessionStore from '../store/session';
-import api from '../api';
+  import { defineComponent } from 'vue';
+  import sessionStore from '@/store/session';
+  import api from '@/api';
 
-interface Professor {
-  id: number;
-  name: string;
-  user_type: 'PROFESSOR';
-  professor_page?: {
+  interface Professor {
     id: number;
-    bio?: string;
-  };
-  credentials?: {
-    school_email: string;
-  };
-  courses_taught?: any[];
-}
-
-interface Subject {
-  id: number;
-  name: string;
-  code: string;
-  courses?: any[];
-}
-
-interface Major {
-  id: number;
-  name: string;
-  description: string;
-  courses?: any[];
-}
-
-interface Course {
-  id: number;
-  course_code: string;
-  title: string;
-  description: string;
-  credits: number;
-  professor_id: number;
-  subject_id: number;
-  professor?: Professor;
-  subject?: Subject;
-  majors?: Major[];
-  prerequisites?: Course[];
-}
-
-interface CourseFormData {
-  course_code: string;
-  title: string;
-  description: string;
-  credits: number;
-  professor_id: number | null;
-  subject_id: number | null;
-  prerequisites?: number[];
-}
-
-export default defineComponent({
-  name: 'CourseForm',
-  
-  setup() {
-    const router = useRouter();
-    onMounted(() => {
-      if (sessionStore.user.user_type !== "PROFESSOR") {
-        alert("Not a professor, resource access blocked.");
-        router.back(); // Redirect to the previous page
-      }
-    });
-    return {
-      sessionStore
-    } 
-  },
-
-  data() {
-    return {
-      loading: false,
-      error: null as string | null,
-      showSuccessToast: false,
-      successMessage: '',
-      professors: [] as Professor[],
-      subjects: [] as Subject[],
-      majors: [] as Major[],
-      selectedMajorIds: [] as number[],
-      selectedPrereqIds: [] as number[],
-      availablePrereqs: [] as Course[],
-      formData: {
-        course_code: '',
-        title: '',
-        description: '',
-        credits: 0,
-        professor_id: null,
-        subject_id: null
-      } as CourseFormData
-    };
-  },
-
-  computed: {
-    isEditing(): boolean {
-      return !!this.$route.params.id;
-    }
-  },
-
-  methods: {
-    async fetchReferenceData() {
-      try {
-        this.loading = true;
-        const [professorsRes, subjectsRes, majorsRes] = await Promise.all([
-          api.get<Professor[]>('/professors'),
-          api.get<Subject[]>('/subjects'),
-          api.get<Major[]>('/majors')
-        ]);
-        
-        this.professors = professorsRes.data;
-        this.subjects = subjectsRes.data;
-        this.majors = majorsRes.data;
-      } catch (error) {
-        console.error('Error fetching reference data:', error);
-        this.error = 'Failed to load reference data';
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async fetchAvailablePrereqs() {
-      try {
-        const response = await api.get<Course[]>('/courses')
-        // Filter out the current course if we're editing
-        this.availablePrereqs = response.data.filter(course => 
-          course.id !== parseInt(this.$route.params.id as string)
-        );
-      } catch (error) {
-        console.error('Error fetching prerequisites:', error);
-      }
-    },
-
-    async loadCourse(id: string) {
-      try {
-        this.loading = true;
-        const response = await api.get<Course>(`/courses/${id}`);
-        const course = response.data;
-        
-        this.formData = {
-          course_code: course.course_code,
-          title: course.title,
-          description: course.description,
-          credits: course.credits,
-          professor_id: course.professor_id,
-          subject_id: course.subject_id
-        };
-        
-        this.selectedPrereqIds = course.prerequisites?.map(p => p.id) || [];
-        this.selectedMajorIds = course.majors?.map(p => p.id) || [];
-      } catch (error) {
-        console.error('Error loading course:', error);
-        this.error = 'Failed to load course data';
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    async handleSubmit() {
-      try {
-        this.loading = true;
-        this.error = null;
-
-        if (!this.formData.professor_id || !this.formData.subject_id) {
-          throw new Error('Professor and Subject are required');
-        }
-        
-        const submitData = {
-          course_code: this.formData.course_code,
-          title: this.formData.title,
-          description: this.formData.description,
-          credits: Number(this.formData.credits),
-          professor: {
-            connect: { id: Number(this.formData.professor_id) }
-          },
-          subject: {
-            connect: { id: Number(this.formData.subject_id) }
-          },
-          prerequisites: this.isEditing ? {
-            // For editing, specify both connect and disconnect
-            disconnect: this.availablePrereqs
-              .filter(course => !this.selectedPrereqIds.includes(course.id))
-              .map(course => ({ id: course.id })),
-            connect: this.selectedPrereqIds.map(id => ({ id: Number(id) }))
-          } : {
-            // For new courses, just connect
-            connect: this.selectedPrereqIds.map(id => ({ id: Number(id) }))
-          },
-          majors: this.isEditing ? {
-            disconnect: this.majors
-              .filter(major => !this.selectedMajorIds.includes(major.id))
-              .map(major => ({ id: major.id })),
-            connect: this.selectedMajorIds.map(id => ({ id: Number(id) }))
-          } : {
-            connect: this.selectedMajorIds.map(id => ({ id: Number(id) }))
-          }
-        };
-
-        const endpoint = `/courses${this.isEditing ? `/${this.$route.params.id}` : ''}`;
-        const method = this.isEditing ? 'put' : 'post';
-
-        const response = await api({
-          method,
-          url: endpoint,
-          data: submitData,
-        });
-
-        // Show success message and prepare for redirect
-        const courseId = this.isEditing ? this.$route.params.id : response.data.id;
-        const message = this.isEditing 
-          ? `Successfully updated ${this.formData.course_code}`
-          : `Successfully created ${this.formData.course_code}`;
-          
-        this.successMessage = message;
-        this.showSuccessToast = true;
-        
-        // Redirect after a short delay
-        setTimeout(() => {
-          this.showSuccessToast = false;
-          this.$router.push(`/info/course/${courseId}`);
-        }, 2000);
-
-      } catch (error: any) {
-        console.error('Error details:', error);
-        this.error = error.response?.data?.error || error.message || 'Failed to save course';
-      } finally {
-        this.loading = false;
-      }
-    }
-  },
-
-  async mounted() {
-    await Promise.all([
-      this.fetchReferenceData(),
-      this.fetchAvailablePrereqs()
-    ]);
-    
-    if (this.isEditing) {
-      await this.loadCourse(this.$route.params.id as string);
-    }
+    name: string;
   }
-});
+
+  interface Subject {
+    id: number;
+    name: string;
+  }
+
+  interface Major {
+    id: number;
+    name: string;
+  }
+
+  interface Course {
+    id: number;
+    title: string;
+  }
+
+  export default defineComponent({
+    name: 'CourseForm',
+    setup() {
+      return { sessionStore };
+    },
+    data() {
+      return {
+        formData: {
+          title: '',
+          course_code: '',
+          description: '',
+          credits: null as number | null,
+          professor_id: null as number | null,
+          subject_id: null as number | null,
+          majors: [] as number[],
+          prerequisites: [] as number[],
+          //major_id: [] as number[],
+        },
+        professors: [] as Professor[],
+        subjects: [] as Subject[],
+        majors: [] as Major[],
+        courses: [] as Course[],
+        loading: false,
+        error: null as string | null,
+        showSuccessToast: false,
+        successMessage: null as string | null,
+      };
+    },
+    computed: {
+      isEditing(): boolean {
+        return !!this.$route.params.id;
+      },
+    },
+    methods: {
+      async fetchReferenceData() {
+        try {
+          this.loading = true;
+
+          const [professorsRes, subjectsRes, majorsRes, coursesRes] = await Promise.all([
+            api.get<Professor[]>('/professors'),
+            api.get<Subject[]>('/subjects'),
+            api.get<Major[]>('/majors'),
+            api.get<Course[]>('/courses'),
+          ]);
+
+          this.professors = professorsRes.data;
+          this.subjects = subjectsRes.data;
+          this.majors = majorsRes.data;
+
+          if (this.isEditing) {
+            // Fetch the current course
+            const courseResponse = await api.get(`/courses/${this.$route.params.id}`);
+            const currentCourse = courseResponse.data;
+
+            // Populate formData and include the current course ID
+            this.formData = {
+              ...this.formData,
+              id: currentCourse.id, // Include the current course ID
+              ...currentCourse,
+              prerequisites: currentCourse.prerequisites?.map((prereq: { id: number }) => prereq.id) || [],
+              majors: currentCourse.majors?.map((major: { id: number }) => major.id)[0] || "",
+            };
+
+            // Exclude the current course from prerequisites
+            this.courses = coursesRes.data.filter(course => course.id !== currentCourse.id);
+          } else {
+            this.courses = coursesRes.data;
+          }
+        } catch (error) {
+          console.error('Error fetching reference data:', error);
+          this.error = 'Failed to load reference data.';
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      async handleSubmit() {
+        try {
+          this.loading = true;
+          this.error = null;
+
+          // Normalize the payload
+          const payload = {
+            title: this.formData.title,
+            course_code: this.formData.course_code,
+            description: this.formData.description,
+            credits: this.formData.credits,
+            professor: {
+              connect: { id: this.formData.professor_id }
+            },
+            subject: {
+              connect: { id: this.formData.subject_id }
+            },
+            prerequisites: this.formData.prerequisites.map(id => ({ id })),
+            majors: this.formData.majors.length > 0 ? { connect: this.formData.majors.map(id => ({ id })) } : undefined,
+            user_type: sessionStore.user.user_type // Include user_type for validation in the backend
+          };
+
+          const url = this.isEditing
+            ? `/courses/${this.$route.params.id}`
+            : `/courses`;
+
+          const method = this.isEditing ? "put" : "post";
+
+          const response = await api[method](url, payload);
+          console.log("Course saved:", response.data);
+
+          this.successMessage = `Successfully ${this.isEditing ? "updated" : "created"} course!`;
+          this.showSuccessToast = true;
+
+          setTimeout(() => {
+            this.showSuccessToast = false;
+            this.$router.push("/all-courses"); // Navigate to all courses or desired page
+          }, 2000);
+        } catch (error: any) {
+          console.error("Error saving course:", error);
+
+          // Extract and display the error message
+          if (error.response && error.response.data && error.response.data.error) {
+            this.error = error.response.data.error;
+          } else {
+            this.error = "An unexpected error occurred. Please try again.";
+          }
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      handleCancel() {
+        this.$router.push('/my-courses');
+      },
+    },
+    mounted() {
+      this.fetchReferenceData();
+    },
+  });
 </script>
 
 <style scoped>
-.success-toast {
-  position: fixed;
-  top: 4rem; /* Below app bar */
-  right: 1rem;
-  background-color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  border-left: 4px solid #10B981;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 9999; /* Make sure it's above everything */
-  max-width: 300px;
-  animation: slideIn 0.3s ease-out;
+/* Base styles for the form page */
+.course-form-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 20px;
 }
 
-@keyframes slideIn {
+/* Form card styles */
+.form-card {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Form title */
+.form-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+  color: #2d3748;
+}
+
+/* Form group styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #4a5568;
+}
+
+.form-input,
+.form-textarea,
+select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+select:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+  outline: none;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Actions section */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-primary {
+  background-color: #3182ce;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: #2b6cb0;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.btn-secondary:hover {
+  background-color: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+/* Toast notification styles */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #38a169;
+  color: #ffffff;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.toast.success-toast {
+  background-color: #38a169;
+}
+
+.toast.error-toast {
+  background-color: #e53e3e;
+}
+
+@keyframes fadeIn {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
+}
+
+/* Access denied message */
+.access-denied {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #e53e3e;
 }
 </style>
