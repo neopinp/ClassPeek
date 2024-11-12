@@ -1,10 +1,20 @@
 <template>
   <div class="my-courses-page">
+    <!-- Search and Filter Section -->
+    <div class="search-section">
+      <input 
+        type="text" 
+        v-model="searchQuery" 
+        placeholder="Search courses..."
+        class="search-input"
+      />
+    </div>
+    <!-- Courses Section -->
     <h1>My Courses</h1>
     <div v-if="loading" class="loading">Loading...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="courses-list">
-      <div v-for="course in courses" :key="course.id" class="course-card">
+      <div v-for="course in filteredCourses" :key="course.id" class="course-card">
         <h3 class="course-title">{{ course.title }}</h3>
         <p class="course-code"><strong>Code:</strong> {{ course.course_code }}</p>
         <p class="course-description"><strong>Description:</strong> {{ course.description || "No description avaliable."}} </p>
@@ -46,6 +56,7 @@ export default defineComponent({
   data() {
     return {
       courses: [] as Course[],
+      searchQuery: '',
       loading: false,
       error: null as string | null,
     };
@@ -53,6 +64,15 @@ export default defineComponent({
   computed: {
     isCurrentProfessor(): boolean {
       return sessionStore.user.user_type === "PROFESSOR";
+    },
+    filteredCourses(): Course[] {
+      if (!this.searchQuery) return this.courses;
+
+      const query = this.searchQuery.toLowerCase();
+      return this.courses.filter(course =>
+        course.title.toLowerCase().includes(query) ||
+        course.course_code.toLowerCase().includes(query)
+      );
     },
   },
   methods: {
@@ -107,6 +127,25 @@ export default defineComponent({
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.search-section {
+  margin-bottom: 30px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
 .courses-list {
