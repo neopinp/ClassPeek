@@ -354,7 +354,7 @@ export default defineComponent({
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
 }
 
 .section-code {
@@ -371,5 +371,6 @@ export default defineComponent({
     border-left: 4px solid #4299e1;
     padding-left: 16px;
 }
+
 
 </style>
