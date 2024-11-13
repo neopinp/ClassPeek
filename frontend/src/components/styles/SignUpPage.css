@@ -2,13 +2,13 @@
 .signup-container {
   max-width: 400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
   background-color: #f9f9f9;
   border-radius: 12px;
   box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.2); /* 3D shadow effect */
   position: absolute;
-  top: 50%;
+  top: 54%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
@@ -16,7 +16,8 @@
 /* Heading styling */
 .signup-container h2 {
   font-size: 24px;
-  margin-bottom: 1rem;
+  margin-top: 0rem;
+  margin-bottom: 0.5rem;
   color: #333;
 }
 
@@ -35,6 +36,8 @@
 }
 
 /* Input styling with 3D effect */
+.signup-form input[type="date"],
+.signup-form select[id="role"],
 .signup-form input[type="email"],
 .signup-form input[type="text"],
 .signup-form input[type="password"] {
@@ -49,6 +52,8 @@
   box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.15); /* 3D effect */
 }
 
+.signup-form input[type="date"]:focus,
+.signup-form select[id="role"]:focus,
 .signup-form input[type="email"]:focus,
 .signup-form input[type="text"]:focus,
 .signup-form input[type="password"]:focus {
