@@ -128,12 +128,12 @@
     </div>
 
     <!-- Success Toast -->
-    <div v-if="showSuccessToast" class="toast success-toast show">
+    <div v-if="showSuccessToast" class="toast-notification success-toast show">
       {{ successMessage }}
     </div>
 
     <!-- Error Toast -->
-    <div v-if="showErrorToast" class="toast error-toast show">
+    <div v-if="showErrorToast" class="toast-notification error-toast show">
       {{ errorMessage }}
     </div>
   </div>
@@ -144,7 +144,7 @@
 
 
 <script lang="ts">
-  import { defineComponent, reactive } from 'vue';
+  import { defineComponent } from 'vue';
   import sessionStore from '@/store/session';
   import api from '@/api';
 

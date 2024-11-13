@@ -105,11 +105,9 @@ select:focus {
 }
 
 /* ===== Toast Messages ===== */
-.toast {
+.toast-notification {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  max-width: 300px; /* Limit the width */
+  max-width: 300px;
   padding: 15px 20px;
   border-radius: 8px;
   font-size: 16px;
@@ -119,19 +117,17 @@ select:focus {
   opacity: 0;
   transform: translateY(20px);
   transition: all 0.3s ease-in-out;
-  text-align: center; /* Center the text */
-  word-wrap: break-word; /* Handle long messages */
 }
 
-.toast.show {
+.toast-notification.show {
   opacity: 1;
   transform: translateY(0);
 }
 
-.toast.success-toast {
+.toast-notification.success-toast {
   background-color: #38a169; /* Green for success */
 }
 
-.toast.error-toast {
+.toast-notification.error-toast {
   background-color: #e53e3e; /* Red for error */
 }
