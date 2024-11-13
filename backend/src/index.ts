@@ -121,6 +121,7 @@ app.get("/", async (req: Request, res: Response) => {
             <thead>
               <tr>
                 <th>User ID</th>
+                <th>User Type</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Blurb</th>
@@ -132,6 +133,7 @@ app.get("/", async (req: Request, res: Response) => {
                   (user) => `
                   <tr>
                     <td>${user.id}</td>
+                    <td>${user.user_type}</td>
                     <td>${user.name}</td>
                     <td>${user.credentials?.school_email || "N/A"}</td>
                     <td>${user.profile?.blurb || "N/A"}</td>
