@@ -89,7 +89,16 @@
           <div v-else class="course-info">
             <p><strong>Credits:</strong> {{ data?.credits }}</p>
             <p><strong>Course Code:</strong> {{ data?.course_code }}</p>
-            <p><strong>Professor:</strong> {{ data?.professor?.name }}</p>
+            <p><strong>Professor: </strong>
+              <router-link
+                v-if="data?.professor?.id"
+                :to="{ name: 'Info', params: { type: 'professor', id: data?.professor?.id } }"
+                class="course-title-link"
+              >
+              {{ data?.professor?.name }}
+              </router-link>
+              <span v-else>{{ data?.professor?.name }}</span>
+            </p>
           </div>
         </div>
       </section>
@@ -154,7 +163,15 @@
               <div class="comment-item">
                 <div class="user-info">
                   <div class="user-header">
-                    <span class="user-name">{{ comment.user.name }}</span>
+                    <!-- Username also links to their profile -->
+                    <router-link
+                      v-if="comment.user.user_type === 'PROFESSOR'"
+                      :to="{ name: 'Info', params: { type: 'professor', id: comment.user.id } }"
+                      class="user-name-link"
+                    >
+                      <span class="user-name">{{ comment.user.name }}</span>
+                    </router-link>
+                    <span v-else class="user-name">{{ comment.user.name }}</span>
                     <span class="user-type-badge" 
                       :class="{ 
                         'professor': comment.user.user_type === 'PROFESSOR',
@@ -208,7 +225,15 @@
                   >
                     <div class="user-info">
                       <div class="user-header">
-                        <span class="user-name">{{ reply.user.name }}</span>
+                        <!-- Username also links to their profile -->
+                        <router-link
+                          v-if="reply.user.user_type === 'PROFESSOR'"
+                          :to="{ name: 'Info', params: { type: 'professor', id: reply.user.id } }"
+                          class="user-name-link"
+                        >
+                          <span class="user-name">{{ reply.user.name }}</span>
+                        </router-link>
+                        <span v-else class="user-name">{{ reply.user.name }}</span>
                         <span class="user-type-badge"
                           :class="{
                             'professor': reply.user.user_type === 'PROFESSOR',
@@ -900,7 +925,7 @@ export default defineComponent({
     gap: 0.5rem;
   }
 
-  .user-name {
+  .user-name-link {
     font-weight: 600;
     color: #2c3e50;
   }
@@ -1043,6 +1068,17 @@ export default defineComponent({
   .professor-info p, .course-info p {
     margin: 0;
     color: #666;
+  }
+
+  .course-info .course-title-link {
+    color: #1e90ff; /* Link color */
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  .course-info .course-title-link:hover {
+    color: #0056b3; /* Hover color */
+    text-decoration: underline;
   }
 
   strong {

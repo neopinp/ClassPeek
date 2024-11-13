@@ -15,7 +15,12 @@
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="courses-list">
       <div v-for="course in filteredCourses" :key="course.id" class="course-card">
-        <h3 class="course-title">{{ course.title }}</h3>
+        <router-link
+          :to="{ name: 'Info', params: { type: 'course', id: course.id } }"
+          class="course-title-link"
+        >
+          <h3>{{ course.title }}</h3>
+        </router-link>
         <p class="course-code"><strong>Code:</strong> {{ course.course_code }}</p>
         <p class="course-description"><strong>Description:</strong> {{ course.description || "No description avaliable."}} </p>
         <div class="actions">
@@ -172,7 +177,7 @@ export default defineComponent({
   margin-bottom: 10px;
 }
 
-.course-title {
+.course-title-link {
   font-size: 18px;
   font-weight: 600;
   color: #2d3748;

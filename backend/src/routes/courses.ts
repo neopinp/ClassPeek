@@ -13,7 +13,7 @@ router.get('/courses', async (req: Request, res: Response) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
-        professor: true,
+        professor: { select: { id: true, name: true } },
         subject: true,
         majors: true,
         prerequisites: true
