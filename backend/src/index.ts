@@ -11,10 +11,23 @@ import commentRoutes from './routes/comments';
 
 const app: Application = express();
 const prisma = new PrismaClient();
-const PORT: number | string = process.env.PORT || 3000;
+
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const allowedOrigins = [
+  'http://classpeek.ecrl.marist.edu',
+  'http://10.11.29.118:8080',
+  'http://localhost:8080'
+];
 
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., mobile apps or Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
@@ -121,6 +134,7 @@ app.get("/", async (req: Request, res: Response) => {
             <thead>
               <tr>
                 <th>User ID</th>
+                <th>User Type</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Blurb</th>
@@ -132,6 +146,7 @@ app.get("/", async (req: Request, res: Response) => {
                   (user) => `
                   <tr>
                     <td>${user.id}</td>
+                    <td>${user.user_type}</td>
                     <td>${user.name}</td>
                     <td>${user.credentials?.school_email || "N/A"}</td>
                     <td>${user.profile?.blurb || "N/A"}</td>
@@ -151,8 +166,8 @@ app.get("/", async (req: Request, res: Response) => {
 
 
 // Output current backend server status to console
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port http://0.0.0.0:${PORT}`);
 });
 
 export default app;

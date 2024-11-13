@@ -18,14 +18,87 @@
         </div>
         <div class="info-card">
           <h4>Additional Information</h4>
+          <!-- Professor Specific Information -->
           <div v-if="isProfessor" class="professor-info">
-            <p><strong>Office:</strong> {{ data?.professor_page?.office_location || 'Not specified' }}</p>
-            <p><strong>Office Hours:</strong> {{ data?.professor_page?.office_hours || 'Not specified' }}</p>
+            <!-- Office Location -->
+            <div class="editable-field">
+              <label><strong>Office:</strong></label>
+              <div v-if="isEditingField !== 'office_location'" class="text-display">
+                <p>{{ data?.professor_page?.office_location || 'Not specified' }}</p>
+                <button
+                  v-if="isCurrentProfessor && !isEditingField" 
+                  class="edit-button"
+                  @click="startEdit('office_location')"
+                >
+                  Edit
+                </button>
+              </div>
+              <div v-else>
+                <textarea
+                  v-model="editedData.office_location"
+                  class="input-field"
+                ></textarea>
+                <button
+                  class="save-button"
+                  @click="saveEdit('office_location')"
+                >
+                  Save
+                </button>
+                <button
+                  class="cancel-button"
+                  @click="cancelCommentEdit"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <!-- Office Hours -->
+            <div class="editable-field">
+              <label><strong>Office Hours:</strong></label>
+              <div v-if="isEditingField !== 'office_hours'" class="text-display">
+                <p>{{ data?.professor_page?.office_hours || 'Not specified' }}</p>
+                <button
+                  v-if="isCurrentProfessor && !isEditingField" 
+                  class="edit-button"
+                  @click="startEdit('office_hours')"
+                >
+                  Edit
+                </button>
+              </div>
+              <div v-else>
+                <textarea
+                  v-model="editedData.office_hours"
+                  class="input-field"
+                ></textarea>
+                <button
+                  class="save-button"
+                  @click="saveEdit('office_hours')"
+                >
+                  Save
+                </button>
+                <button
+                  class="cancel-button"
+                  @click="cancelCommentEdit"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
           <div v-else class="course-info">
             <p><strong>Credits:</strong> {{ data?.credits }}</p>
             <p><strong>Course Code:</strong> {{ data?.course_code }}</p>
-            <p><strong>Professor:</strong> {{ data?.professor?.name }}</p>
+            <p><strong>Professor: </strong>
+              <router-link
+                v-if="data?.professor?.id"
+                :to="{ name: 'Info', params: { type: 'professor', id: data?.professor?.id } }"
+                class="course-title-link"
+              >
+              {{ data?.professor?.name }}
+              </router-link>
+              <span v-else>{{ data?.professor?.name }}</span>
+            </p>
           </div>
         </div>
       </section>
@@ -33,8 +106,29 @@
       <article class="main-content">
         <h2>{{ getTopicTitle() }}</h2>
         <div class="content-body">
-          <p>{{ getMainContent() }}</p>
-          
+          <!-- Bio Section with Editing -->
+          <div v-if="!isEditingField || isEditingField !== 'bio'">
+            <p>{{ getMainContent() }}</p>
+            <button 
+              v-if="isCurrentProfessor && !isEditingField" 
+              class="edit-button" 
+              @click="startEdit('bio')">
+              Edit Bio
+            </button>
+          </div>
+          <div v-else>
+            <textarea
+              v-model="editedData.bio"
+              class="input-field"
+              placeholder="Edit professor bio here"
+            ></textarea>
+            <div class="edit-actions">
+              <button class="btn btn-primary" @click="saveEdit('bio')">Save</button>
+              <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+            </div>
+          </div>
+
+          <!-- Prerequisites Section -->
           <div v-if="!isProfessor && data?.prerequisites?.length" class="prerequisites">
             <h3>Prerequisites:</h3>
             <ul>
@@ -69,7 +163,15 @@
               <div class="comment-item">
                 <div class="user-info">
                   <div class="user-header">
-                    <span class="user-name">{{ comment.user.name }}</span>
+                    <!-- Username also links to their profile -->
+                    <router-link
+                      v-if="comment.user.user_type === 'PROFESSOR'"
+                      :to="{ name: 'Info', params: { type: 'professor', id: comment.user.id } }"
+                      class="user-name-link"
+                    >
+                      <span class="user-name">{{ comment.user.name }}</span>
+                    </router-link>
+                    <span v-else class="user-name">{{ comment.user.name }}</span>
                     <span class="user-type-badge" 
                       :class="{ 
                         'professor': comment.user.user_type === 'PROFESSOR',
@@ -88,8 +190,8 @@
                   <div v-if="editingComment?.id === comment.id" class="edit-form">
                     <textarea v-model="editingComment.content"></textarea>
                     <div class="comment-actions">
-                      <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
-                      <button class="btn btn-primary" @click="saveEdit">Save</button>
+                      <button class="btn btn-secondary" @click="cancelCommentEdit">Cancel</button>
+                      <button class="btn btn-primary" @click="saveCommentEdit">Save</button>
                     </div>
                   </div>
                   <div v-else>{{ comment.content }}</div>
@@ -98,7 +200,7 @@
                 <div class="comment-actions">
                   <button class="action-button" @click="startReply(comment)">Reply</button>
                   <div v-if="isCurrentUser(comment.user.id)" class="user-actions">
-                    <button class="edit-button" @click="startEdit(comment)">Edit</button>
+                    <button class="edit-button" @click="startCommentEdit(comment)">Edit</button>
                     <button class="delete-button" @click="deleteComment(comment.id)">Delete</button>
                   </div>
                 </div>
@@ -123,7 +225,15 @@
                   >
                     <div class="user-info">
                       <div class="user-header">
-                        <span class="user-name">{{ reply.user.name }}</span>
+                        <!-- Username also links to their profile -->
+                        <router-link
+                          v-if="reply.user.user_type === 'PROFESSOR'"
+                          :to="{ name: 'Info', params: { type: 'professor', id: reply.user.id } }"
+                          class="user-name-link"
+                        >
+                          <span class="user-name">{{ reply.user.name }}</span>
+                        </router-link>
+                        <span v-else class="user-name">{{ reply.user.name }}</span>
                         <span class="user-type-badge"
                           :class="{
                             'professor': reply.user.user_type === 'PROFESSOR',
@@ -143,7 +253,7 @@
                     </div>
 
                     <div v-if="isCurrentUser(reply.user.id)" class="comment-actions">
-                      <button class="edit-button" @click="startEdit(reply)">Edit</button>
+                      <button class="edit-button" @click="startCommentEdit(reply)">Edit</button>
                       <button class="delete-button" @click="deleteComment(reply.id)">Delete</button>
                     </div>
                   </div>
@@ -200,8 +310,15 @@ export default defineComponent({
   data() {
     return {
       data: null as any,
+      editedData: {
+        bio: "",
+        office_hours: "",
+        office_location: "",
+      },
       loading: false,
       error: null as string | null,
+      isEditing: false,
+      isEditingField:  null as "bio" | "office_hours" | "office_location" | null,
       type: '' as 'professor' | 'course',
       newComment: '',
       editingComment: null as Comment | null,
@@ -214,6 +331,13 @@ export default defineComponent({
   computed: {
     isProfessor(): boolean {
       return this.type === 'professor';
+    },
+
+    isCurrentProfessor(): boolean {
+      return (
+        sessionStore.user.user_type === "PROFESSOR" &&
+        sessionStore.user.id === this.data?.professor_page?.professor_id
+      );
     },
 
     entityId(): number | null {
@@ -258,6 +382,47 @@ export default defineComponent({
       } catch (error) {
         console.error('Error fetching data:', error);
         this.error = 'Failed to load data';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    startEdit(field: "bio" | "office_hours" | "office_location") {
+      this.isEditingField = field;
+      if (this.data?.professor_page) {
+        this.editedData[field] = this.data.professor_page[field];
+      }
+    },
+
+    cancelEdit() {
+      this.isEditingField = null;
+    },
+    
+    async saveEdit(field: "bio" | "office_hours" | "office_location") {
+      if (!this.isEditingField) return;
+
+      try {
+        this.loading = true;
+
+        const updateData: Partial<typeof this.editedData> = {
+          [field]: this.editedData[field],
+        };
+
+        const professorId = this.data?.id;
+        if (!professorId) throw new Error("Professor ID is missing");
+
+        const response = await api.put(`/professors/${professorId}/page`, updateData);
+        console.log("Updated Professor Page:", response.data);
+
+        // Update local data
+        if (this.data?.professor_page) {
+          this.data.professor_page[field] = this.editedData[field];
+        }
+
+        this.isEditingField = null;
+      } catch (error) {
+        console.error("Error updating professor page:", error);
+        alert("Failed to save changes. Please try again.");
       } finally {
         this.loading = false;
       }
@@ -442,11 +607,11 @@ export default defineComponent({
     },
 
     // Comment Edit Methods
-    startEdit(comment: Comment) {
+    startCommentEdit(comment: Comment) {
       this.editingComment = { ...comment };
     },
 
-    async saveEdit() {
+    async saveCommentEdit() {
       if (!this.editingComment) return;
 
       try {
@@ -477,7 +642,7 @@ export default defineComponent({
       }
     },
 
-    cancelEdit() {
+    cancelCommentEdit() {
       this.editingComment = null;
     },
 
@@ -580,6 +745,23 @@ export default defineComponent({
       0 4px 8px rgba(0, 0, 0, 0.12),
       0 8px 16px rgba(0, 0, 0, 0.08),
       0 16px 24px rgba(0, 0, 0, 0.06);
+  }
+
+   /* ===== Editable items ===== */
+  .editable-field {
+    margin-bottom: 20px;
+  }
+  .editable-field strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+  .editable-field textarea,
+  .editable-field input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
   }
 
   /* Profile Image */
@@ -743,7 +925,7 @@ export default defineComponent({
     gap: 0.5rem;
   }
 
-  .user-name {
+  .user-name-link {
     font-weight: 600;
     color: #2c3e50;
   }
@@ -886,6 +1068,17 @@ export default defineComponent({
   .professor-info p, .course-info p {
     margin: 0;
     color: #666;
+  }
+
+  .course-info .course-title-link {
+    color: #1e90ff; /* Link color */
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  .course-info .course-title-link:hover {
+    color: #0056b3; /* Hover color */
+    text-decoration: underline;
   }
 
   strong {

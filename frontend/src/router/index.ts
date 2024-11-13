@@ -1,22 +1,22 @@
 // index.ts
 
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
-import sessionStore from '@/store/session'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
 import SubjectsPage from '@/components/SubjectsPage.vue'
-import APITestPage from '@/components/APITestPage.vue'
+import MajorsPage from '@/components/MajorsPage.vue'
+import MyCoursesPage from '@/components/MyCoursesPage.vue'
+import AllCoursesPage from '@/components/AllCoursesPage.vue'
+import CourseForm from '@/components/CourseForm.vue'
+import MajorForm from '@/components/MajorForm.vue'
+import SubjectForm from '@/components/SubjectForm.vue'
 import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
 import axios from 'axios'
-
-import MajorsPage from '@/components/MajorsPage.vue'
-import CourseForm from '@/components/CourseForm.vue'
-import MajorForm from '@/components/MajorForm.vue'
-import SubjectForm from '@/components/SubjectForm.vue'
+import api from '../api'
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -52,6 +52,18 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Profile - ClassPeek' }
   },
   {
+    path: '/my-courses',
+    name: 'MyCoursesPage',
+    component: MyCoursesPage,
+    meta: { title: 'My Courses - ClassPeek'}
+  },
+  {
+    path: '/all-courses',
+    name: 'AllCoursesPage',
+    component: AllCoursesPage,
+    meta: { title: 'All Courses - ClassPeek'}
+  },
+  {
     path: '/course-form/:id?',
     name: 'CourseForm',
     component: CourseForm,
@@ -77,9 +89,10 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: async (to, from, next) => {
       try {
         // Fetch the data to get the name
-        const response = await axios.get(
-          `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
-        );
+        //const response = await axios.get(
+        //  `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
+        //);
+        const response = await api.get(`${to.params.type}s/${to.params.id}`);
         
         // Set meta title based on type and name
         const name = to.params.type === 'professor' ? response.data.name : response.data.title;
@@ -91,12 +104,6 @@ const routes: Array<RouteRecordRaw> = [
         next();
       }
     }
-  },
-  {
-    path: '/api-test',
-    name: 'APITestPage',
-    component: APITestPage,
-    meta: { title: 'API Test - ClassPeek' } 
   },
   {
     path: '/signin',

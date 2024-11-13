@@ -1,6 +1,7 @@
 // src/routes/professors.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -50,7 +51,7 @@ router.get('/professors/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.put('/professors/:id/page', async (req: Request, res: Response) => {
+router.put('/professors/:id/page', requireAuth, async (req: Request, res: Response) => {
   try {
     const professorPage = await prisma.professorPage.update({
       where: { professor_id: parseInt(req.params.id) },
@@ -62,7 +63,7 @@ router.put('/professors/:id/page', async (req: Request, res: Response) => {
   }
 });
 
-router.delete('/professors/:id', async (req: Request, res: Response) => {
+router.delete('/professors/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     await prisma.$transaction(async (tx) => {
       // First we have to delete the associated comments with the table.
