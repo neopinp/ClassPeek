@@ -85,18 +85,24 @@ export default defineComponent({
         };
     },
     computed: {
-        filteredMajors(): Major[] {
-            if (!this.searchQuery) return this.majors;
+    filteredMajors(): Major[] {
+        const query = this.searchQuery.toLowerCase();
 
-            const query = this.searchQuery.toLowerCase();
-            return this.majors.filter(major =>
-                major.name.toLowerCase().includes(query) ||
-                major.courses?.some(course =>
-                    course.title.toLowerCase().includes(query) ||
-                    course.course_code.toLowerCase().includes(query)
-                )
-            );
+        if (!query) {
+        // No side effects here
+            return this.majors;
         }
+
+        return this.majors.filter(
+        (major) =>
+            major.name.toLowerCase().includes(query) ||
+            major.courses?.some(
+            (course) =>
+                course.title.toLowerCase().includes(query) ||
+                course.course_code.toLowerCase().includes(query)
+            )
+        );
+        },
     },
     methods: {
         async fetchMajors() {
@@ -184,6 +190,54 @@ export default defineComponent({
     },
 
     watch: {
+        searchQuery: {
+            handler(query: string) {
+            if (!query) {
+                // Untoggle everything when query is cleared
+                this.selectedMajors = [];
+                this.expandedCourses = [];
+            } else {
+                // Toggle majors and courses for the filtered results
+                const filtered = this.majors.filter(
+                (major) =>
+                    major.name.toLowerCase().includes(query.toLowerCase()) ||
+                    major.courses?.some(
+                    (course) =>
+                        course.title.toLowerCase().includes(query.toLowerCase()) ||
+                        course.course_code.toLowerCase().includes(query.toLowerCase())
+                    )
+                );
+
+                filtered.forEach((major) => {
+                // Ensure major is selected
+                if (!this.selectedMajors.some((m) => m.id === major.id)) {
+                    this.toggleMajor(major);
+                }
+
+                // Ensure filtered courses are toggled
+                major.courses
+                    ?.filter(
+                    (course) =>
+                        course.title.toLowerCase().includes(query.toLowerCase()) ||
+                        course.course_code.toLowerCase().includes(query.toLowerCase())
+                    )
+                    .forEach((course) => {
+                    const baseCode = this.getBaseCourseCode(course.course_code);
+                    const groupedCourse = {
+                        baseCode,
+                        title: course.title,
+                        sections: [course],
+                    };
+
+                    if (!this.expandedCourses.includes(baseCode)) {
+                        this.toggleCourse(groupedCourse);
+                    }
+                    });
+                });
+            }
+            },
+            immediate: true, // Run on component mount
+        },
         majors: {
         handler(newMajors) {
             if (newMajors.length > 0) {
@@ -371,6 +425,4 @@ export default defineComponent({
     border-left: 4px solid #4299e1;
     padding-left: 16px;
 }
-
-
 </style>
