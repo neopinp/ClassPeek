@@ -56,9 +56,12 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
-    "client": "cd frontend && npm run serve",
+    "client": "cd frontend && npm run serve -- --host classpeek.ecrl.marist.edu",
     "build": "cd frontend && npm run build && cd ../backend && npm run build",
-    "start": "cd backend && npm run start"
+    "start": "cd backend && npm run start",
+    "pm2-dev": "pm2 start npm --name 'classpeek' -- run dev",
+    "pm2-client": "pm2 start npm --name 'classpeek-client' -- run client",
+    "pm2-server": "pm2 start npm --name 'classpeek-server' -- run server"
   },
   "keywords": [],
   "author": "",

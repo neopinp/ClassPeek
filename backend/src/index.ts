@@ -15,6 +15,7 @@ const prisma = new PrismaClient();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const allowedOrigins = [
   'http://classpeek.ecrl.marist.edu',
+  'http://classpeek.ecrl.marist.edu:8080',
   'http://10.11.29.118:8080',
   'http://localhost:8080'
 ];
@@ -163,7 +164,6 @@ app.get("/", async (req: Request, res: Response) => {
     res.status(500).send("Failed to fetch data");
   }
 });
-
 
 // Output current backend server status to console
 app.listen(PORT, '0.0.0.0', () => {
