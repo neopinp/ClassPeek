@@ -151,7 +151,15 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
           return res.status(404).json({ error: 'Course not found.' });
         }
     
-        // Update the course and handle prerequisites and majors
+        // Normalize majors and prerequisites payload
+        const majorConnect = majors?.connect?.map((major: { id: number }) => ({ id: major.id })) || [];
+        const prereqConnect = prerequisites?.map((prereq: { id: number }) => ({ id: prereq.id })) || [];
+        const majorDisconnect =
+          existingCourse.majors?.map((major) => ({ id: major.id })) || [];
+        const prereqDisconnect =
+          existingCourse.prerequisites?.map((prereq) => ({ id: prereq.id })) || [];
+    
+        // Update the course
         const updatedCourse = await prisma.course.update({
           where: { id: courseId },
           data: {
@@ -166,12 +174,12 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
               ? { connect: { id: subject.connect.id } }
               : undefined,
             prerequisites: {
-              disconnect: existingCourse.prerequisites?.map((prereq) => ({ id: prereq.id })) || [],
-              connect: prerequisites?.map((prereq: { id: any; }) => ({ id: prereq.id })) || [],
+              disconnect: prereqDisconnect,
+              connect: prereqConnect,
             },
             majors: {
-              disconnect: existingCourse.majors?.map((major) => ({ id: major.id })) || [],
-              connect: majors?.map((major: { id: any; }) => ({ id: major.id })) || [],
+              disconnect: majorDisconnect,
+              connect: majorConnect,
             },
           },
           include: {
