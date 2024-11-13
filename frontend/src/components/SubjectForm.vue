@@ -1,5 +1,5 @@
 <template>
-  <div class="form-page">
+  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="form-page">
     <div class="form-card">
       <h2 class="form-title">{{ isEditing ? "Edit Subject" : "Create Subject" }}</h2>
 
@@ -61,15 +61,22 @@
       {{ errorMessage }}
     </div>
   </div>
+  <div v-else class="access-denied">
+    <p>You do not have permission to access this page.</p>
+  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import api from "@/api";
+import sessionStore from "../store/session";
 
 
 export default defineComponent({
   name: "SubjectForm",
+  setup() {
+      return { sessionStore };
+    },
   data() {
     return {
       formData: {
