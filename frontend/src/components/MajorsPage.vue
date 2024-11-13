@@ -19,7 +19,9 @@
                 <div v-if="selectedMajors.some(m => m.id === major.id)" class="courses-list">
                     <div v-for="courseGroup in groupCoursesByBaseCode(major.courses)" :key="courseGroup.baseCode"
                         class="course-group">
-                        <div class="course-header" @click.stop="toggleCourse(courseGroup)">
+                        <div class="course-header" 
+                             :class="{ 'active-course': isCourseActive(courseGroup) }"
+                             @click.stop="toggleCourse(courseGroup)">
                             <h4>{{ courseGroup.baseCode }} - {{ courseGroup.title }}</h4>
                             <span class="section-count">{{ courseGroup.sections.length }} sections</span>
                         </div>
@@ -152,6 +154,18 @@ export default defineComponent({
             return Object.values(groupedCourses);
         },
 
+        // Updated helper function to check if user search query matches course info
+        isCourseActive(course: GroupedCourse): boolean {
+
+            // Return false if searchQuery is empty to prevent any course from being active initially
+            if (!this.searchQuery.trim()) {
+                return false;
+            }
+
+            const query = this.searchQuery.toLowerCase();
+            return course.title.toLowerCase().includes(query) || course.baseCode.toLowerCase().includes(query);
+        },
+
         handleRouteQuery() {
             const majorName = this.$route.query.select as string;
             if (majorName && this.majors.length > 0) {
@@ -230,14 +244,14 @@ export default defineComponent({
         0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.major-card:hover {
+.major-card:hover{
     transform: translateY(-2px);
     box-shadow:
         0 4px 8px rgba(0, 0, 0, 0.12),
         0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
-.major-card.active {
+.major-card.active{
     border-left: 4px solid #4299e1;
     padding-left: 16px;
     animation: highlight 1s ease-in-out;
@@ -298,6 +312,7 @@ export default defineComponent({
     background: #f7fafc;
     border-radius: 6px;
     cursor: pointer;
+    
 }
 
 .course-header:hover {
@@ -317,6 +332,7 @@ export default defineComponent({
 .course-sections {
     margin: 10px 0;
     padding-left: 20px;
+    
 }
 
 .section-link {
@@ -327,6 +343,7 @@ export default defineComponent({
     text-decoration: none;
     border-radius: 4px;
     transition: background-color 0.2s ease;
+    
 }
 
 .section-link:hover {
@@ -337,6 +354,7 @@ export default defineComponent({
     display: flex;
     justify-content: space-between;
     align-items: center;
+
 }
 
 .section-code {
@@ -347,4 +365,12 @@ export default defineComponent({
     color: #718096;
     font-size: 0.9em;
 }
+
+/* Updated course css and activated if the isCourseActive function is true? */
+.course-header.active-course {
+    border-left: 4px solid #4299e1;
+    padding-left: 16px;
+}
+
+
 </style>
