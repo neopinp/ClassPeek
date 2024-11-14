@@ -9,11 +9,11 @@ const prisma = new PrismaClient();
 
 router.post('/auth/signup', (req: Request, res: Response) => {
   const signUpUser = async () => {
-    const { email, name, password } = req.body;
+    const { dob, role, email, name, password } = req.body;
 
     try {
       // Ensure all required fields are present
-      if (!email || !name || !password) {
+      if (!dob || !role || !email || !name || !password) {
         return res.status(400).json({ error: 'All fields are required' });
       }
 
@@ -37,8 +37,8 @@ router.post('/auth/signup', (req: Request, res: Response) => {
       const newUser = await prisma.user.create({
         data: {
           name,
-          user_type: UserType.STUDENT, // Default to STUDENT
-          dob: new Date(), // Set a default or handle via the form
+          user_type: role,
+          dob: new Date(dob),
           credentials: {
             create: {
               school_email: email,

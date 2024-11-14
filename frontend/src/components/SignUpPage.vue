@@ -9,6 +9,15 @@
   <div class="signup-container">
     <h2>Create Account</h2>
     <form @submit.prevent="handleSignUp" class="signup-form">
+      <label for="dob">DOB:</label>
+      <input type="date" id="dob" v-model="userData.dob">
+      
+      <label for="role">Role:</label>
+      <select id="role" v-model="userData.role">
+      <option>STUDENT</option>
+      <option>PROFESSOR</option>
+      </select>
+
       <label for="email">Email:</label>
       <input type="email" id="email" v-model="userData.email" required />
 
@@ -38,6 +47,8 @@ export default defineComponent({
   data() {
     return {
       userData: {
+        dob: "",
+        role: "",
         email: "",
         name: "",
         password: "",
