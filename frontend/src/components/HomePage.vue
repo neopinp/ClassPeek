@@ -142,3 +142,84 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+.homePage {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  text-align: center;
+}
+
+main h1 {
+  font-size: 2em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+main p {
+  font-size: 1.2em;
+  color: #666;
+}
+
+.logo {
+  max-width: 150px;
+  height: auto;
+}
+
+/* Search box styling */
+
+input[type="text"] {
+  padding: 8px;
+  font-size: 1em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 50%;
+  margin-top: 10px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+  border-color: #007bff;
+}
+
+/* Section elements styling */
+.section-style {
+  background-color: #f0f8ff;
+  padding: 15px;
+  margin: 15px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+}
+
+.section-style h4 {
+  font-size: 1.5em;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.section-style ol {
+  list-style-type: none;
+  padding: 0;
+}
+
+.section-style li {
+  margin: 8px 0;
+}
+
+
+/* Router link elements styling */
+
+.link-style {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.link-style:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+</style>
