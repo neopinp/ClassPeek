@@ -7,6 +7,10 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
+    "pm2-start": "pm2 start dist/index.js --name 'classpeek-server'",
+    "pm2-stop": "pm2 stop classpeek-server",
+    "pm2-restart": "pm2 restart classpeek-server",
+    "pm2-save": "pm2 save",
     "reset-db": "ts-node prisma/reset_db.ts",
     "seed": "ts-node prisma/seed.ts",
     "reset-and-seed": "ts-node prisma/reset_db.ts && ts-node prisma/seed.ts"
