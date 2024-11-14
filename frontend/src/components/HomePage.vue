@@ -12,13 +12,14 @@
       </div>
       <br />
       <div>
-        <input type="text" placeholder="Search" />
+        <input type="text" placeholder="Search" v-model="searchQuery" />
       </div>
       <nav>
-        <section style="background-color: lightcyan">
+        <!-- Majors Section -->
+        <section v-if="filteredMajors.length" style="background-color: lightcyan">
           <h4>Majors</h4>
           <ol>
-            <li id="homepage-li" v-for="major in majors" :key="major.id">
+            <li v-for="major in filteredMajors" :key="major.id">
               <router-link 
                 :to="{ name: 'MajorsPage', query: { select: major.name } }"
                 class="text-blue-600 hover:underline"
@@ -29,10 +30,11 @@
           </ol>
         </section>
 
-        <section style="background-color: lightcyan">
+        <!-- Professors Section -->
+        <section v-if="filteredProfessors.length" style="background-color: lightcyan">
           <h4>Professors</h4>
           <ol>
-            <li id="homepage-li" v-for="professor in professors" :key="professor.id">
+            <li v-for="professor in filteredProfessors" :key="professor.id">
               <router-link 
                 :to="{ name: 'Info', params: { type: 'professor', id: professor.id } }"
                 class="text-blue-600 hover:underline"
@@ -43,10 +45,11 @@
           </ol>
         </section>
 
-        <section style="background-color: lightcyan;">
+        <!-- Subjects Section -->
+        <section v-if="filteredSubjects.length" style="background-color: lightcyan;">
           <h4>Subjects</h4>
           <ol>
-            <li id="homepage-li" v-for="subject in subjects" :key="subject.id">
+            <li v-for="subject in filteredSubjects" :key="subject.id">
               <router-link 
                 :to="{ name: 'SubjectsPage', query: { select: subject.code } }"
                 class="text-blue-600 hover:underline"
@@ -75,7 +78,27 @@ export default defineComponent({
       majors: [] as any[],
       professors: [] as any[],
       subjects: [] as any[],
+      searchQuery: '' as string,
     };
+  },
+
+  computed: {
+    filteredMajors() {
+      return this.majors.filter(major => 
+        major.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
+    filteredProfessors() {
+      return this.professors.filter(professor => 
+        professor.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    },
+    filteredSubjects() {
+      return this.subjects.filter(subject => 
+        subject.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        subject.code.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
   },
 
   methods: {
@@ -109,8 +132,8 @@ export default defineComponent({
 
   mounted() {
     sessionStore.fetchSession().then(() => {
-      this.userName = sessionStore.user.name || "Guest"
-    })
+      this.userName = sessionStore.user.name || "Guest";
+    });
     Promise.all([
       this.fetchMajors(),
       this.fetchProfessors(),
