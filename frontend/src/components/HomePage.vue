@@ -19,7 +19,7 @@
         <section v-if="filteredMajors.length" style="background-color: lightcyan">
           <h4>Majors</h4>
           <ol>
-            <li v-for="major in filteredMajors" :key="major.id">
+            <li id="homepage-li" v-for="major in filteredMajors" :key="major.id">
               <router-link 
                 :to="{ name: 'MajorsPage', query: { select: major.name } }"
                 class="text-blue-600 hover:underline"
@@ -34,7 +34,7 @@
         <section v-if="filteredProfessors.length" style="background-color: lightcyan">
           <h4>Professors</h4>
           <ol>
-            <li v-for="professor in filteredProfessors" :key="professor.id">
+            <li id="homepage-li" v-for="professor in filteredProfessors" :key="professor.id">
               <router-link 
                 :to="{ name: 'Info', params: { type: 'professor', id: professor.id } }"
                 class="text-blue-600 hover:underline"
@@ -49,7 +49,7 @@
         <section v-if="filteredSubjects.length" style="background-color: lightcyan;">
           <h4>Subjects</h4>
           <ol>
-            <li v-for="subject in filteredSubjects" :key="subject.id">
+            <li id="homepage-li" v-for="subject in filteredSubjects" :key="subject.id">
               <router-link 
                 :to="{ name: 'SubjectsPage', query: { select: subject.code } }"
                 class="text-blue-600 hover:underline"
