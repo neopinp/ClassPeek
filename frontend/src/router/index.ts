@@ -1,6 +1,6 @@
 // index.ts
 
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomePage from '@/components/HomePage.vue'
 import AboutPage from '@/components/AboutPage.vue'
 import SubjectsPage from '@/components/SubjectsPage.vue'
@@ -15,10 +15,7 @@ import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import EditProfilePage from '@/components/EditProfilePage.vue'
-import axios from 'axios'
 import api from '../api'
-
-const API_BASE_URL = 'http://localhost:3000/api';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -126,7 +123,7 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 
