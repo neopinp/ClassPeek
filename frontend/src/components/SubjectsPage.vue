@@ -78,6 +78,7 @@ interface Course {
 interface Subject {
   id: number;
   name: string;
+  code: string;
   description: string;
   courses?: Course[];
 }
@@ -102,26 +103,24 @@ export default defineComponent({
   },
   computed: {
     filteredSubjects(): Subject[] {
-      if (!this.searchQuery) {
-        this.clearSelections(); // Clear selections when query is empty
+      const query = this.searchQuery.toLowerCase();
+
+      if (!query) {
+      // No side effects here
         return this.subjects;
       }
 
-      const query = this.searchQuery.toLowerCase();
-      const filtered = this.subjects.filter(subject =>
-        subject.name.toLowerCase().includes(query) ||
-        subject.courses?.some(course =>
-          course.title.toLowerCase().includes(query) ||
-          course.course_code.toLowerCase().includes(query)
-        )
-      );
-
-      // Automatically toggle subjects and courses based on the search query
-      this.toggleSubjectsAndCourses(filtered);
-
-      return filtered;
+      return this.subjects.filter(
+        (subject) =>
+          subject.name.toLowerCase().includes(query) ||
+          subject.courses?.some(
+          (course) =>
+            course.title.toLowerCase().includes(query) ||
+            course.course_code.toLowerCase().includes(query)
+          )
+        );
+      },
     },
-  },
   methods: {
     async fetchSubjects() {
       try {
@@ -194,13 +193,78 @@ export default defineComponent({
       this.selectedSubjects = [];
       this.expandedCourses = [];
     },
-  },
-  watch: {
-    searchQuery(newQuery) {
-      if (!newQuery) {
-        this.clearSelections();
+    handleRouteQuery() {
+      const subjectCode = this.$route.query.select as string;
+      if (subjectCode && this.subjects.length > 0) {
+        const subject = this.subjects.find(s => s.code === subjectCode);
+        if (subject) {
+          this.selectedSubjects = [subject];
+          this.$nextTick(() => {
+            const element = document.getElementById(`subject-${subject.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          });
+        }
       }
     },
+  },
+  watch: {
+    searchQuery: {
+      handler(query: string) {
+        if (!query) {
+          this.selectedSubjects = [];
+          this.expandedCourses = [];
+        } else {
+          const filtered = this.subjects.filter(
+            (subject) =>
+              subject.name.toLowerCase().includes(query.toLowerCase()) ||
+              subject.courses?.some(
+                (course) =>
+                  course.title.toLowerCase().includes(query.toLowerCase()) ||
+                  course.course_code.toLowerCase().includes(query.toLowerCase())
+              )
+          );
+
+          filtered.forEach((subject) => {
+            if (!this.selectedSubjects.some((s) => s.id === subject.id)) {
+              this.toggleSubject(subject);
+            }
+            subject.courses?.filter(
+              (course) =>
+                course.title.toLowerCase().includes(query.toLowerCase()) ||
+                course.course_code.toLowerCase().includes(query.toLowerCase())
+              ).forEach((course) => {
+                const baseCode = this.getBaseCourseCode(course.course_code);
+                const groupedCourse = {
+                  baseCode,
+                  title: course.title,
+                  sections: [course],
+                };
+
+                if (!this.expandedCourses.includes(baseCode)) {
+                  this.toggleCourse(groupedCourse)
+                }
+              });
+          });
+        }
+      },
+      immediate: true
+    },
+    subjects: {
+      handler(newSubjects) {
+        if (newSubjects.length > 0) {
+          this.handleRouteQuery();
+        }
+      },
+      immediate: true
+    },
+    '$route.query': {
+      handler() {
+        this.handleRouteQuery();
+      },
+      immediate: true
+    }
   },
   mounted() {
     this.fetchSubjects();
