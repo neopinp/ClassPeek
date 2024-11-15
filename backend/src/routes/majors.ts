@@ -36,6 +36,7 @@ router.get('/majors/:id', async (req: Request, res: Response) => {
 // PROFESSOR restricted actions
 router.post('/majors', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
+    console.log("Incoming major payload:", req.body);
     const major = await prisma.major.create({
       data: req.body
     });
@@ -67,6 +68,7 @@ router.delete('/majors/:id', restrictTo(["PROFESSOR"]), (req, res) => {
       }
 
       if (major.courses.length > 0) {
+        console.log("Major deletion blocked, has courses still associated.");
         return res.status(400).json({
           error: 'Cannot delete major with associated courses',
           message: `This major has ${major.courses.length} course${major.courses.length === 1 ? '' : 's'} associated with it:`,

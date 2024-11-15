@@ -57,6 +57,7 @@ router.put('/professors/:id/page', requireAuth, async (req: Request, res: Respon
       where: { professor_id: parseInt(req.params.id) },
       data: req.body
     });
+    console.log(`Updating professor ${req.params.id} page with payload: ${req.body}`);
     res.json(professorPage);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update professor page' });
@@ -75,7 +76,7 @@ router.delete('/professors/:id', requireAuth, async (req: Request, res: Response
         where: { id: parseInt(req.params.id) }
       });
     });
-    
+    console.log(`Deleted professor ${req.params.id} page`);
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete professor page'});

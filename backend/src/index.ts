@@ -44,10 +44,10 @@ app.use(cookieSession({
 }));
 
 // Debugging session
-app.use((req, res, next) => {
-  console.log("Session in middleware:", req.session);
-  next();
-});
+//app.use((req, res, next) => {
+//  console.log("Session in middleware:", req.session);
+//  next();
+//});
 
 // Middleware to track active sessions with user names
 const activeSessions: Record<string, { userId: number; userType: string; userName: string }> = {};

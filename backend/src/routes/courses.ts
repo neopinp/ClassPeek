@@ -201,6 +201,7 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
 
 router.delete('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
+    console.log("Deleting course w/ payload:", req.body);
     await prisma.course.delete({
       where: { id: parseInt(req.params.id) }
     });
