@@ -139,12 +139,59 @@
           </div>
         </div>
 
+        <!-- Ratings Section -->
+        <div class="ratings-section">
+          <h3>Ratings</h3>
+          
+          <!-- Display Average Rating -->
+          <div class="average-rating">
+            <span class="stars">{{ renderStars(averageRating) }}</span>
+            <span class="numeric-rating">{{ averageRating.toFixed(1) }} / 5</span>
+          </div>
+          
+          <!-- User Rating Submission -->
+          <div v-if="isAuthenticated" class="user-rating">
+            <!-- TODO: Add individual user routes, it'd use this structure below
+            <h4>Your Rating</h4>
+            <div v-if="userRating">
+              <span class="stars">{{ renderStars(userRating) }}</span>
+              <span class="numeric-rating">{{ userRating }} / 5</span>
+              <button class="edit-button" @click="toggleRatingForm">Edit Rating</button>
+            </div>
+            <div v-else> -->
+            <div>
+              <button class="btn btn-primary" @click="toggleRatingForm">Rate This {{ isProfessor ? 'Professor' : 'Course' }}</button>
+            </div>
+            
+            <!-- Rating Form -->
+            <div v-if="showRatingForm" class="rating-form">
+              <form @submit.prevent="submitRating">
+                <div class="rating-options">
+                  <label v-for="n in 5" :key="n">
+                    <input type="radio" :value="n" v-model.number="ratingValue" required />
+                    {{ n }}
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Submit</button>
+                  <button type="button" class="btn btn-secondary" @click="toggleRatingForm">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Rating Not Available -->
+          <div v-else class="not-authenticated">
+            <p>Please log in to submit a rating.</p>
+          </div>
+        </div>
+
         <!-- Comments Section -->
         <div class="comments-section">
           <h3>Comments</h3>
           
           <!-- Main Comment Form -->
-          <div class="comment-form">
+          <div v-if="isAuthenticated" class="comment-form">
             <textarea
               v-model="newComment"
               placeholder="Write a comment..."
@@ -154,6 +201,9 @@
                 Post Comment
               </button>
             </div>
+          </div>
+          <div v-else class="comment-form">
+            <p>Please login to post comments.</p>
           </div>
 
           <!-- Comments List -->
@@ -324,11 +374,18 @@ export default defineComponent({
       editingComment: null as Comment | null,
       replyingTo: null as number | null,
       replyContent: '',
-      comments: [] as Comment[]
+      comments: [] as Comment[],
+      averageRating: 0.0 as number,
+      userRating: null as number | null,
+      ratingValue: 5 as number,
+      showRatingForm: false,
     };
   },
 
   computed: {
+    isAuthenticated(): boolean {
+      return !!this.user.id;
+    },
     isProfessor(): boolean {
       return this.type === 'professor';
     },
@@ -378,6 +435,7 @@ export default defineComponent({
         this.data = response.data;
         
         await this.fetchComments();
+        await this.fetchRatings();
         document.title = `${this.getTitle()} - ClassPeek`;
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -680,7 +738,109 @@ export default defineComponent({
       } catch (error) {
         console.error('Error submitting reply:', error);
       }
-    }
+    },
+
+    // Ratings Methods
+    async fetchRatings() {
+      if (!this.data) return;
+
+      try {
+        // Determine the type and ID for fetching ratings
+        const params: any = {};
+        let endpoint = '';
+
+        if (this.isProfessor) {
+          const professorPageId = this.data.professor_page?.id;
+          if (!professorPageId) {
+            console.error('ProfessorPage ID is missing');
+            return;
+          }
+          params.professorPageId = professorPageId;
+          endpoint = `/ratings`;
+        } else {
+          const courseId = this.data.id;
+          if (!courseId) {
+            console.error('Course ID is missing');
+            return;
+          }
+          params.courseId = courseId;
+          endpoint = `/ratings`;
+        }
+
+        // Fetch average rating
+        const averageResponse = await api.get(endpoint, { params });
+        this.averageRating = averageResponse.data.averageRating;
+
+        // If authenticated, fetch user's rating
+        if (this.isAuthenticated) {
+          const userId = sessionStore.user.id;
+          // Since ratings are unique per user per entity, fetch the user's rating
+          // Assuming an endpoint exists to fetch a specific user's rating
+          // Alternatively, iterate through comments or ratings to find it
+          // For simplicity, assuming the API returns user's rating in the average endpoint
+          // Otherwise, you might need to implement a separate API call
+
+          // Example: Fetch user's rating
+          // Adjust the API endpoint as per your backend implementation
+          // Here, we'll fetch all ratings and filter for the current user
+
+          const ratingsResponse = await api.get(endpoint, { params });
+          const allRatings = ratingsResponse.data.allRatings; // Adjust based on actual API response
+
+          const userRatingObj = allRatings.find((r: any) => r.userId === userId);
+          this.userRating = userRatingObj ? userRatingObj.value : null;
+        }
+      } catch (error) {
+        console.error('Error fetching ratings:', error);
+      }
+    },
+
+    renderStars(rating: number): string {
+      const fullStars = Math.floor(rating);
+      const halfStar = rating - fullStars >= 0.5;
+      let stars = '★'.repeat(fullStars);
+      if (halfStar) stars += '½';
+      stars = stars.padEnd(5, '☆'); // Ensure total of 5 stars
+      return stars;
+    },
+
+    toggleRatingForm() {
+      this.showRatingForm = !this.showRatingForm;
+      if (this.userRating) {
+        this.ratingValue = this.userRating;
+      } else {
+        this.ratingValue = 5;
+      }
+    },
+
+    async submitRating() {
+      try {
+        const payload: any = {
+          value: this.ratingValue,
+        };
+
+        if (this.isProfessor) {
+          payload.professorPageId = this.data.professor_page.id;
+        } else {
+          payload.courseId = this.data.id;
+        }
+
+        const response = await api.post('/ratings', payload);
+        this.averageRating = response.data.averageRating;
+
+        // Update user's rating
+        if (this.userRating) {
+          this.userRating = this.ratingValue;
+        } else {
+          this.userRating = this.ratingValue;
+        }
+
+        this.showRatingForm = false;
+      } catch (error) {
+        console.error('Error submitting rating:', error);
+        alert('Failed to submit rating. Please try again.');
+      }
+    },
   },
 
   mounted() {
@@ -1017,6 +1177,87 @@ export default defineComponent({
     border: 1px solid #e5e7eb;
     border-radius: 0.375rem;
     min-height: 80px;
+  }
+
+  /* ===== Ratings Section ===== */
+  .ratings-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.05),
+      0 4px 6px rgba(0, 0, 0, 0.02);
+  }
+
+  .ratings-section h3 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .average-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .average-rating .stars {
+    color: #f59e0b; /* Amber-400 for stars */
+    font-size: 1.25rem;
+  }
+
+  .average-rating .numeric-rating {
+    font-weight: 600;
+    color: #374151; /* Gray-700 */
+  }
+
+  .user-rating {
+    margin-bottom: 1.5rem;
+  }
+
+  .user-rating h4 {
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+  }
+
+  .user-rating .stars {
+    color: #f59e0b;
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+  }
+
+  .rating-form {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+  }
+
+  .rating-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .rating-options label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .rating-options input[type="radio"] {
+    accent-color: #3b82f6; /* Blue-500 */
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.5rem;
   }
 
   /* Buttons */
