@@ -8,6 +8,7 @@ import majorRoutes from './routes/majors';
 import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
+import ratingRoutes from './routes/ratings';
 
 const app: Application = express();
 const prisma = new PrismaClient();
@@ -69,6 +70,7 @@ app.use('/api', majorRoutes);
 app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
 app.use('/api', commentRoutes);
+app.use('/api', ratingRoutes);
 
 // Health Check Route
 app.get('/api/health', (req: Request, res: Response) => {
