@@ -42,6 +42,8 @@ router.post("/comments", requireAuth, (req, res) => {
         userId,
       });
 
+      console.log("Comment created from payload: ", req.body)
+
       res.json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -60,6 +62,7 @@ router.put("/comments/:id", requireAuth, async (req, res) => {
       Number(req.params.id),
       content
     );
+    console.log("Updated comment with payload: ", req.body)
     res.json(comment);
   } catch (error) {
     console.error("Error updating comment:", error);

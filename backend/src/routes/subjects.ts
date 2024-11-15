@@ -36,6 +36,7 @@ router.get('/subjects/:id', async (req: Request, res: Response) => {
 // PROFESSOR restricted actions
 router.post('/subjects', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
+    console.log("Incoming subject payload:", req.body);
     const subject = await prisma.subject.create({
       data: req.body
     });
@@ -67,6 +68,7 @@ router.delete('/subjects/:id', restrictTo(["PROFESSOR"]), (req, res) => {
       }
 
       if (subject.courses.length > 0) {
+        console.log("Subject deletion blocked, has courses still associated.");
         return res.status(400).json({
           error: 'Cannot delete subject with associated courses',
           message: `This subject has ${subject.courses.length} course${subject.courses.length === 1 ? '' : 's'} associated with it:`,

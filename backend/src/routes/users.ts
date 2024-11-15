@@ -56,7 +56,7 @@ router.post('/auth/signup', (req: Request, res: Response) => {
           credentials: true,
         },
       });
-
+      console.log(`User signed up: ${role}, ${dob}, ${email}, ${name}`);
       res.status(201).json(newUser);
     } catch (error) {
       console.error('Error creating user:', error);
@@ -91,7 +91,7 @@ router.post('/auth/login', (req: Request, res: Response) => {
         req.session.userId = user.id;
         req.session.userType = user.user_type;
       }
-
+      console.log('User signed in: ', req.session)
       res.json({ message: 'Login successful', user });
     } catch (error) {
       res.status(500).json({ error: 'Failed to log in' });

@@ -13,8 +13,10 @@ const app: Application = express();
 const prisma = new PrismaClient();
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = '127.0.0.1';
 const allowedOrigins = [
   'http://classpeek.ecrl.marist.edu',
+  'http://classpeek.ecrl.marist.edu:8080',
   'http://10.11.29.118:8080',
   'http://localhost:8080'
 ];
@@ -42,10 +44,10 @@ app.use(cookieSession({
 }));
 
 // Debugging session
-app.use((req, res, next) => {
-  console.log("Session in middleware:", req.session);
-  next();
-});
+//app.use((req, res, next) => {
+//  console.log("Session in middleware:", req.session);
+//  next();
+//});
 
 // Middleware to track active sessions with user names
 const activeSessions: Record<string, { userId: number; userType: string; userName: string }> = {};
@@ -164,10 +166,9 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
-
 // Output current backend server status to console
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port http://0.0.0.0:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
 });
 
 export default app;
