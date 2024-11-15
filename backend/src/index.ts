@@ -16,8 +16,6 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '127.0.0.1';
 const allowedOrigins = [
   'http://classpeek.ecrl.marist.edu',
-  'http://classpeek.ecrl.marist.edu:8080',
-  'http://10.11.29.118:8080',
   'http://localhost:8080'
 ];
 
@@ -42,12 +40,6 @@ app.use(cookieSession({
   secure: false,
   sameSite: 'lax', // Cookies persist for navigation and subdomains.
 }));
-
-// Debugging session
-//app.use((req, res, next) => {
-//  console.log("Session in middleware:", req.session);
-//  next();
-//});
 
 // Middleware to track active sessions with user names
 const activeSessions: Record<string, { userId: number; userType: string; userName: string }> = {};
@@ -76,7 +68,18 @@ app.use('/api', subjectRoutes);
 app.use('/api', majorRoutes);
 app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
-app.use('/api', commentRoutes)
+app.use('/api', commentRoutes);
+
+// Health Check Route
+app.get('/api/health', (req: Request, res: Response) => {
+  res.json({ status: 'OK' });
+});
+
+// Error Handling Middleware
+app.use((err: any, req: Request, res: Response, next: Function) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
 
 // Root Route: Backend Output + User Table
 app.get("/", async (req: Request, res: Response) => {
