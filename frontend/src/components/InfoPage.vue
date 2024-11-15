@@ -249,7 +249,7 @@
 
                 <div class="comment-actions">
                   <button class="action-button" @click="startReply(comment)">Reply</button>
-                  <div v-if="isCurrentUser(comment.user.id)" class="user-actions">
+                  <div v-if="isCurrentUser(comment.user.id) || isUserProfessor" class="user-actions">
                     <button class="edit-button" @click="startCommentEdit(comment)">Edit</button>
                     <button class="delete-button" @click="deleteComment(comment.id)">Delete</button>
                   </div>
@@ -302,7 +302,7 @@
                       {{ reply.content }}
                     </div>
 
-                    <div v-if="isCurrentUser(reply.user.id)" class="comment-actions">
+                    <div v-if="isCurrentUser(reply.user.id) || isUserProfessor" class="comment-actions">
                       <button class="edit-button" @click="startCommentEdit(reply)">Edit</button>
                       <button class="delete-button" @click="deleteComment(reply.id)">Delete</button>
                     </div>
@@ -388,6 +388,10 @@ export default defineComponent({
     },
     isProfessor(): boolean {
       return this.type === 'professor';
+    },
+
+    isUserProfessor(): boolean {
+      return sessionStore.user.user_type === "PROFESSOR";
     },
 
     isCurrentProfessor(): boolean {
