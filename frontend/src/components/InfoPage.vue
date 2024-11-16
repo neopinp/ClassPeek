@@ -25,29 +25,16 @@
               <label><strong>Office:</strong></label>
               <div v-if="isEditingField !== 'office_location'" class="text-display">
                 <p>{{ data?.professor_page?.office_location || 'Not specified' }}</p>
-                <button
-                  v-if="isCurrentProfessor && !isEditingField" 
-                  class="edit-button"
-                  @click="startEdit('office_location')"
-                >
+                <button v-if="isCurrentProfessor && !isEditingField" class="btn btn-primary" @click="startEdit('office_location')">
                   Edit
                 </button>
               </div>
               <div v-else>
-                <textarea
-                  v-model="editedData.office_location"
-                  class="input-field"
-                ></textarea>
-                <button
-                  class="save-button"
-                  @click="saveEdit('office_location')"
-                >
+                <textarea v-model="editedData.office_location" class="input-field"></textarea>
+                <button class="btn btn-primary" @click="saveEdit('office_location')">
                   Save
                 </button>
-                <button
-                  class="cancel-button"
-                  @click="cancelCommentEdit"
-                >
+                <button class="btn btn-secondary" @click="cancelEdit">
                   Cancel
                 </button>
               </div>
@@ -60,7 +47,7 @@
                 <p>{{ data?.professor_page?.office_hours || 'Not specified' }}</p>
                 <button
                   v-if="isCurrentProfessor && !isEditingField" 
-                  class="edit-button"
+                  class="btn btn-primary"
                   @click="startEdit('office_hours')"
                 >
                   Edit
@@ -72,14 +59,14 @@
                   class="input-field"
                 ></textarea>
                 <button
-                  class="save-button"
+                  class="btn btn-primary"
                   @click="saveEdit('office_hours')"
                 >
                   Save
                 </button>
                 <button
-                  class="cancel-button"
-                  @click="cancelCommentEdit"
+                  class="btn btn-secondary"
+                  @click="cancelEdit"
                 >
                   Cancel
                 </button>
@@ -106,25 +93,27 @@
       <article class="main-content">
         <h2>{{ getTopicTitle() }}</h2>
         <div class="content-body">
-          <!-- Bio Section with Editing -->
-          <div v-if="!isEditingField || isEditingField !== 'bio'">
-            <p>{{ getMainContent() }}</p>
-            <button 
-              v-if="isCurrentProfessor && !isEditingField" 
-              class="edit-button" 
-              @click="startEdit('bio')">
-              Edit Bio
-            </button>
-          </div>
-          <div v-else>
-            <textarea
-              v-model="editedData.bio"
-              class="input-field"
-              placeholder="Edit professor bio here"
-            ></textarea>
-            <div class="edit-actions">
-              <button class="btn btn-primary" @click="saveEdit('bio')">Save</button>
-              <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+          <!-- Bio Section -->
+          <div class="editable-field">
+            <div v-if="!isEditingField || isEditingField !== 'bio'">
+              <p>{{ getMainContent() }}</p>
+              <button 
+                v-if="isCurrentProfessor && !isEditingField" 
+                class="btn btn-primary" 
+                @click="startEdit('bio')">
+                Edit Bio
+              </button>
+            </div>
+            <div v-else>
+              <textarea
+                v-model="editedData.bio"
+                class="input-field"
+                placeholder="Edit professor bio here"
+              ></textarea>
+              <div class="edit-actions">
+                <button class="btn btn-primary" @click="saveEdit('bio')">Save</button>
+                <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+              </div>
             </div>
           </div>
 
@@ -237,7 +226,7 @@
                 </div>
 
                 <div class="comment-content">
-                  <div v-if="editingComment?.id === comment.id" class="edit-form">
+                  <div v-if="editingComment?.id === comment.id" class="editable-field">
                     <textarea v-model="editingComment.content"></textarea>
                     <div class="comment-actions">
                       <button class="btn btn-secondary" @click="cancelCommentEdit">Cancel</button>
@@ -248,10 +237,10 @@
                 </div>
 
                 <div class="comment-actions">
-                  <button class="action-button" @click="startReply(comment)">Reply</button>
+                  <button class="btn btn-primary" @click="startReply(comment)">Reply</button>
                   <div v-if="isCurrentUser(comment.user.id) || isUserProfessor" class="user-actions">
-                    <button class="edit-button" @click="startCommentEdit(comment)">Edit</button>
-                    <button class="delete-button" @click="deleteComment(comment.id)">Delete</button>
+                    <button class="btn btn-primary" @click="startCommentEdit(comment)">Edit</button>
+                    <button class="btn btn-tertiary" @click="deleteComment(comment.id)">Delete</button>
                   </div>
                 </div>
 
@@ -276,8 +265,7 @@
                     <div class="user-info">
                       <div class="user-header">
                         <!-- Username also links to their profile -->
-                        <router-link
-                          v-if="reply.user.user_type === 'PROFESSOR'"
+                        <router-link v-if="reply.user.user_type === 'PROFESSOR'"
                           :to="{ name: 'Info', params: { type: 'professor', id: reply.user.id } }"
                           class="user-name-link"
                         >
@@ -303,8 +291,8 @@
                     </div>
 
                     <div v-if="isCurrentUser(reply.user.id) || isUserProfessor" class="comment-actions">
-                      <button class="edit-button" @click="startCommentEdit(reply)">Edit</button>
-                      <button class="delete-button" @click="deleteComment(reply.id)">Delete</button>
+                      <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
+                      <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -779,17 +767,10 @@ export default defineComponent({
         if (this.isAuthenticated) {
           const userId = sessionStore.user.id;
           // Since ratings are unique per user per entity, fetch the user's rating
-          // Assuming an endpoint exists to fetch a specific user's rating
-          // Alternatively, iterate through comments or ratings to find it
-          // For simplicity, assuming the API returns user's rating in the average endpoint
-          // Otherwise, you might need to implement a separate API call
-
-          // Example: Fetch user's rating
-          // Adjust the API endpoint as per your backend implementation
-          // Here, we'll fetch all ratings and filter for the current user
+          // Currently the API returns every rating, maybe tweak to fetch user rating seperately?
 
           const ratingsResponse = await api.get(endpoint, { params });
-          const allRatings = ratingsResponse.data.allRatings; // Adjust based on actual API response
+          const allRatings = ratingsResponse.data.allRatings;
 
           const userRatingObj = allRatings.find((r: any) => r.userId === userId);
           this.userRating = userRatingObj ? userRatingObj.value : null;
@@ -922,10 +903,22 @@ export default defineComponent({
   .editable-field textarea,
   .editable-field input {
     width: 100%;
+    max-width: 400px;
+    min-height: 50px;
     padding: 10px;
+    font-size: 16px;
     border-radius: 6px;
     border: 1px solid #ccc;
-    font-size: 16px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    resize: vertical; /* Allow vertical resizing for textareas */
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .editable-field textarea:focus,
+  .editable-field input:focus {
+    border-color: #4299e1; /* Blue border on focus */
+    box-shadow: 0 0 5px rgba(66, 153, 225, 0.5); /* Subtle glow */
   }
 
   /* Profile Image */
@@ -1125,33 +1118,6 @@ export default defineComponent({
     justify-content: flex-end;
   }
 
-  .action-button {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
-  }
-
-  .action-button:hover {
-    transform: translateY(-1px);
-  }
-
-  .edit-button {
-    color: #3b82f6;
-  }
-
-  .edit-button:hover {
-    color: #2563eb;
-  }
-
-  .delete-button {
-    color: #ef4444;
-  }
-
-  .delete-button:hover {
-    color: #dc2626;
-  }
-
   /* Reply Section */
   .replies {
     margin-top: 1rem;
@@ -1289,6 +1255,16 @@ export default defineComponent({
 
   .btn-secondary:hover {
     background-color: #4b5563;
+    transform: translateY(-1px);
+  }
+
+  .btn-tertiary {
+    background-color: #f63b3b;
+    color: white;
+  }
+
+  .btn-tertiary:hover {
+    background-color: #cc2323;
     transform: translateY(-1px);
   }
 
