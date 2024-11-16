@@ -1,225 +1,135 @@
 <template>
   <div class="homePage">
     <main>
-      <h1>Welcome to ClassPeek!</h1>
-      <!-- Greeting based on user session -->
-      <p v-if="userName">Hi, {{ userName }}</p>
-      <p v-else>Hi, Guest</p>
-      <p>This is the homepage of our application.</p>
-      <br />
-      <div>
-        <img src="../assets/logo.png" class="logo" />
+      <div class="header">
+        <h1 class="page-title">Welcome to ClassPeek!</h1>
+        <p v-if="userName" class="greeting">Hi, {{ userName }}</p>
+        <p v-else class="greeting">Hi, Guest</p>
       </div>
-      <br />
-      <div>
-        <input type="text" placeholder="Search" v-model="searchQuery" />
+      <!-- Search Section -->
+      <div class="search-section">
+        <input
+          type="text"
+          placeholder="Search for professors, subjects, or majors..."
+          v-model="searchQuery"
+          class="search-input"
+        />
       </div>
-      <nav>
+      <!-- Horizontal Grid Section -->
+      <div class="horizontal-grid">
         <!-- Majors Section -->
-        <section v-if="filteredMajors.length" style="background-color: lightcyan">
-          <h4>Majors</h4>
-          <ol>
-            <li id="homepage-li" v-for="major in filteredMajors" :key="major.id">
-              <router-link 
+        <section class="grid-section">
+          <h2 class="section-title">Majors</h2>
+          <ul class="list">
+            <li v-for="major in filteredMajors" :key="major.id" class="card">
+              <router-link
                 :to="{ name: 'MajorsPage', query: { select: major.name } }"
-                class="text-blue-600 hover:underline"
+                class="card-link"
               >
-                {{ major.name }}
+                <div class="card-name">{{ major.name }}</div>
+                <div class="card-description">{{ getFirstSentence(major.description) }}</div>
               </router-link>
             </li>
-          </ol>
+          </ul>
         </section>
-
         <!-- Professors Section -->
-        <section v-if="filteredProfessors.length" style="background-color: lightcyan">
-          <h4>Professors</h4>
-          <ol>
-            <li id="homepage-li" v-for="professor in filteredProfessors" :key="professor.id">
-              <router-link 
+        <section class="grid-section">
+          <h2 class="section-title">Professors</h2>
+          <ul class="list">
+            <li v-for="professor in filteredProfessors" :key="professor.id" class="card">
+              <router-link
                 :to="{ name: 'Info', params: { type: 'professor', id: professor.id } }"
-                class="text-blue-600 hover:underline"
+                class="card-link"
               >
-                {{ professor.name }}
+                <div class="card-name">{{ professor.name }}</div>
+                <div class="card-description">{{ professor.bio }}</div>
               </router-link>
             </li>
-          </ol>
+          </ul>
         </section>
-
         <!-- Subjects Section -->
-        <section v-if="filteredSubjects.length" style="background-color: lightcyan;">
-          <h4>Subjects</h4>
-          <ol>
-            <li id="homepage-li" v-for="subject in filteredSubjects" :key="subject.id">
-              <router-link 
+        <section class="grid-section">
+          <h2 class="section-title">Subjects</h2>
+          <ul class="list">
+            <li v-for="subject in filteredSubjects" :key="subject.id" class="card">
+              <router-link
                 :to="{ name: 'SubjectsPage', query: { select: subject.code } }"
-                class="text-blue-600 hover:underline"
+                class="card-link"
               >
-                {{ subject.name }}
+                <div class="card-name">{{ subject.name }}</div>
+                <div class="card-description">{{ subject.description }}</div>
               </router-link>
             </li>
-          </ol>
+          </ul>
         </section>
-      </nav>
+      </div>
     </main>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import sessionStore from "../store/session";
-import api from '../api';
-import './styles/HomePage.css';
+  import { defineComponent } from "vue";
+  import api from "../api";
+  import sessionStore from "../store/session";
 
-export default defineComponent({
-  name: 'HomePage',
-  data() {
-    return {
-      userName: sessionStore.user.name || "Guest",
-      majors: [] as any[],
-      professors: [] as any[],
-      subjects: [] as any[],
-      searchQuery: '' as string,
-    };
-  },
-
-  computed: {
-    filteredMajors() {
-      return this.majors.filter(major => 
-        major.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
+  export default defineComponent({
+    name: "HomePage",
+    data() {
+      return {
+        userName: sessionStore.user?.name || null,
+        searchQuery: "",
+        professors: [] as { id: number; name: string; bio?: string }[],
+        subjects: [] as { id: number; name: string; code: string; description: string }[],
+        majors: [] as { id: number; name: string; description: string }[],
+      };
     },
-    filteredProfessors() {
-      return this.professors.filter(professor => 
-        professor.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
+    computed: {
+      filteredProfessors() {
+        return this.professors.filter((prof) =>
+          prof.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+      },
+      filteredSubjects() {
+        return this.subjects.filter((subj) =>
+          subj.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+      },
+      filteredMajors() {
+        return this.majors.filter((major) =>
+          major.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+      },
     },
-    filteredSubjects() {
-      return this.subjects.filter(subject => 
-        subject.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        subject.code.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    }
-  },
-
-  methods: {
-    async fetchMajors() {
-      try {
-        const response = await api.get('/majors');
-        this.majors = response.data;
-      } catch (error) {
-        console.error('Error fetching majors:', error);
-      }
+    methods: {
+      async fetchData() {
+        try {
+          const [professorsResponse, subjectsResponse, majorsResponse] = await Promise.all([
+            api.get("/professors"),
+            api.get("/subjects"),
+            api.get("/majors"),
+          ]);
+          this.professors = professorsResponse.data.map((professor: any) => ({
+            id: professor.id,
+            name: professor.name,
+            bio: professor.professor_page?.bio || "No bio provided.",
+          }));
+          this.subjects = subjectsResponse.data;
+          this.majors = majorsResponse.data;
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      },
+      getFirstSentence(text: string): string {
+        const firstSentence = text.split(".")[0];
+        return firstSentence.trim() + ".";
+      },
     },
-
-    async fetchProfessors() {
-      try {
-        const response = await api.get('/professors');
-        this.professors = response.data;
-      } catch (error) {
-        console.error('Error fetching professors:', error);
-      }
+    mounted() {
+      this.fetchData();
     },
-
-    async fetchSubjects() {
-      try {
-        const response = await api.get('/subjects');
-        this.subjects = response.data;
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-      }
-    },
-  },
-
-  mounted() {
-    sessionStore.fetchSession().then(() => {
-      this.userName = sessionStore.user.name || "Guest";
-    });
-    Promise.all([
-      this.fetchMajors(),
-      this.fetchProfessors(),
-      this.fetchSubjects(),
-    ]);
-  },
-});
+  });
 </script>
 
-<style>
-.homePage {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  text-align: center;
-}
-
-main h1 {
-  font-size: 2em;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-main p {
-  font-size: 1.2em;
-  color: #666;
-}
-
-.logo {
-  max-width: 150px;
-  height: auto;
-}
-
-/* Search box styling */
-
-input[type="text"] {
-  padding: 8px;
-  font-size: 1em;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 50%;
-  margin-top: 10px;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-input[type="text"]:focus {
-  border-color: #007bff;
-}
-
-/* Section elements styling */
-.section-style {
-  background-color: #f0f8ff;
-  padding: 15px;
-  margin: 15px auto;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-}
-
-.section-style h4 {
-  font-size: 1.5em;
-  color: #007bff;
-  margin-bottom: 10px;
-}
-
-.section-style ol {
-  list-style-type: none;
-  padding: 0;
-}
-
-.section-style li {
-  margin: 8px 0;
-}
-
-
-/* Router link elements styling */
-
-.link-style {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-}
-
-.link-style:hover {
-  color: #0056b3;
-  text-decoration: underline;
-}
+<style scoped>
+  @import './styles/HomePage.css'
 </style>
