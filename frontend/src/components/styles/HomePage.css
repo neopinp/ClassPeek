@@ -1,53 +1,128 @@
 /* Home-Page CSS */
-
+/* General Page Styles */
 .homePage {
-  text-align: center;
-  margin-top: 50px;
-}
- .homePage main {
-  margin-top: 50px; /* Add a top margin to avoid content overlay */
-  height: 500px;
-  background: #ccc;
-}
-
-
- .homePage nav {
-  display: flex;
-}
-
- .homePage nav > section {
-  width:50%;
-}
-
-.homePage section {
-  border: 1px solid black;
   padding: 20px;
-  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.homePage div {
-  margin: auto;
-  width: fit-content;
-  border: transparent;
-
+.header {
+  text-align: center;
 }
 
-.logo {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background-color: transparent;
-}
-
-ol {
-  list-style-type: none; /* Remove default numbering */
-}
-
-#homepage-li {
-  color:black;
-  text-shadow: black 1px 1px 10px; /* color offset-x offset-y blur-radius */
-  text-align: left;
+.page-title {
+  font-size: 3rem;
+  font-weight: bold;
   margin-bottom: 10px;
-  font-size: 16px;
-  font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  color: #2c3e50;
+}
+
+.greeting {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+/* Search Section */
+.search-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 600px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+.highlight {
+  border: 2px solid #4caf50; /* Green border to indicate highlighting */
+  background-color: #e8f5e9; /* Light green background for emphasis */
+  transition: all 0.3s ease-in-out; /* Smooth transition effect */
+}
+
+.search-highlight {
+  color: #1976d2; /* Blue color for search terms in the list */
+  font-weight: bold;
+  background: #e3f2fd; /* Light blue background */
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Horizontal Grid Section */
+.horizontal-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 1600px;
+  gap: 20px;
+}
+
+/* Grid Section with Scrollable Content */
+.grid-section {
+  flex: 1;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  height: calc(90vh - 260px); /* Dynamic height based on viewport */
+  overflow-y: auto; /* Scrollbar for overflow */
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+/* Card Styles */
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.card {
+  margin-bottom: 15px;
+}
+
+.card-link {
+  text-decoration: none;
+  display: block;
+  flex-direction: column;
+  background: #ffffff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-link:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Consolidated Card Styles */
+.card-name {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.card-description {
+  display: block;
+  font-size: 1rem;
+  color: #555;
 }

@@ -86,9 +86,6 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: async (to, from, next) => {
       try {
         // Fetch the data to get the name
-        //const response = await axios.get(
-        //  `${API_BASE_URL}/${to.params.type}s/${to.params.id}`
-        //);
         const response = await api.get(`${to.params.type}s/${to.params.id}`);
         
         // Set meta title based on type and name

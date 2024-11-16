@@ -1,225 +1,210 @@
 <template>
   <div class="homePage">
-    <main>
-      <h1>Welcome to ClassPeek!</h1>
-      <!-- Greeting based on user session -->
-      <p v-if="userName">Hi, {{ userName }}</p>
-      <p v-else>Hi, Guest</p>
-      <p>This is the homepage of our application.</p>
-      <br />
-      <div>
-        <img src="../assets/logo.png" class="logo" />
+    <header class="header">
+      <h1 class="page-title">Welcome to ClassPeek!</h1>
+      <p class="greeting">Hi, {{ user?.name || 'Guest' }}</p>
+      <div class="search-section">
+        <input
+          type="text"
+          v-model="searchQuery"
+          class="search-input"
+          placeholder="Search for professors, subjects, or majors..."
+        />
       </div>
-      <br />
-      <div>
-        <input type="text" placeholder="Search" v-model="searchQuery" />
+    </header>
+
+    <div class="horizontal-grid">
+      <!-- Majors Section -->
+      <div
+        class="grid-section majors"
+        :class="{ highlight: highlightedSection === 'majors' }"
+      >
+        <h2 class="section-title">Majors</h2>
+        <ul class="list">
+          <li
+            v-for="major in filteredMajors"
+            :key="major.id"
+            class="card"
+          >
+            <router-link
+              :to="{ name: 'MajorsPage', query: { select: major.name, search: searchQuery } }"
+              class="card-link"
+            >
+              <span class="card-name">{{ major.name }}</span>
+              <span class="card-description">
+                {{ major.description.split('.')[0] }}.
+              </span>
+            </router-link>
+          </li>
+        </ul>
       </div>
-      <nav>
-        <!-- Majors Section -->
-        <section v-if="filteredMajors.length" style="background-color: lightcyan">
-          <h4>Majors</h4>
-          <ol>
-            <li id="homepage-li" v-for="major in filteredMajors" :key="major.id">
-              <router-link 
-                :to="{ name: 'MajorsPage', query: { select: major.name } }"
-                class="text-blue-600 hover:underline"
-              >
-                {{ major.name }}
-              </router-link>
-            </li>
-          </ol>
-        </section>
 
-        <!-- Professors Section -->
-        <section v-if="filteredProfessors.length" style="background-color: lightcyan">
-          <h4>Professors</h4>
-          <ol>
-            <li id="homepage-li" v-for="professor in filteredProfessors" :key="professor.id">
-              <router-link 
-                :to="{ name: 'Info', params: { type: 'professor', id: professor.id } }"
-                class="text-blue-600 hover:underline"
-              >
-                {{ professor.name }}
-              </router-link>
-            </li>
-          </ol>
-        </section>
+      <!-- Professors Section -->
+      <div
+        class="grid-section professors"
+        :class="{ highlight: highlightedSection === 'professors' }"
+      >
+        <h2 class="section-title">Professors</h2>
+        <ul class="list">
+          <li
+            v-for="professor in filteredProfessors"
+            :key="professor.id"
+            class="card"
+          >
+            <router-link
+              :to="{ name: 'Info', params: { type: 'professor', id: professor.id } }"
+              class="card-link"
+            >
+              <span class="card-name">{{ professor.name }}</span>
+              <span class="card-description">
+                {{ professor.professor_page?.bio || "No bio provided." }}
+              </span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
 
-        <!-- Subjects Section -->
-        <section v-if="filteredSubjects.length" style="background-color: lightcyan;">
-          <h4>Subjects</h4>
-          <ol>
-            <li id="homepage-li" v-for="subject in filteredSubjects" :key="subject.id">
-              <router-link 
-                :to="{ name: 'SubjectsPage', query: { select: subject.code } }"
-                class="text-blue-600 hover:underline"
-              >
-                {{ subject.name }}
-              </router-link>
-            </li>
-          </ol>
-        </section>
-      </nav>
-    </main>
+      <!-- Subjects Section -->
+      <div
+        class="grid-section subjects"
+        :class="{ highlight: highlightedSection === 'subjects' }"
+      >
+        <h2 class="section-title">Subjects</h2>
+        <ul class="list">
+          <li
+            v-for="subject in filteredSubjects"
+            :key="subject.id"
+            class="card"
+          >
+            <router-link
+              :to="{ name: 'SubjectsPage', query: { select: subject.code, search: searchQuery } }"
+              class="card-link"
+            >
+              <span class="card-name">{{ subject.name }}</span>
+              <span class="card-description">
+                {{ subject.description.split('.')[0] }}.
+              </span>
+            </router-link>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-import sessionStore from "../store/session";
-import api from '../api';
-import './styles/HomePage.css';
+<script>
+import { defineComponent } from "vue";
+import api from "../api";
 
 export default defineComponent({
-  name: 'HomePage',
+  name: "HomePage",
   data() {
     return {
-      userName: sessionStore.user.name || "Guest",
-      majors: [] as any[],
-      professors: [] as any[],
-      subjects: [] as any[],
-      searchQuery: '' as string,
+      searchQuery: "",
+      majors: [],
+      subjects: [],
+      professors: [],
+      courses: [], // New: Add courses to the data
+      filteredMajors: [],
+      filteredSubjects: [],
+      filteredProfessors: [],
+      highlightedSection: null, // Keeps track of the section to highlight (majors/subjects)
     };
   },
-
-  computed: {
-    filteredMajors() {
-      return this.majors.filter(major => 
-        major.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    },
-    filteredProfessors() {
-      return this.professors.filter(professor => 
-        professor.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    },
-    filteredSubjects() {
-      return this.subjects.filter(subject => 
-        subject.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        subject.code.toLowerCase().includes(this.searchQuery.toLowerCase())
-      );
-    }
-  },
-
   methods: {
-    async fetchMajors() {
+    async fetchData() {
       try {
-        const response = await api.get('/majors');
-        this.majors = response.data;
+        const [majorsRes, subjectsRes, professorsRes, coursesRes] = await Promise.all([
+          api.get("/majors"),
+          api.get("/subjects"),
+          api.get("/professors"),
+          api.get("/courses"),
+        ]);
+
+        this.majors = majorsRes.data;
+        this.subjects = subjectsRes.data;
+        this.professors = professorsRes.data;
+        this.courses = coursesRes.data;
+        this.filteredMajors = [...this.majors];
+        this.filteredSubjects = [...this.subjects];
+        this.filteredProfessors = [...this.professors];
       } catch (error) {
-        console.error('Error fetching majors:', error);
+        console.error("Error fetching data:", error);
       }
     },
+    handleSearch() {
+      const query = this.searchQuery.toLowerCase();
 
-    async fetchProfessors() {
-      try {
-        const response = await api.get('/professors');
-        this.professors = response.data;
-      } catch (error) {
-        console.error('Error fetching professors:', error);
+      // Filter majors, subjects, and professors
+      this.filteredMajors = this.majors.filter(
+        (major) =>
+          major.name.toLowerCase().includes(query) ||
+          major.description.toLowerCase().includes(query)
+      );
+      this.filteredSubjects = this.subjects.filter(
+        (subject) =>
+          subject.name.toLowerCase().includes(query) ||
+          subject.description.toLowerCase().includes(query)
+      );
+      this.filteredProfessors = this.professors.filter(
+        (professor) =>
+          professor.name.toLowerCase().includes(query) ||
+          professor.professor_page?.bio?.toLowerCase().includes(query)
+      );
+
+      // Filter courses and map to relevant majors/subjects
+      const filteredCourses = this.courses.filter(
+        (course) =>
+          course.title.toLowerCase().includes(query) ||
+          course.course_code.toLowerCase().includes(query)
+      );
+
+      // Highlight the matching section
+      if (filteredCourses.length > 0) {
+        const matchingSubjects = new Set(
+          filteredCourses.map((course) => course.subject_id)
+        );
+        const matchingMajors = new Set(
+          filteredCourses.flatMap((course) =>
+            course.majors?.map((major) => major.id) || []
+          )
+        );
+
+        this.filteredSubjects = this.subjects.filter((subject) =>
+          matchingSubjects.has(subject.id)
+        );
+        this.filteredMajors = this.majors.filter((major) =>
+          matchingMajors.has(major.id)
+        );
+
+        this.highlightedSection = "courses";
+      } else {
+        this.highlightedSection = null; // Reset highlight if no courses match
       }
     },
+    navigateToPage(section, id, query) {
+      // Navigate to the respective section page with the query
+      const routeName =
+        section === "major"
+          ? "MajorsPage"
+          : section === "subject"
+          ? "SubjectsPage"
+          : null;
 
-    async fetchSubjects() {
-      try {
-        const response = await api.get('/subjects');
-        this.subjects = response.data;
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
+      if (routeName) {
+        this.$router.push({ name: routeName, query: { select: id, search: query } });
       }
     },
   },
-
+  watch: {
+    searchQuery: "handleSearch",
+  },
   mounted() {
-    sessionStore.fetchSession().then(() => {
-      this.userName = sessionStore.user.name || "Guest";
-    });
-    Promise.all([
-      this.fetchMajors(),
-      this.fetchProfessors(),
-      this.fetchSubjects(),
-    ]);
+    this.fetchData();
   },
 });
 </script>
 
-<style>
-.homePage {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  text-align: center;
-}
-
-main h1 {
-  font-size: 2em;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-main p {
-  font-size: 1.2em;
-  color: #666;
-}
-
-.logo {
-  max-width: 150px;
-  height: auto;
-}
-
-/* Search box styling */
-
-input[type="text"] {
-  padding: 8px;
-  font-size: 1em;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 50%;
-  margin-top: 10px;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-input[type="text"]:focus {
-  border-color: #007bff;
-}
-
-/* Section elements styling */
-.section-style {
-  background-color: #f0f8ff;
-  padding: 15px;
-  margin: 15px auto;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-}
-
-.section-style h4 {
-  font-size: 1.5em;
-  color: #007bff;
-  margin-bottom: 10px;
-}
-
-.section-style ol {
-  list-style-type: none;
-  padding: 0;
-}
-
-.section-style li {
-  margin: 8px 0;
-}
-
-
-/* Router link elements styling */
-
-.link-style {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-}
-
-.link-style:hover {
-  color: #0056b3;
-  text-decoration: underline;
-}
+<style scoped>
+  @import './styles/HomePage.css'
 </style>

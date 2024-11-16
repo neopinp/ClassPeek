@@ -7,6 +7,7 @@ async function resetDatabase() {
     console.log('Starting database reset...');
     
     // Delete all records from all tables
+    await prisma.rating.deleteMany({});
     await prisma.comment.deleteMany({});
     await prisma.course.deleteMany({});
     await prisma.professorPage.deleteMany({});
@@ -18,6 +19,7 @@ async function resetDatabase() {
     
     // Reset all sequences
     console.log('Resetting ID sequences...');
+    await prisma.$executeRaw`ALTER SEQUENCE "Rating_id_seq" RESTART WITH 1;`;
     await prisma.$executeRaw`ALTER SEQUENCE "Comment_id_seq" RESTART WITH 1;`;
     await prisma.$executeRaw`ALTER SEQUENCE "Course_id_seq" RESTART WITH 1;`;
     await prisma.$executeRaw`ALTER SEQUENCE "ProfessorPage_id_seq" RESTART WITH 1;`;

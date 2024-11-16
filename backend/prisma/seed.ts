@@ -69,6 +69,7 @@ async function seed() {
   {
     name: 'Mary Johnson',
     email: 'mary.johnson@university.edu',
+    blurb: 'Dedicated to making abstract mathematics accessible to students.',
     dob: new Date('1980-03-20'),
     bio: 'PhD in Mathematics, specializing in Abstract Algebra',
     officeHours: 'TR 1-3PM',
@@ -77,6 +78,7 @@ async function seed() {
   {
     name: 'John Smith',
     email: 'john.smith@university.edu',
+    blurb: 'Passionate about teaching algorithms and data-driven problem-solving.',
     dob: new Date('1975-05-15'),
     bio: 'PhD in Computer Science with focus on algorithms',
     officeHours: 'MWF 2-4PM',
@@ -85,6 +87,7 @@ async function seed() {
   {
     name: 'Sarah Chen',
     email: 'sarah.chen@university.edu',
+    blurb: 'Inspiring students to explore quantum physics with hands-on research.',
     dob: new Date('1982-08-10'),
     bio: 'PhD in Physics, research focus on Quantum Computing',
     officeHours: 'MW 10AM-12PM',
@@ -93,6 +96,7 @@ async function seed() {
   {
     name: 'Michael Brown',
     email: 'michael.brown@university.edu',
+    blurb: 'Bringing organic chemistry to life with real-world applications',
     dob: new Date('1978-11-25'),
     bio: 'PhD in Chemistry, specializing in Organic Chemistry',
     officeHours: 'TR 9-11AM',
@@ -101,6 +105,7 @@ async function seed() {
   {
     name: 'Emily Taylor',
     email: 'emily.taylor@university.edu',
+    blurb: 'Engaging students with the wonders of genetics and biology.',
     dob: new Date('1983-04-30'),
     bio: 'PhD in Biology, research in Genetics',
     officeHours: 'MWF 1-3PM',
@@ -109,6 +114,7 @@ async function seed() {
   {
     name: 'David Wilson',
     email: 'david.wilson@university.edu',
+    blurb: 'Engaging students with the wonders of genetics and biology.',
     dob: new Date('1977-09-05'),
     bio: 'PhD in Computer Science, specializing in Operating Systems and Computer Architecture',
     officeHours: 'MW 3-5PM',
@@ -124,6 +130,11 @@ const professors = await Promise.all(
         name: prof.name,
         user_type: UserType.PROFESSOR,
         dob: prof.dob,
+        profile: {
+          create: {
+            blurb: prof.blurb,
+          }
+        },
         credentials: {
           create: {
             school_email: prof.email,
