@@ -8,7 +8,7 @@
           type="text"
           v-model="searchQuery"
           class="search-input"
-          placeholder="Search for professors, subjects, or majors..."
+          placeholder="Search for courses in majors or subjects, or professor information..."
         />
       </div>
     </header>
