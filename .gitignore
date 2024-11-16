@@ -9,4 +9,5 @@ backend/dist/
 
 # Common
 .DS_Store
+acme_challenge
 node_modules
