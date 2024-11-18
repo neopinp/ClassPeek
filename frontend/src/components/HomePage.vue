@@ -2,13 +2,13 @@
   <div class="homePage">
     <header class="header">
       <h1 class="page-title">Welcome to ClassPeek!</h1>
-      <p class="greeting">Hi, {{ user?.name || 'Guest' }}</p>
+      <p class="greeting">Hi, {{ user_name }}</p>
       <div class="search-section">
         <input
           type="text"
           v-model="searchQuery"
           class="search-input"
-          placeholder="Search for professors, subjects, or majors..."
+          placeholder="Search for courses in majors or subjects, or professor information..."
         />
       </div>
     </header>
@@ -95,11 +95,13 @@
 <script>
 import { defineComponent } from "vue";
 import api from "../api";
+import sessionStore from "../store/session";
 
 export default defineComponent({
   name: "HomePage",
   data() {
     return {
+      user_name: sessionStore.user?.name || "Guest",
       searchQuery: "",
       majors: [],
       subjects: [],

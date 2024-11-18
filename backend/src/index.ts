@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '127.0.0.1';
 const allowedOrigins = [
-  'http://classpeek.ecrl.marist.edu',
+  'https://classpeek.ecrl.marist.edu',
   'http://localhost:8080'
 ];
 
@@ -38,8 +38,8 @@ app.use(cookieSession({
   name: 'session',
   keys: ['development-static-key-123'],
   maxAge: 24 * 60 * 60 * 1000,
-  secure: false,
-  sameSite: 'lax', // Cookies persist for navigation and subdomains.
+  secure: process.env.NODE_ENV === 'production',  // Use secure cookies for production (https://)
+  sameSite: 'lax',                                // Cookies persist for navigation and subdomains.
 }));
 
 // Middleware to track active sessions with user names
