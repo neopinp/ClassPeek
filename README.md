@@ -1,54 +1,65 @@
 # Classpeek
 The purpose of ClassPeek is to create an interactive platform for students and instructors to share and manage educational content, facilitating discussions and collaboration around courses. The application will provide features such as course management, file sharing, and discussion boards in a user-friendly, dynamic web environment.
 
+## Overview
+This application is written in **TypeScript** and built using **Vue.js**, **Express.js**, and **Prisma** to interact with a **PostgreSQL** database. The project is organized into two main directories:
+- `frontend`: Contains the Vue.js application and its build logic.
+- `backend`: Contains the Express.js application and its logic.
+
+The production build for the application is always contained in the `/dist` folder within each respective directory. In production, the `./frontend/dist` folder contains the `index.html` file, which your reverse proxy (e.g., Nginx) will serve.
+
 ## Installation
-First, make sure that you have VSCode and node.js installed on your device. If already, make sure that your node.js installation is at the latest (at the time of creating this, 20.18.0) and for npm as well. 
-As of 10/23/2024, I think I have the package.json files setup correctly. All you need to do is run `npm install` in the root, frontend, and backend folders and that should install all the dependencies needed. Once you've done that, run `npx prisma generate` so you can generate a prisma client to test if the connection (the .env file) is working for your device. If that works, skip straight to the running the server section.
+Before getting started, ensure you have **VSCode** and **Node.js** installed. Verify that your Node.js and npm versions are up to date (e.g., Node.js `20.18.0` at the time of writing).
 
-It is generally recommended that you run these commands regardless at your root folder since these are global installations.
-```
-npm install -g typescript (run in root)
-npm install -g @vue/cli (run in root)
-```
-
-If you prefer to install the packages yourself, follow the below instructions.
-
-Make sure that you're in the root directory for the file where you cloned the repository(i.e. .../Classpeek), then run these in the terminal to install the dependicies for Classpeek on your device.
-```
-npm install -g typescript (run in root)
-npm install -g @vue/cli (run in root)
-npm install -D concurrently (run in root)
+### Global Dependencies
+Install the following global packages:
+```bash
+npm install -g typescript
+npm install -g @vue/cli
+npm install -g pm2
 ```
 
-Once you have installed the above, we are now installing the so we can interact with our PostgreSQL database. First **make sure that you are running this from the backend!**
+### Project Dependencies
+Run the following command from the root directory to install all necessary dependencies for the project:
+```bash
+npm run install-all
 ```
-cd backend
-npm install prisma @prisma/client typescript
-npx prisma generate
+
+This command automates the process of running `npm install` in the root, `frontend`, and `backend` directories.
+
+### Database Connection
+When running this for the first time, we need to create a **Prisma client** in order for our application to communicate with the backend. Run the following command if this is a fresh installation.
+```bash
+npm run prisma-generate
 ```
 
 ## Running the server
-Each of the commands starts up the applcation on your localhost (127.0.0.1) address. The front end runs on the 8080 port, and the backend runs on the 3000 port.
+For development, the frontend runs on `http://localhost:8080`, and the backend runs on `http://localhost:3000`.
 
-### Root
-First make sure that you are running this from the root diectory (.../Classpeek), then run them based on what you are trying to do.
-```
-npm run dev (from root, both backend and frontend)
-npm run client (from root, runs frontend)
-npm run server (from root, runs backend)
-npm run build (from root, builds and runs frontend & backend for 'production')
-npm run start (from root, starts backend for 'production')
+### Development
+Run these commands from the **root directory** (`.../Classpeek`):
+```bash
+npm run dev     # Starts both backend and frontend for development
+npm run client  # Starts the frontend only
+npm run server  # Starts the backend only
 ```
 
+### Production
+1. Build the application
+    ```bash
+    npm run build
+    ```
+    This creates a production-ready build in the /dist folder for both the frontend and backend.
 
-### Frontend
-Works only with frontend. So make sure from the root you cd into the `frontend` folder.
-```
-npm run serve (cd frontend, runs frontend)
-```
+2. Configure your reverse proxy (e.g., Nginx or Apache):
+    - Serve static files from `./frontend/dist`.
+    - Route API requests (`/api/`) to `http://127.0.0.1:3000/api/`.
 
-### Backend
-```
-npm run dev ((run in /backend))
-npx prisma generate (Needed everytime you change the schema)
-```
+3. Start the backend
+    ```bash
+    npm run start       # Starts the server within your terminal
+    npm run pm2-start   # Starts the server within a PM2 daemon
+    npm run pm2-stop    # Stops the PM2 daemon
+    npm run pm2-restart # Restarts the PM2 daemon
+    npm run pm2-save    # Saves the PM2 daemon
+    ```

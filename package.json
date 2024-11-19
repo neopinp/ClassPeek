@@ -53,14 +53,18 @@
     "typescript": "^5.6.3"
   },
   "scripts": {
+    "install-all": "npm install && (cd frontend && npm install) && (cd ../backend && npm install)",
+    "prisma-generate": "cd backend && npx prisma generate",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run serve",
     "build": "cd frontend && npm run build && cd ../backend && npm run build",
     "start": "cd backend && npm run start",
-    "pm2-dev": "pm2 start npm --name 'classpeek' -- run dev",
-    "pm2-client": "pm2 start npm --name 'classpeek-client' -- run client",
-    "pm2-server": "pm2 start npm --name 'classpeek-server' -- run server"
+    "pm2-start": "cd backend && npm run pm2-start",
+    "pm2-stop": "cd backend && npm run pm2-stop",
+    "pm2-restart": "cd backend && npm run pm2-restart",
+    "pm2-save": "cd backend && npm run pm2-save"
+    
   },
   "keywords": [],
   "author": "",
