@@ -88,7 +88,7 @@ export default defineComponent({
 }
 
 nav {
-  background-color: #42b982;
+  background-color: #ff0932;
   padding: 1rem;
   position: relative;
 }
@@ -168,7 +168,7 @@ nav ul li a.router-link-exact-active {
 
 .dropdown-menu li:hover {
   background-color: #f0f0f0;
-  color: #42b982;
+  color: #ff0932;
 }
 
 #profileDropdown:hover .dropdown-menu {

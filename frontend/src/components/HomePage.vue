@@ -1,5 +1,9 @@
 <template>
   <div class="homePage">
+
+    <div class="header-container">
+    <!-- Render Marist Logo -->
+    <img :src="logo" width="200px" height="200px" alt="Marist Logo" />
     <header class="header">
       <h1 class="page-title">Welcome to ClassPeek!</h1>
       <p class="greeting">Hi, {{ user_name }}</p>
@@ -12,7 +16,7 @@
         />
       </div>
     </header>
-
+  </div>
     <div class="horizontal-grid">
       <!-- Majors Section -->
       <div
@@ -101,6 +105,8 @@ export default defineComponent({
   name: "HomePage",
   data() {
     return {
+      // Dynamically resolve the image path
+      logo: require('./images/MaristFox.png'), // Adjust relative path if needed
       user_name: sessionStore.user?.name || "Guest",
       searchQuery: "",
       majors: [],
