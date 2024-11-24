@@ -6,6 +6,10 @@
   flex-direction: column;
   align-items: center;
   background-color: rgb(249, 187, 187);
+  background-image: url("../images/download.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .header-container {
@@ -23,14 +27,12 @@
   font-weight: bold;
   margin-bottom: 10px;
   color: #2c3e50;
-
 }
 
 .greeting {
   font-size: 1.5rem;
   margin-bottom: 20px;
   color: #555;
-
 }
 
 /* Search Section */
@@ -41,7 +43,6 @@
   width: 100%;
   max-width: 800px;
   margin: 20px auto;
-
 }
 
 .search-input {
@@ -51,7 +52,6 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 1.2rem;
-
 }
 
 .highlight {
