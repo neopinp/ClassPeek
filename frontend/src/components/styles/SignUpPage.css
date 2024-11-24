@@ -59,7 +59,8 @@
 .signup-form input[type="password"]:focus {
   border-color: #ff0932;
   outline: none;
-  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(66, 185, 131, 0.5); /* Enhanced 3D effect on focus */
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(220, 54, 28, 0.5); /* Enhanced 3D effect on focus */
+
 }
 
 /* Button styling with 3D effect */
