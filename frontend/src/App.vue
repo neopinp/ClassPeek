@@ -174,4 +174,19 @@ nav ul li a.router-link-exact-active {
 #profileDropdown:hover .dropdown-menu {
   display: flex;
 }
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 </style>
