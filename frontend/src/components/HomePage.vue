@@ -107,7 +107,7 @@ export default defineComponent({
     return {
       // Dynamically resolve the image path
       logo: require('./images/MaristFox.png'), // Adjust relative path if needed
-      user_name: sessionStore.user?.name || "Guest",
+      user_name: "",
       searchQuery: "",
       majors: [],
       subjects: [],
@@ -128,7 +128,7 @@ export default defineComponent({
           api.get("/professors"),
           api.get("/courses"),
         ]);
-
+        this.user_name = sessionStore.user?.name || "Guest";
         this.majors = majorsRes.data;
         this.subjects = subjectsRes.data;
         this.professors = professorsRes.data;
