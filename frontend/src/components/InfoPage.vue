@@ -24,7 +24,7 @@
             <div class="editable-field">
               <label><strong>Office:</strong></label>
               <div v-if="isEditingField !== 'office_location'" class="text-display">
-                <p>{{ data?.professor_page?.office_location || 'Not specified' }}</p>
+                <p style="color: black;">{{ data?.professor_page?.office_location || 'Not specified' }}</p>
                 <button v-if="isCurrentProfessor && !isEditingField" class="btn btn-primary" @click="startEdit('office_location')">
                   Edit
                 </button>
@@ -44,7 +44,7 @@
             <div class="editable-field">
               <label><strong>Office Hours:</strong></label>
               <div v-if="isEditingField !== 'office_hours'" class="text-display">
-                <p>{{ data?.professor_page?.office_hours || 'Not specified' }}</p>
+                <p style="color: black;">{{ data?.professor_page?.office_hours || 'Not specified' }}</p>
                 <button
                   v-if="isCurrentProfessor && !isEditingField" 
                   class="btn btn-primary"
@@ -849,7 +849,8 @@ export default defineComponent({
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: #f5f7fa;
+    background: rgb(249, 187, 187);
+    /*background-image: url("images/download.jpg");*/
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
     font-size: 16px;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -874,7 +875,7 @@ export default defineComponent({
   }
 
   .profile-card, .info-card {
-    background: white;
+    background: rgb(255, 61, 93);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 
@@ -893,6 +894,7 @@ export default defineComponent({
   }
 
    /* ===== Editable items ===== */
+
   .editable-field {
     margin-bottom: 20px;
   }
@@ -957,7 +959,7 @@ export default defineComponent({
   /* ===== Main Content Area ===== */
   .main-content {
     flex: 3;
-    background: white;
+    background: rgb(255, 61, 93);
     padding: 30px;
     border-radius: 8px;
     box-shadow: 
@@ -1019,7 +1021,7 @@ export default defineComponent({
 
   /* Comment Form */
   .comment-form {
-    background: white;
+    background: rgb(249, 187, 187);
     padding: 1.5rem;
     border-radius: 0.75rem;
     border: 1px solid #e5e7eb;
@@ -1042,7 +1044,7 @@ export default defineComponent({
 
   .comment-form textarea:focus {
     outline: none;
-    border-color: #3b82f6;
+    border-color: red;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 
@@ -1153,7 +1155,7 @@ export default defineComponent({
   .ratings-section {
     margin-top: 2rem;
     padding: 2rem;
-    background: white;
+    background: rgb(255, 223, 223);
     border-radius: 0.75rem;
     box-shadow: 
       0 2px 4px rgba(0, 0, 0, 0.05),
