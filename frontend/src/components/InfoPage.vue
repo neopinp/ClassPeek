@@ -875,7 +875,7 @@ export default defineComponent({
   }
 
   .profile-card, .info-card {
-    background: rgb(255, 61, 93);
+    background: rgb(240, 240, 240);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 
@@ -959,7 +959,7 @@ export default defineComponent({
   /* ===== Main Content Area ===== */
   .main-content {
     flex: 3;
-    background: rgb(255, 61, 93);
+    background: rgb(240, 240, 240);
     padding: 30px;
     border-radius: 8px;
     box-shadow: 
@@ -1021,7 +1021,7 @@ export default defineComponent({
 
   /* Comment Form */
   .comment-form {
-    background: rgb(249, 187, 187);
+    background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 0.75rem;
     border: 1px solid #e5e7eb;
@@ -1155,7 +1155,7 @@ export default defineComponent({
   .ratings-section {
     margin-top: 2rem;
     padding: 2rem;
-    background: rgb(255, 223, 223);
+    background: #f8f9fa;
     border-radius: 0.75rem;
     box-shadow: 
       0 2px 4px rgba(0, 0, 0, 0.05),

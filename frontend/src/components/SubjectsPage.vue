@@ -341,7 +341,7 @@
   }
 
   .subject-card.active{
-    border-left: 4px solid #4299e1;
+    border-left: 4px solid #e14242;
     padding-left: 16px;
     animation: highlight 1s ease-in-out;
   }

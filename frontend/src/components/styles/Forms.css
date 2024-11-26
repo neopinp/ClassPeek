@@ -7,7 +7,7 @@
   align-items: center;
   padding: 20px;
   min-height: 100vh;
-  background-color: #f9f9f9;
+  background: rgb(249, 187, 187);
 }
 
 .form-card {
