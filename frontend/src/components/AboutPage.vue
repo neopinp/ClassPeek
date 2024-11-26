@@ -1,5 +1,5 @@
 <template>
-    <div class="aboutPage">
+  <div class="aboutPage">
       <div class="about-top-section">
         <img src="../assets/logo.png" class="aboutLogo">
         <div class="about-text">
@@ -7,19 +7,20 @@
         </div>
       </div>
       <div class="mission-section">
-          <p>'To provide a community founded on education where students can thrive and gain the power to shape their own path'</p>
-        </div>
+        <p>'To provide a community founded on education where students can thrive and gain the power to shape their own
+          path'</p>
+      </div>
 
     </div>
-  </template>
+</template>
   
-  <script lang="ts">
-  import { defineComponent } from 'vue';
-  
-  export default defineComponent({
-    name: 'AboutPage',
-  });
-  import "./styles/AboutPage.css"
-  </script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'AboutPage',
+});
+import "./styles/AboutPage.css"
+</script>
   
   

@@ -7,7 +7,7 @@
   align-items: center;
   padding: 20px;
   min-height: 100vh;
-  background-color: #f9f9f9;
+  background: rgb(249, 187, 187);
 }
 
 .form-card {
@@ -57,7 +57,7 @@ select {
 .form-textarea:focus,
 select:focus {
   outline: none;
-  border-color: #4299e1;
+  border-color: #e14242;
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
