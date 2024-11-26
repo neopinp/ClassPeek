@@ -306,7 +306,7 @@
     width: 100%;
     padding: 12px 20px;
     font-size: 16px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #f0e2e2;
     border-radius: 8px;
     transition: all 0.3s ease;
   }
@@ -352,7 +352,7 @@
     }
 
     50% {
-        background-color: #e3f2fd;
+        background-color: #fde3e3;
     }
 
     100% {
@@ -369,7 +369,7 @@
 
   .subject-header h3 {
     font-size: 1.5em;
-    color: #2d3748;
+    color: #482d2d;
     margin: 0;
   }
 
@@ -379,14 +379,14 @@
   }
 
   .subject-description {
-    color: #4a5568;
+    color: #684a4a;
     margin: 0;
   }
 
   .courses-list {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #f0e2e2;
   }
 
   .course-group {
@@ -405,16 +405,16 @@
   }
 
   .course-header:hover {
-    background: #edf2f7;
+    background: #f7eded;
   }
 
   .course-header h4 {
     margin: 0;
-    color: #2d3748;
+    color: #482d2d;
   }
 
   .section-count {
-    color: #718096;
+    color: #967171;
     font-size: 0.9em;
   }
 
@@ -428,7 +428,7 @@
     display: block;
     padding: 8px 12px;
     margin: 5px 0;
-    color: #4a5568;
+    color: #684a4a;
     text-decoration: none;
     border-radius: 4px;
     transition: background-color 0.2s ease;
@@ -457,7 +457,7 @@
 
   /* Updated course css and activated if the isCourseActive function is true? */
   .course-header.active-course {
-    border-left: 4px solid #4299e1;
+    border-left: 4px solid #e14242;
     padding-left: 16px;
   }
 </style>
