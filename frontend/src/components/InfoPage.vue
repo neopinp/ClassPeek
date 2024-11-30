@@ -1014,6 +1014,9 @@ export default defineComponent({
 
   /* ===== Main Content Area ===== */
   .main-content {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    max-height: calc(90vh - 20px);
     flex: 3;
     background: rgb(240, 240, 240);
     padding: 30px;
