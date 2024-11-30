@@ -1,6 +1,8 @@
 <template>
   <div id="app">
     <nav>
+      <!-- This is the main navigation bar of the website -->
+      <!-- Once you have created a new page in the router, insert it here -->
       <ul>
         <!-- Shared links -->
         <li><router-link to="/">Home</router-link></li>
@@ -8,7 +10,7 @@
         <li><router-link to="/subjects">Subjects</router-link></li>
         <li><router-link to="/majors">Majors</router-link></li>
 
-        <!-- Protected links -->
+        <!-- Protected links (We can restrict these based on the user.user.user_type and using Vue's v-if)-->
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/my-courses">My Courses</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/all-courses">All Courses</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/course-form">Course Form</router-link></li>
@@ -52,6 +54,7 @@ export default defineComponent({
     toggleDropdown() {
       this.isDropdownOpen = !this.isDropdownOpen;
     },
+    // Various methods to handle user based sessions/info
     viewProfile() {
       this.isDropdownOpen = false;
       // For professors, we direct them to their info page as it is their 'profile'

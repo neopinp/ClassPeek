@@ -1,6 +1,7 @@
 import { reactive } from "vue";
 import api from "../api";
 
+// Accessible across
 const sessionStore = reactive({
   isAuthenticated: false,
   user: {
@@ -12,11 +13,12 @@ const sessionStore = reactive({
     email: null,
   },
 
+  // Functions to handle userdata once a session is created, and for logging out too
   async fetchSession() {
     try {
       const response = await api.get("/users/me");
       this.isAuthenticated = true;
-      this.user = response.data; // Ensure `user_type` is part of the data
+      this.user = response.data;
     } catch (error) {
       console.error("Failed to fetch session:", error);
       this.isAuthenticated = false;

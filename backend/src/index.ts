@@ -64,6 +64,8 @@ app.use(async (req, res, next) => {
 });
 
 // Route handlers (i.e. our apis)
+// From the API route you've imported, reference it here with the /api prefix
+// Works in conjunction with the routes further specified in the files (i.e. '/api' + '/courses')
 app.use('/api', courseRoutes);
 app.use('/api', subjectRoutes);
 app.use('/api', majorRoutes);

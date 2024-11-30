@@ -82,15 +82,18 @@ export default defineComponent({
     },
   },
   methods: {
+    // Methods that handle frontend/backend data handling
     async handleSubmit() {
       try {
         this.loading = true;
 
+        // Creating/updating a major requires different API endpoints
         const method = this.isEditing ? "put" : "post";
         const url = this.isEditing
+          // If we are editing a major, we need to include it's ID in the API endpoint
           ? `/majors/${this.$route.params.id}`
           : "/majors";
-
+        // Form data includes the name and description from the relevant fields in the HTML
         const response = await api[method](url, this.formData);
         console.log("Major saved:", response.data);
 
@@ -105,6 +108,7 @@ export default defineComponent({
     handleCancel() {
       this.$router.push("/majors");
     },
+    // Success toast that informs the user of success or failure, and redirects to the major page if successful
     showToast(type: 'success' | 'error', message: string) {
       if (type === 'success') {
         this.successMessage = message;
