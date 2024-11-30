@@ -2,6 +2,7 @@
   <div class="info-page">
     <main>
       <section class="sidebar">
+      <!-- Profile Card section (Image and title of the info page) -->
         <div class="profile-card">
           <div class="image-container">
             <img 
@@ -18,7 +19,7 @@
         </div>
         <div class="info-card">
           <h4>Additional Information</h4>
-          <!-- Professor Specific Information -->
+          <!-- Professor Specific Information (v-if checks if the info page is rendering for a professor) -->
           <div v-if="isProfessor" class="professor-info">
             <!-- Office Location -->
             <div class="editable-field">
@@ -286,8 +287,19 @@
                       </span>
                     </div>
 
-                    <div class="comment-content">
+                    <!--<div class="comment-content">
                       {{ reply.content }}
+                    </div>-->
+
+                    <div class="comment-content">
+                      <div v-if="editingReply?.id === reply.id" class="editable-field">
+                        <textarea v-model="editingReply.content"></textarea>
+                        <div class="comment-actions">
+                          <button class="btn btn-secondary" @click="cancelCommentEdit">Cancel</button>
+                          <button class="btn btn-primary" @click="saveCommentEdit">Save</button>
+                        </div>
+                      </div>
+                      <div v-else>{{ reply.content }}</div>
                     </div>
 
                     <div v-if="isCurrentUser(reply.user.id) || isUserProfessor" class="comment-actions">
@@ -316,6 +328,7 @@ import api from "../api";
 import sessionStore from "../store/session";
 import axios from 'axios';
 
+// Interfaces to store User and Comment data
 interface User {
   id: number;
   name: string;
@@ -336,10 +349,12 @@ export default defineComponent({
   name: "InfoPage",
 
   setup() {
+    // Upon loading the page, we use fetchSession to get all of the relevant data needed to populate the page ...
     onMounted(() => {
       sessionStore.fetchSession();
     });
 
+    // ... and note the current user for various permissions
     return {
       user: sessionStore.user,
     };
@@ -360,6 +375,7 @@ export default defineComponent({
       type: '' as 'professor' | 'course',
       newComment: '',
       editingComment: null as Comment | null,
+      editingReply: null as Comment | null,
       replyingTo: null as number | null,
       replyContent: '',
       comments: [] as Comment[],
@@ -374,6 +390,7 @@ export default defineComponent({
     isAuthenticated(): boolean {
       return !!this.user.id;
     },
+    // If the page is a professor_page, we use this check to include additional fields
     isProfessor(): boolean {
       return this.type === 'professor';
     },
@@ -382,6 +399,7 @@ export default defineComponent({
       return sessionStore.user.user_type === "PROFESSOR";
     },
 
+    // Only professors can edit their own page
     isCurrentProfessor(): boolean {
       return (
         sessionStore.user.user_type === "PROFESSOR" &&
@@ -395,6 +413,7 @@ export default defineComponent({
   },
 
   methods: {
+    // Various functions that change the structure of the page depending on the type of info page being rendered
     getTitle() {
       if (!this.data) return '';
       return this.isProfessor ? this.data.name : this.data.title;
@@ -414,6 +433,7 @@ export default defineComponent({
     async fetchData() {
       this.loading = true;
       try {
+        // Gets the information for the page from the URL parameters
         this.type = this.$route.params.type as 'professor' | 'course';
         const id = this.$route.params.id;
         
@@ -422,10 +442,11 @@ export default defineComponent({
           return;
         }
 
+        // Constructs the API request from the type of page and the unique ID for it
         const response = await api.get(`/${this.type}s/${id}`);
-        
         this.data = response.data;
         
+        // Gets associated comments and ratings for the course/professor
         await this.fetchComments();
         await this.fetchRatings();
         document.title = `${this.getTitle()} - ClassPeek`;
@@ -437,6 +458,7 @@ export default defineComponent({
       }
     },
 
+    // Changes part of the page that is being edited into editable fields respectively
     startEdit(field: "bio" | "office_hours" | "office_location") {
       this.isEditingField = field;
       if (this.data?.professor_page) {
@@ -448,6 +470,7 @@ export default defineComponent({
       this.isEditingField = null;
     },
     
+    // Gets the edited data from the page, creates an API put for the professor_page, and updates the data on the page
     async saveEdit(field: "bio" | "office_hours" | "office_location") {
       if (!this.isEditingField) return;
 
@@ -478,6 +501,7 @@ export default defineComponent({
       }
     },
 
+    // Populates the page with comments associated with the page
     async fetchComments() {
       try {
         if (!this.data) {
@@ -487,6 +511,7 @@ export default defineComponent({
 
         let params = {};
         
+        // Professors and Courses have different comment relations that need to be handlesd here
         if (this.isProfessor) {
           if (this.data.professor_page?.id) {
             params = { professorPageId: this.data.professor_page.id };
@@ -508,6 +533,7 @@ export default defineComponent({
         const response = await api.get('/comments', { params });
         this.comments = response.data;
 
+        // Comments are finicky, so debugging output
         console.log('Fetched comments with replies:', JSON.stringify(this.comments, null, 2));
       } catch (error) {
         console.error('Error fetching comments:', error);
@@ -516,6 +542,7 @@ export default defineComponent({
 
     // Comment Sorting and Formatting Methods
     sortComments(comments: Comment[]) {
+      // Sorts comments by most recent
       return [...comments].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -543,6 +570,7 @@ export default defineComponent({
       }
     },
 
+    // Creates timestamps for the comments that are read nicely as (x minutes ago) instead of the MM/DD/YYYY HH:MM usual
     formatRelativeTime(dateString: string): string {
       try {
         const date = new Date(dateString);
@@ -580,6 +608,7 @@ export default defineComponent({
         const diffInYears = Math.floor(diffInDays / 365);
         return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
       } catch (error) {
+        // In case we can't calculate the relative time, display the timestamp directly
         console.error('Error formatting relative time:', error);
         return this.formatDate(dateString);
       }
@@ -595,6 +624,7 @@ export default defineComponent({
       if (!this.newComment.trim() || !this.entityId) return;
 
       try {
+        // Creates the relation for the comment with the page it is being commented under ...
         const commentData = {
           content: this.newComment,
           ...(this.isProfessor 
@@ -602,9 +632,11 @@ export default defineComponent({
             : { courseId: this.data.id }
           )
         };
-
+        
+        // ... then create the comment and post it with the API
         await api.post(`/comments`, commentData);
         this.newComment = '';
+        // Update the comment section after submitting a comment
         await this.fetchComments();
       } catch (error) {
         // Narrow down the type of `error`
@@ -658,18 +690,33 @@ export default defineComponent({
 
     // Comment Edit Methods
     startCommentEdit(comment: Comment) {
-      this.editingComment = { ...comment };
+      // We can tell if it is an reply if the comment has a parent
+      if (comment.parent_id) {
+        this.editingReply = { ...comment };
+      } else {
+        this.editingComment = { ...comment };
+      }
     },
 
     async saveCommentEdit() {
-      if (!this.editingComment) return;
+      // Somehow if we call this without anything being edited, this catches it and prevents erronous edits
+      if (!this.editingComment && !this.editingReply) return;
 
       try {
-        await api.put(`/comments/${this.editingComment.id}`, {
-          content: this.editingComment.content,
-        });
+        // Changes the comment field being saved depending on if a comment or reply is being edited
+        if (this.editingComment) {
+          await api.put(`/comments/${this.editingComment.id}`, {
+            content: this.editingComment.content,
+          });
+          this.editingComment = null;
+        }
+        if (this.editingReply) {
+          await api.put(`/comments/${this.editingReply.id}`, {
+            content: this.editingReply.content,
+          });
+          this.editingReply = null;
+        }
         await this.fetchComments();
-        this.editingComment = null;
       } catch (error) {
         // Narrow down the type of `error`
         if (axios.isAxiosError(error)) {
@@ -693,11 +740,14 @@ export default defineComponent({
     },
 
     cancelCommentEdit() {
+      // Clear both fields
       this.editingComment = null;
+      this.editingReply = null;
     },
 
     // Reply Methods
     startReply(comment: Comment) {
+      // Make sure that we are replying to an actual comment
       const userName = comment?.user?.name;
       if (!userName) {
         console.error('Invalid comment object or missing user name:', comment);
@@ -716,12 +766,14 @@ export default defineComponent({
       if (!this.replyContent.trim() || !this.entityId) return;
 
       try {
+        // Create the comment, and link it to both the 'parent' comment it is replying to and the page it is a comment under
         const commentData = {
           content: this.replyContent,
           parentId,
           [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
         };
 
+        // Post the reply
         await api.post(`/comments`, commentData);
 
         this.replyContent = '';
@@ -781,6 +833,7 @@ export default defineComponent({
     },
 
     renderStars(rating: number): string {
+      // Determine how many stars are present given the average rating (calculated in the backend)
       const fullStars = Math.floor(rating);
       const halfStar = rating - fullStars >= 0.5;
       let stars = '★'.repeat(fullStars);
@@ -810,6 +863,7 @@ export default defineComponent({
           payload.courseId = this.data.id;
         }
 
+        // Post the new rating, and update the courses averageRating
         const response = await api.post('/ratings', payload);
         this.averageRating = response.data.averageRating;
 
@@ -828,11 +882,13 @@ export default defineComponent({
     },
   },
 
+  // Vue structure that runs functions before the page is loaded, handy for getting the data needed before populating the page
   mounted() {
     this.fetchData();
   },
 
   watch: {
+    // When the user goes to another info page from within an info page (clicking on the professor profile from the comment, etc...), refetch data
     '$route'(to, from) {
       if (to.params.id !== from.params.id || to.params.type !== from.params.type) {
         this.fetchData();
