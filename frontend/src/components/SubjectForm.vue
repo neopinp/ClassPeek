@@ -97,15 +97,18 @@ export default defineComponent({
     },
   },
   methods: {
+    // Methods that handle frontend/backend data handling
     async handleSubmit() {
       try {
         this.loading = true;
-
+        
+        // Creating/updating a subject requires different API endpoints
         const method = this.isEditing ? "put" : "post";
         const url = this.isEditing
+          // If we are editing a subject, we need to include it's ID in the API endpoint
           ? `/subjects/${this.$route.params.id}`
           : "/subjects";
-
+        // Form data includes the name and description from the relevant fields in the HTML
         const response = await api[method](url, this.formData);
         console.log("Subject saved:", response.data);
 
@@ -120,6 +123,7 @@ export default defineComponent({
     handleCancel() {
       this.$router.push("/subjects");
     },
+    // Success toast that informs the user of success or failure, and redirects to the subjects page if successful
     showToast(type: 'success' | 'error', message: string) {
       if (type === 'success') {
         this.successMessage = message;

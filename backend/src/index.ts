@@ -1,5 +1,6 @@
 import express, { Application, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client'; 
+import { swaggerDocs, swaggerUi } from './swagger';
+import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 import cookieSession from 'cookie-session';
 import courseRoutes from './routes/courses';
@@ -9,21 +10,20 @@ import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
 import ratingRoutes from './routes/ratings';
+const path = require('path');
 
 const app: Application = express();
 const prisma = new PrismaClient();
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '127.0.0.1';
-const allowedOrigins = [
-  'https://classpeek.ecrl.marist.edu',
-  'http://localhost:8080'
-];
+const { CLIENT_URL } = require(path.resolve(__dirname, '../../shared/config'));
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., mobile apps or Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || CLIENT_URL.includes(origin)) {
+      // Track origin for debugging in console
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -32,8 +32,22 @@ app.use(cors({
   credentials: true
 }));
 
+// Track incoming origins in console for debugging
+app.use((req, res, next) => {
+  if (req.get('Origin')) {
+    console.log('Incoming request origin:', req.get('Origin'));
+    console.log('Allowed Origins:', CLIENT_URL);
+  }
+  next();
+});
+
+// Middleware for parsing UI
 app.use(express.json());
 
+// Middleware for using Swagger for API documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// Middleware to facilitate user sessions via cookieSession
 app.use(cookieSession({
   name: 'session',
   keys: ['development-static-key-123'],
@@ -86,6 +100,7 @@ app.use((err: any, req: Request, res: Response, next: Function) => {
 });
 
 // Root Route: Backend Output + User Table
+// This is meant for debugging, so when accessing localhost:3000 we can see all users noted and any and all active sessions.
 app.get("/", async (req: Request, res: Response) => {
   try {
     // Fetch all users
@@ -176,6 +191,7 @@ app.get("/", async (req: Request, res: Response) => {
 // Output current backend server status to console
 app.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
+  console.log(`Swagger docs available at http://${HOST}:${PORT}/api-docs`)
 });
 
 export default app;

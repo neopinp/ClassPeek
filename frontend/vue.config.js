@@ -1,3 +1,6 @@
+const path = require('path');
+const { SERVER_URL } = require('../shared/config');
+
 module.exports = {
   // Specifies where to build our files for production
   publicPath: '/',
@@ -10,8 +13,15 @@ module.exports = {
     port: 8080,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000', // Proxy API requests to Express backend
+        target: SERVER_URL, // Proxy API requests to Express backend
         changeOrigin: true,
+      },
+    },
+  },
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '@config': path.resolve(__dirname, '../shared/config.js'),
       },
     },
   },

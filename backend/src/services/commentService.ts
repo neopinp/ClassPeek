@@ -1,12 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 
+// Inserting comments into the database is done in this Service file.
+// The comments route file handles the creation of relationships before any CRUD operations, simplifies code
 export class CommentService {
   private prisma: PrismaClient;
 
   constructor() {
     this.prisma = new PrismaClient
   }
-
+  
   async createComment({
     content,
     courseId,
