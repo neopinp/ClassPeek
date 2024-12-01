@@ -17,18 +17,13 @@ const prisma = new PrismaClient();
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = '127.0.0.1';
-const { CLIENT_URL } = require(path.resolve(__dirname, '../../shared/config'))
-
-const allowedOrigins = [
-  CLIENT_URL
-  //'https://classpeek.ecrl.marist.edu',
-  //'http://localhost:8080'
-];
+const { CLIENT_URL } = require(path.resolve(__dirname, '../../shared/config'));
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g., mobile apps or Postman)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || CLIENT_URL.includes(origin)) {
+      // Track origin for debugging in console
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -36,6 +31,15 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// Track incoming origins in console for debugging
+app.use((req, res, next) => {
+  if (req.get('Origin')) {
+    console.log('Incoming request origin:', req.get('Origin'));
+    console.log('Allowed Origins:', CLIENT_URL);
+  }
+  next();
+});
 
 // Middleware for parsing UI
 app.use(express.json());
