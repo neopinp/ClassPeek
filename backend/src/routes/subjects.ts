@@ -1,4 +1,3 @@
-// src/routes/subjects.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { restrictTo } from '../middleware/auth.middleware';

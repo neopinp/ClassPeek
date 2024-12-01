@@ -7,9 +7,11 @@ interface SubmitRatingInput {
   courseId?: number;
 }
 
+// Same service reasoning as comments, except more important here since average ratings is a new field we have to handle
 export class RatingService {
   private prisma = new PrismaClient;
   
+  // Getting the average rating for an info page is processed here instead of client-side
   async getAverageRatingForProfessor(professorPageId: number): Promise<number> {
     const aggregation = await this.prisma.rating.aggregate({
       where: { professorPageId },

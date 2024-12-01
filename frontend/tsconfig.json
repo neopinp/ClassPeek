@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@config": [
+        "../shared/config"
       ]
     },
     "lib": [
@@ -37,7 +40,8 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "../shared/**/*"
   ],
   "exclude": [
     "node_modules"

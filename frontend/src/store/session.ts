@@ -1,7 +1,7 @@
 import { reactive } from "vue";
 import api from "../api";
 
-// Accessible across
+// Accessible data across the entire frontend
 const sessionStore = reactive({
   isAuthenticated: false,
   user: {

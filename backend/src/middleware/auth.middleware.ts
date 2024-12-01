@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
 // Middleware for authentication restricted actions
+// After the route (i.e. '/users/me'), requireAuth is inserted as a parameter.
+// When calling APIs with either of these, withCredentials MUST be set to true or this will fail
 export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
   console.log("Session being authenticated:", req.session);
   if (!req.session || !req.session.userId) {
@@ -16,7 +18,7 @@ export const restrictTo = (allowedRoles: string[]) => {
     const userType = req.session?.userType;
 
     if (!userType || !allowedRoles.includes(userType)) {
-      res.status(403).json({ error: "Access denied" }); // Send response
+      res.status(403).json({ error: "Access denied" }); // Send 403 response if role is restricted
       return; // Prevent further execution
     }
 
