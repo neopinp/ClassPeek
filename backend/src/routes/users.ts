@@ -216,6 +216,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
           },
           profile: {
             select: {
+              image_data: true, // Avatar
               blurb: true, // Short bio
               description: true, // Detailed bio
             },

@@ -42,7 +42,7 @@ router.get("/files/:title", async (req, res) => {
 router.post("/files", requireAuth, (req, res) => {
   const createFile = async () => {
     try {
-      const { title, content } = req.body;
+      const { title, type, content } = req.body;
       const userId = req.session?.userId; // Get user ID from session
 
       if (!userId) {
@@ -51,6 +51,7 @@ router.post("/files", requireAuth, (req, res) => {
 
       const file = await fileService.createFile({
         title: title,
+        type: type,
         content: content,
         user_id:userId,
       });
@@ -65,24 +66,6 @@ router.post("/files", requireAuth, (req, res) => {
   }
   createFile();
 });
-
-// Update
-router.put("/files/:title", requireAuth, async (req, res) => {
-    try {
-      const { user_id, title, content } = req.body;
-  
-      const file = await fileService.updateFile(
-        Number(user_id),
-        title.toString(),
-        content
-      );
-      console.log("Updated file with payload: ", req.body)
-      res.json(file);
-    } catch (error) {
-      console.error("Error updating file:", error);
-      res.status(400).json({ error: (error as Error).message });
-    }
-  });
 
 // Delete
 router.delete("/comments/:id", requireAuth, async (req, res) => {

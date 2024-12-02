@@ -9,18 +9,21 @@ export class FileService {
 
   async createFile({
     title,
+    type,
     content,
     user_id,
   }: {
     title: string;
-    content: Object;
+    type: string;
+    content: string;
     user_id: number;
   }) {
     try {
       return await this.prisma.file.create({
         data: {
           title:title,
-          content:JSON.stringify(content),
+          type:type,
+          content:content,
           user_id: user_id,
         },
       });
@@ -61,18 +64,6 @@ export class FileService {
       throw new Error("Failed to fetch file");
     }
   }
-
-  async updateFile(user_id: number, title: string, content: Object) {
-    try {
-    return await this.prisma.file.update({
-        where: { user_id: user_id, title:title },
-        data: { content: JSON.stringify(content) },
-    });
-    } catch (error) {
-    console.error("Error updating comment:", error);
-    throw new Error("Failed to update comment");
-    }
-}
 
   async deleteFile(user_id: number, title: string) {
     try {
