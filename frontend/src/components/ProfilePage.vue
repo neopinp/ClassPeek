@@ -130,6 +130,9 @@ export default defineComponent({
       };
     },
   },
+  mounted() {
+    document.title = sessionStore.user.name;
+  },
 });
 </script>
 

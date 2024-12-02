@@ -18,6 +18,7 @@
 
     /* Completeness */
     "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
+    "removeComments": false,
 
     /* Include config when building to perserve references*/
     "paths": {

@@ -10,7 +10,7 @@ const swaggerOptions = {
     info: {
       title: 'ClassPeek API Documentation',
       version: '1.0.0',
-      description: 'API documentation for the ClassPeek application',
+      description: 'API documentation for the ClassPeek application. This API is used to fetch and manage data for the ClassPeek application. These go from getting the courses, subjects, majors, and professors of an institution, to managing the students registered and various comments and ratings associated with accounts and pages.',
     },
     servers: [
       {
@@ -18,7 +18,10 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ['./routes/*.ts'], // Path to your route files where the Swagger annotations will be added
+  apis: [
+          path.join(__dirname, './routes/*.ts'), // Development
+          path.join(__dirname, './routes/*.js'), // Production
+    ],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);

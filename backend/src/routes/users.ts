@@ -3,7 +3,10 @@ import { PrismaClient, UserType } from '@prisma/client';
 import { requireAuth } from '../middleware/auth.middleware';
 import bcrypt from 'bcrypt';
 
-// Swagger Docs notation
+
+const router = express.Router();
+const prisma = new PrismaClient();
+
 /**
  * @swagger
  * /api/auth/signup:
@@ -27,69 +30,63 @@ import bcrypt from 'bcrypt';
  *               dob:
  *                 type: string
  *                 format: date
+ *                 example: "1990-01-01"
  *               role:
  *                 type: string
  *                 enum: [STUDENT, PROFESSOR]
+ *                 example: "STUDENT"
  *               email:
  *                 type: string
  *                 format: email
+ *                 example: "user@example.com"
  *               name:
  *                 type: string
+ *                 example: "John Doe"
  *               password:
  *                 type: string
+ *                 example: "password123"
  *     responses:
  *       201:
  *         description: User successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 user_type:
+ *                   type: string
+ *                   example: "STUDENT"
+ *                 dob:
+ *                   type: string
+ *                   format: date
+ *                   example: "1990-01-01"
+ *                 credentials:
+ *                   type: object
+ *                   properties:
+ *                     school_email:
+ *                       type: string
+ *                       format: email
+ *                       example: "user@example.com"
+ *                 profile:
+ *                   type: object
+ *                   properties:
+ *                     blurb:
+ *                       type: string
+ *                       nullable: true
+ *                       example: null
  *       400:
- *         description: Missing required fields
+ *         description: "All fields are required"
  *       409:
- *         description: User already exists
+ *         description: "User already exists"
  *       500:
- *         description: Server error
- * 
- * /api/auth/login:
- *   post:
- *     tags:
- *       - Authentication
- *     summary: Login user
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *       401:
- *         description: Invalid credentials
- *       500:
- *         description: Server error
- * 
- * /api/auth/logout:
- *   post:
- *     tags:
- *       - Authentication
- *     summary: Logout user
- *     responses:
- *       200:
- *         description: Logout successful
- *       500:
- *         description: Server error
+ *         description: "Failed to create user"
  */
-
-const router = express.Router();
-const prisma = new PrismaClient();
-
 router.post('/auth/signup', (req: Request, res: Response) => {
   const signUpUser = async () => {
     const { dob, role, email, name, password } = req.body;
@@ -150,6 +147,69 @@ router.post('/auth/signup', (req: Request, res: Response) => {
   signUpUser();
 });
 
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Login user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: "Login successful"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "John Doe"
+ *                     user_type:
+ *                       type: string
+ *                       example: "STUDENT"
+ *                     dob:
+ *                       type: string
+ *                       format: date
+ *                       example: "1990-01-01"
+ *                     credentials:
+ *                       type: object
+ *                       properties:
+ *                         school_email:
+ *                           type: string
+ *                           format: email
+ *                           example: "user@example.com"
+ *       401:
+ *         description: "Invalid email or password"
+ *       500:
+ *         description: "Failed to log in"
+ */
 router.post('/auth/login', (req: Request, res: Response) => {
   const loginUser = async () => {
     const { email, password } = req.body;
@@ -184,6 +244,19 @@ router.post('/auth/login', (req: Request, res: Response) => {
   loginUser();
 });
 
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Logout user
+ *     responses:
+ *       200:
+ *         description: "Logged out successfully"
+ *       500:
+ *         description: "Failed to log out"
+ */
 router.post('/auth/logout', (req: Request, res: Response) => {
   const logoutUser = async () => {
     try {
@@ -199,6 +272,58 @@ router.post('/auth/logout', (req: Request, res: Response) => {
   logoutUser();
 });
 
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get the current user's information
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: "Successful response"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 name:
+ *                   type: string
+ *                   example: "John Doe"
+ *                 user_type:
+ *                   type: string
+ *                   example: "STUDENT"
+ *                 dob:
+ *                   type: string
+ *                   format: date
+ *                   example: "1990-01-01"
+ *                 blurb:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Short bio"
+ *                 description:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Detailed bio"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "user@example.com"
+ *                 professor_page:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         description: "Unauthorized: No session found"
+ *       404:
+ *         description: "User not found"
+ *       500:
+ *         description: "Internal server error"
+ */
 router.get('/users/me', requireAuth, (req: Request, res: Response) => {
   const fetchUser = async () => {
     try {
@@ -251,6 +376,46 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
   fetchUser();
 });
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get a list of all users
+ *     responses:
+ *       200:
+ *         description: "A list of users"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "John Doe"
+ *                   user_type:
+ *                     type: string
+ *                     example: "STUDENT"
+ *                   dob:
+ *                     type: string
+ *                     format: date
+ *                     example: "1990-01-01"
+ *                   credentials:
+ *                     type: object
+ *                     properties:
+ *                       school_email:
+ *                         type: string
+ *                         format: email
+ *                         example: "user@example.com"
+ *       500:
+ *         description: "Internal server error"
+ */
 router.get('/users/:id?', (req: Request, res: Response) => {
   const fetchUsers = async () => {
     try {
@@ -285,6 +450,55 @@ router.get('/users/:id?', (req: Request, res: Response) => {
   fetchUsers();
 });
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Update the user's profile
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - blurb
+ *               - description
+ *             properties:
+ *               blurb:
+ *                 type: string
+ *                 example: "Short bio"
+ *               description:
+ *                 type: string
+ *                 example: "Detailed bio"
+ *     responses:
+ *       200:
+ *         description: "Profile updated successfully"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user_id:
+ *                   type: integer
+ *                   example: 1
+ *                 blurb:
+ *                   type: string
+ *                   example: "Updated short bio"
+ *                 description:
+ *                   type: string
+ *                   example: "Updated detailed bio"
+ *       400:
+ *         description: "Both blurb and description are required"
+ *       401:
+ *         description: "Unauthorized"
+ *       500:
+ *         description: "Failed to update profile"
+ */
 router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
   const updateUserProfile = async () => {
     const { blurb, description } = req.body;
@@ -311,6 +525,37 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
     }
   }
   updateUserProfile();
+});
+
+router.put("/users/passwordreset", requireAuth, (req: Request, res: Response) => {
+  const passwordReset = async () => {
+    const { password } = req.body;
+    const userId = req.session?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: "Password field is required" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const updatedUserCredentials = await prisma.user_Credentials.update({
+        where: { id: userId },
+        data: { password:hashedPassword },
+      });
+
+      res.json(updatedUserCredentials);
+    } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  }
+  passwordReset();
 });
 
 export default router;

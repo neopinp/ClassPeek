@@ -9,6 +9,84 @@ const prisma = new PrismaClient();
 // Helper function to get base course code
 const getBaseCourseCode = (courseCode: string) => courseCode.split('-')[0];
 
+/**
+ * @swagger
+ * /api/courses:
+ *   get:
+ *     tags:
+ *       - Courses
+ *     summary: Retrieve a list of all courses
+ *     responses:
+ *       200:
+ *         description: A list of courses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   title:
+ *                     type: string
+ *                     example: "Introduction to Computer Science"
+ *                   course_code:
+ *                     type: string
+ *                     example: "CS101"
+ *                   description:
+ *                     type: string
+ *                     example: "An introductory course to computer science."
+ *                   credits:
+ *                     type: integer
+ *                     example: 3
+ *                   professor:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *                       name:
+ *                         type: string
+ *                         example: "Dr. Jane Smith"
+ *                   subject:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: "Computer Science"
+ *                   majors:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         name:
+ *                           type: string
+ *                           example: "Computer Science"
+ *                   prerequisites:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 10
+ *                         course_code:
+ *                           type: string
+ *                           example: "MATH101"
+ *                         title:
+ *                           type: string
+ *                           example: "Calculus I"
+ *       500:
+ *         description: Failed to fetch courses
+ */
 router.get('/courses', async (req: Request, res: Response) => {
   try {
     const courses = await prisma.course.findMany({
@@ -25,6 +103,99 @@ router.get('/courses', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/courses/{id}:
+ *   get:
+ *     tags:
+ *       - Courses
+ *     summary: Retrieve a course by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The course ID
+ *     responses:
+ *       200:
+ *         description: Course details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 title:
+ *                   type: string
+ *                   example: "Introduction to Computer Science"
+ *                 course_code:
+ *                   type: string
+ *                   example: "CS101"
+ *                 description:
+ *                   type: string
+ *                   example: "An introductory course to computer science."
+ *                 credits:
+ *                   type: integer
+ *                   example: 3
+ *                 professor:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Dr. Jane Smith"
+ *                 subject:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: "Computer Science"
+ *                     code:
+ *                       type: string
+ *                       example: "CS"
+ *                 prerequisites:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 10
+ *                       course_code:
+ *                         type: string
+ *                         example: "MATH101"
+ *                       title:
+ *                         type: string
+ *                         example: "Calculus I"
+ *                 required_for:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *                       name:
+ *                         type: string
+ *                         example: "Computer Science Major"
+ *                 majors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: "Computer Science"
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Failed to fetch course
+ */
 router.get('/courses/:id', (req: Request, res: Response) => {
   const fetchCourse = async () => {
     try {
@@ -84,6 +255,137 @@ router.get('/courses/:id', (req: Request, res: Response) => {
 });
 
 // PROFESSOR restricted actions
+
+/**
+ * @swagger
+ * /api/courses:
+ *   post:
+ *     tags:
+ *       - Courses
+ *     summary: Create a new course
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - course_code
+ *               - description
+ *               - credits
+ *               - professor
+ *               - subject
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Advanced Algorithms"
+ *               course_code:
+ *                 type: string
+ *                 example: "CS301"
+ *               description:
+ *                 type: string
+ *                 example: "An in-depth study of algorithms."
+ *               credits:
+ *                 type: integer
+ *                 example: 4
+ *               professor:
+ *                 type: object
+ *                 properties:
+ *                   connect:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *               subject:
+ *                 type: object
+ *                 properties:
+ *                   connect:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *               prerequisites:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 10
+ *               majors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *     responses:
+ *       201:
+ *         description: Course created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 5
+ *                 title:
+ *                   type: string
+ *                   example: "Advanced Algorithms"
+ *                 course_code:
+ *                   type: string
+ *                   example: "CS301"
+ *                 description:
+ *                   type: string
+ *                   example: "An in-depth study of algorithms."
+ *                 credits:
+ *                   type: integer
+ *                   example: 4
+ *                 professor:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 2
+ *                     name:
+ *                       type: string
+ *                       example: "Dr. Jane Smith"
+ *                 subject:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: "Computer Science"
+ *                 majors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: "Computer Science"
+ *       400:
+ *         description: Bad request - Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Only professors can create courses
+ *       500:
+ *         description: Failed to create course
+ */
 router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   const createCourse = async () => {
     try {
@@ -128,6 +430,152 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
     createCourse();
   });
 
+  /**
+ * @swagger
+ * /api/courses/{id}:
+ *   put:
+ *     tags:
+ *       - Courses
+ *     summary: Update a course by ID
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The course ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Advanced Algorithms"
+ *               course_code:
+ *                 type: string
+ *                 example: "CS301"
+ *               description:
+ *                 type: string
+ *                 example: "An updated description."
+ *               credits:
+ *                 type: integer
+ *                 example: 4
+ *               professor:
+ *                 type: object
+ *                 properties:
+ *                   connect:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 3
+ *               subject:
+ *                 type: object
+ *                 properties:
+ *                   connect:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *               prerequisites:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 11
+ *               majors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 2
+ *     responses:
+ *       200:
+ *         description: Course updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 5
+ *                 title:
+ *                   type: string
+ *                   example: "Advanced Algorithms"
+ *                 course_code:
+ *                   type: string
+ *                   example: "CS301"
+ *                 description:
+ *                   type: string
+ *                   example: "An updated description."
+ *                 credits:
+ *                   type: integer
+ *                   example: 4
+ *                 professor:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 3
+ *                     name:
+ *                       type: string
+ *                       example: "Dr. Alan Turing"
+ *                 subject:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 2
+ *                     name:
+ *                       type: string
+ *                       example: "Mathematics"
+ *                 majors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 2
+ *                       name:
+ *                         type: string
+ *                         example: "Mathematics"
+ *                 prerequisites:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 11
+ *                       course_code:
+ *                         type: string
+ *                         example: "CS201"
+ *                       title:
+ *                         type: string
+ *                         example: "Data Structures"
+ *       400:
+ *         description: Bad request - Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Only professors can update courses
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Failed to update course
+ */
   router.put('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
     const updateCourse = async () => {
       try {
@@ -199,6 +647,35 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
     updateCourse();
   });
 
+
+  /**
+ * @swagger
+ * /api/courses/{id}:
+ *   delete:
+ *     tags:
+ *       - Courses
+ *     summary: Delete a course by ID
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The course ID
+ *     responses:
+ *       204:
+ *         description: Course deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Only professors can delete courses
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Failed to delete course
+ */
 router.delete('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
   try {
     console.log("Deleting course w/ payload:", req.body);

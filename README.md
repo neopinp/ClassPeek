@@ -8,6 +8,8 @@ This application is written in **TypeScript** and built using **Vue.js**, **Expr
 
 The production build for the application is always contained in the `/dist` folder within each respective directory. In production, the `./frontend/dist` folder contains the `index.html` file, which your reverse proxy (e.g., Nginx) will serve.
 
+The **API documentation**, once your application has been completely setup, can be viewed at `<server_ip>/api-docs`. For example, with our current ECRL build, `https://classpeek.ecrl.marist.edu/api-docs/`.
+
 ## Installation
 Before getting started, ensure you have **VSCode** and **Node.js** installed. Verify that your Node.js and npm versions are up to date (e.g., Node.js `20.18.0` at the time of writing).
 

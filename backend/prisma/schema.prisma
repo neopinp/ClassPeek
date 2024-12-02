@@ -37,6 +37,9 @@ model User {
   // Comments and ratings created by a user
   comments      Comment[]
   ratings       Rating[]
+
+  // User Uploaded Files
+  files File[]
   
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
