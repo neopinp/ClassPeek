@@ -27,6 +27,9 @@ model User {
   credentials   User_Credentials?
   profile       Profile?
   
+  // Profile Avatar
+  image_data    String?          @db.Text
+
   // Professor-specific relationships
   professor_page ProfessorPage?
   courses_taught Course[]
@@ -40,6 +43,9 @@ model User {
   
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
+
+  // Files uploaded by a user
+  files File[]
 }
 
 model User_Credentials {
@@ -58,7 +64,7 @@ model Profile {
   id            Int      @id @default(autoincrement())
   blurb         String?  @db.VarChar(255)
   description   String?  @db.Text
-  
+  image_data    String?  @db.Text
   user          User     @relation(fields: [user_id], references: [id])
   user_id       Int      @unique
   
@@ -73,9 +79,7 @@ model ProfessorPage {
   office_location String?  @db.VarChar(255)
   
   // File storage for profile image
-  image_key       String?  @db.VarChar(255)  // Unique identifier for the image in storage
-  image_url       String?  @db.Text          // URL to access the image
-  image_filename  String?  @db.VarChar(255)  // Original filename
+  image_data      String?  @db.Text
   
   professor       User     @relation(fields: [professor_id], references: [id])
   professor_id    Int      @unique
@@ -98,10 +102,7 @@ model Course {
   credits       Int
   
   // File storage for syllabus
-  syllabus_key      String?  @db.VarChar(255)  // Unique identifier in storage
-  syllabus_url      String?  @db.Text          // URL to access the file
-  syllabus_filename String?  @db.VarChar(255)  // Original filename
-  syllabus_updated  DateTime? // When the syllabus was last updated
+  syllabus_data  String?  @db.Text
   
   // Relationships
   professor     User     @relation(fields: [professor_id], references: [id])
@@ -196,8 +197,11 @@ model Rating {
 model File {
   id                Int       @id @default(autoincrement())
   title             String    @unique @db.VarChar(50)
-  content           Json?
+  type              String    @db.Text
+  content           String    @db.Text
   
   user              User      @relation(fields: [user_id], references: [id])
   user_id           Int
+
+  @@index([user_id])
 }
