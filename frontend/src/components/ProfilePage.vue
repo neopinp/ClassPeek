@@ -76,6 +76,7 @@ export default defineComponent({
   },
   computed: {
     user() {
+      (sessionStore.user) ? document.title = sessionStore.user.name : {};
       return sessionStore.user;
     },
   },
