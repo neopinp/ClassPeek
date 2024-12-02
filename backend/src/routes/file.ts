@@ -78,3 +78,5 @@ router.delete("/comments/:id", requireAuth, async (req, res) => {
       res.status(400).json({ error: (error as Error).message });
     }
   });
+
+export default router;

@@ -43,9 +43,6 @@ model User {
   
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
-
-  // Files uploaded by a user
-  files File[]
 }
 
 model User_Credentials {
