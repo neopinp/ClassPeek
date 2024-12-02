@@ -341,6 +341,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
           },
           profile: {
             select: {
+              image_data: true, // Avatar
               blurb: true, // Short bio
               description: true, // Detailed bio
             },
@@ -524,6 +525,37 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
     }
   }
   updateUserProfile();
+});
+
+router.put("/users/passwordreset", requireAuth, (req: Request, res: Response) => {
+  const passwordReset = async () => {
+    const { password } = req.body;
+    const userId = req.session?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: "Password field is required" });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const updatedUserCredentials = await prisma.user_Credentials.update({
+        where: { id: userId },
+        data: { password:hashedPassword },
+      });
+
+      res.json(updatedUserCredentials);
+    } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  }
+  passwordReset();
 });
 
 export default router;

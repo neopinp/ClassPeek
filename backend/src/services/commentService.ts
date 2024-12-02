@@ -70,7 +70,7 @@ export class CommentService {
   }
 
     // Update a comment
-    async updateComment(id: number, content: string) {
+  async updateComment(id: number, content: string) {
       try {
         return await this.prisma.comment.update({
           where: { id },
@@ -80,7 +80,7 @@ export class CommentService {
         console.error("Error updating comment:", error);
         throw new Error("Failed to update comment");
       }
-    }
+  }
 
   async deleteComment(id: number) {
     try {

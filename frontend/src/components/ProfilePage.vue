@@ -6,7 +6,9 @@
           <div class="image-container">
             <!-- TODO: Add images for users too -->
             <div class="image-placeholder">
-              <span>No Image Available</span>
+              <span v-if="!isEditing && editableProfile.image_data != ''">No Image Available</span>
+              <img v-if="!isEditing && editableProfile.image_data != ''" id="image" style="width:200px;height:200px;object-fit:contain">
+              <input v-else id="input" type="file" @change="uploadImg">
             </div>
           </div>
           <h4 class="title">{{ user.name }}</h4>
@@ -58,7 +60,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, render } from "vue";
 import sessionStore from "@/store/session";
 import api from "@/api";
 
@@ -67,7 +69,9 @@ export default defineComponent({
   data() {
     return {
       isEditing: false,
+      new_image: "",
       editableProfile: {
+        image_data: sessionStore.user.image_data || "",
         blurb: sessionStore.user.blurb || "",
         description: sessionStore.user.description || "",
       },
@@ -76,23 +80,40 @@ export default defineComponent({
   },
   computed: {
     user() {
+      (sessionStore.user) ? document.title = sessionStore.user.name : {};
       return sessionStore.user;
     },
   },
   methods: {
+    uploadImg() {
+      let fileList = ((document.getElementById("input") as unknown)as HTMLInputElement).files;
+      let file;
+      (fileList) ? file = fileList[0] : {}; 
+      const reader = new FileReader();
+      (file) ? reader.readAsDataURL(file) : {};
+      reader.onload = () => {
+        this.new_image = (reader.result) as string || ""
+      }
+      
+    },
+
     startEditing() {
       this.isEditing = true;
       this.editableProfile = {
+        image_data: this.user.image_data || "",
         blurb: this.user.blurb || "",
         description: this.user.description || "",
       };
     },
     async saveChanges() {
       try {
+        (this.new_image != "") ? this.editableProfile.image_data = this.new_image : {};
         const response = await api.put("/users/profile", this.editableProfile);
+        sessionStore.user.image_data = response.data.image_data;
         sessionStore.user.blurb = response.data.blurb;
         sessionStore.user.description = response.data.description;
         this.isEditing = false;
+        this.new_image = "";
         this.errorMessage = null;
       } catch (error) {
         console.error("Failed to save changes:", error);
@@ -101,11 +122,16 @@ export default defineComponent({
     },
     cancelChanges() {
       this.isEditing = false;
+      this.new_image = "";
       this.editableProfile = {
+        image_data: this.user.blurb || "",
         blurb: this.user.blurb || "",
         description: this.user.description || "",
       };
     },
+  },
+  mounted() {
+    document.title = sessionStore.user.name;
   },
 });
 </script>

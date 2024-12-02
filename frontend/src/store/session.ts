@@ -7,6 +7,7 @@ const sessionStore = reactive({
   user: {
     id: null,
     name: "Guest",
+    image_data: "",
     user_type: "STUDENT",
     blurb: null,
     description: null,
@@ -25,6 +26,7 @@ const sessionStore = reactive({
       this.user = {
         id: null,
         name: "Guest",
+        image_data: "",
         user_type: "STUDENT",
         blurb: null,
         description: null,
@@ -40,6 +42,7 @@ const sessionStore = reactive({
       this.user = {
         id: null,
         name: "Guest",
+        image_data: "",
         user_type: "STUDENT",
         blurb: null,
         description: null,

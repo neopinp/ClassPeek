@@ -10,6 +10,8 @@ import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
 import ratingRoutes from './routes/ratings';
+import fileRoutes from './routes/file';
+
 const path = require('path');
 
 const app: Application = express();
@@ -87,6 +89,7 @@ app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
 app.use('/api', commentRoutes);
 app.use('/api', ratingRoutes);
+app.use('/api', fileRoutes);
 
 // Health Check Route
 app.get('/api/health', (req: Request, res: Response) => {
