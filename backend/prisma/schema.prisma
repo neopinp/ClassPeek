@@ -37,6 +37,9 @@ model User {
   
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
+
+  // Files uploaded by a user
+  files File[]
 }
 
 model User_Credentials {
@@ -187,4 +190,16 @@ model Rating {
 
   @@unique([userId, professorPageId], name: "user_professor_unique")
   @@unique([userId, courseId], name: "user_course_unique")
+}
+
+// Store file objects using JSON
+model File {
+  id                Int       @id @default(autoincrement())
+  title             String    @unique @db.VarChar(50)
+  content           Json?
+  
+  user              User      @relation(fields: [user_id], references: [id])
+  user_id           Int
+
+  @@index([user_id])
 }
