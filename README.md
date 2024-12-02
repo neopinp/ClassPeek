@@ -76,14 +76,14 @@ This project is hosted on a webserver and the database was setup on that as well
     sudo systemctl restart postgresql
     ```
 
-8. We can run this line from any device to test our connection. Use this to verify that our connection works and we can interact with the `classpeek` schema.
+8. We can run this line from any device to test our connection. Use this to verify that our connection works and we can interact with the `classpeek` database.
     ```bash
     psql -h <server-ip> -U username -d classpeek
     ```
 
 9. Once we have verified that our schema is working, change the following line in the `.env` file within `/backend` so our application can communicate with the database.
     ```conf
-    DATABASE_URL="postgresql://username:password@<server_ip>:5432/classpeek?schema=public"
+    DATABASE_URL="postgresql://<username>:<password>@<server_ip>:5432/classpeek?schema=public"
     ```
 
 10. **Optional**: Add a firewall rule for PostgreSQL on port 5432 (default port for PostgreSQL)
@@ -101,6 +101,32 @@ Additionally, we also need to push our schema onto the new database. This is don
 ```bash
 npx prisma db push
 ```
+
+## Setting up the configuration
+Classpeek works on server addresses by refering to a `config.js` stored with the `/shared` directory. It looks like this by default.
+```js
+// Application-wide constants, lets us change the application for different servers through here
+const CLIENT_URL = [
+    'https://classpeek.ecrl.marist.edu',
+    'http://localhost:8080',
+    'http://localhost:3000'
+];
+
+const API_PATH = '/api';
+const API_URL = `${CLIENT_URL[0]}${API_PATH}`;
+
+const SERVER_URL = 'http://localhost:3000';
+
+// Exporting the constants for usage elsewhere in the application
+module.exports = {
+  CLIENT_URL,
+  API_PATH,
+  API_URL,
+  SERVER_URL,
+};
+```
+
+To get this working with your setup, just change the **first** CLIENT_URL entry to your **server address**.
 
 ## Running the server
 For development, the frontend runs on `http://localhost:8080`, and the backend runs on `http://localhost:3000`.
