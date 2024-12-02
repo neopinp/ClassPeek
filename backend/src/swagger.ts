@@ -18,7 +18,10 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: [path.join(__dirname, './routes/*.ts')], // Path to your route files where the Swagger annotations will be added
+  apis: [
+          path.join(__dirname, './routes/*.ts'), // Development
+          path.join(__dirname, './routes/*.js'), // Production
+    ],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
