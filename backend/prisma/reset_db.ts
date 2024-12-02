@@ -16,6 +16,7 @@ async function resetDatabase() {
     await prisma.major.deleteMany({});
     await prisma.subject.deleteMany({});
     await prisma.user.deleteMany({});
+    await prisma.file.deleteMany({});
     
     // Reset all sequences
     console.log('Resetting ID sequences...');
@@ -28,6 +29,7 @@ async function resetDatabase() {
     await prisma.$executeRaw`ALTER SEQUENCE "Major_id_seq" RESTART WITH 1;`;
     await prisma.$executeRaw`ALTER SEQUENCE "Subject_id_seq" RESTART WITH 1;`;
     await prisma.$executeRaw`ALTER SEQUENCE "User_id_seq" RESTART WITH 1;`;
+    await prisma.$executeRaw`ALTER SEQUENCE "File_id_seq" RESTART WITH 1;`;
     
     console.log('Database reset and sequences reset completed successfully');
   } catch (error) {
