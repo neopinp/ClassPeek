@@ -11,7 +11,7 @@
     </div>
     <!-- Courses Section -->
     <h1>All Courses</h1>
-    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="userLoading" class="loading">Loading user data...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="courses-list">
       <div v-for="course in filteredCourses" :key="course.id" class="course-card">
@@ -46,6 +46,7 @@
 
 <script lang="ts">
   import { defineComponent } from "vue";
+  import { isAxiosError } from "axios";
   import api from "../api";
   import sessionStore from "../store/session";
 
@@ -54,7 +55,9 @@
     title: string;
     course_code: string;
     description: string;
-    professor_id?: number;  // Optional here since we only require it for checking course ownership, included in API response
+    professor: {
+      id: number;
+    }
   }
 
   export default defineComponent({
@@ -65,6 +68,7 @@
         searchQuery: '',
         loading: false,
         error: null as string | null,
+        userLoading: true,
       };
     },
     computed: {
@@ -78,7 +82,7 @@
         return (courseId: number) => {
           const course = this.courses.find((c) => c.id === courseId);
           if (!course) return false;
-          return this.isAdmin || course.professor_id === sessionStore.user.id;
+          return this.isAdmin || course.professor.id === sessionStore.user.id;
         }
       },
       filteredCourses(): Course[] {
@@ -100,20 +104,34 @@
           const response = await api.get(`/courses`);
           const coursesData = response.data;
 
-          // Ensure we process the courses correctly
+          // Ensure we process the courses correctly (including the professor_id for access control)
           if (coursesData && Array.isArray(coursesData)) {
-            this.courses = coursesData.map((course: { id: any; title: any; course_code: any; description: any; }) => ({
+            this.courses = coursesData.map((course: { id: number; title: string; course_code: string; description: string; professor: { id: number };}) => ({
               id: course.id,
               title: course.title,
               course_code: course.course_code,
               description: course.description,
+              professor: {
+                id: course.professor.id,
+              },
             }));
           } else {
             this.courses = [];
           }
-        } catch (error: any) {
-          console.error("Error fetching courses:", error);
-          this.error = error.response?.data?.error || "Failed to fetch courses.";
+        } catch (error: unknown) {
+          if (isAxiosError(error)) {
+            // Handle Axios-specific errors
+            console.error("Axios error fetching courses:", error);
+            this.error = error.response?.data?.error || "Failed to fetch courses.";
+          } else if (error instanceof Error) {
+            // Handle generic JavaScript errors
+            console.error("Unexpected error fetching courses:", error);
+            this.error = error.message || "Failed to fetch courses.";
+          } else {
+            // Handle any other types of thrown values
+            console.error("Non-Error thrown:", error);
+            this.error = "Failed to fetch courses.";
+          }
         } finally {
           this.loading = false;
         }
@@ -129,11 +147,19 @@
       },
     },
     mounted() {
-      if (this.isProfessor || this.isAdmin) {
-        this.fetchCourses();
-      } else {
-        this.error = "Unauthorized: Only professors and admins can access this page.";
-      }
+      // While loading the page, watch for changes in user data
+      this.$watch(() => sessionStore.user, (user) => {
+        if (user) {
+          this.userLoading = false;
+          if (this.isProfessor || this.isAdmin) {
+            this.fetchCourses();
+          } else {
+            this.error = "Unauthorized: Only professors and admins can access this page.";
+          }
+        }
+      },
+      { immediate: true }
+      );
     },
   });
 </script>
