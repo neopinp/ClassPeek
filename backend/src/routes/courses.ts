@@ -204,6 +204,7 @@ router.get('/courses/:id', (req: Request, res: Response) => {
         include: {
           professor: {
             select: {
+              id: true,
               name: true
             }
           },
