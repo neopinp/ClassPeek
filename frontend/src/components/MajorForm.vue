@@ -54,81 +54,93 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import api from "@/api";
-import sessionStore from "../store/session";
+  import { defineComponent } from "vue";
+  import { isAxiosError } from "axios";
+  import api from "@/api";
+  import sessionStore from "../store/session";
 
-export default defineComponent({
-  name: "MajorForm",
-  setup() {
-      return { sessionStore };
-    },
-  data() {
-    return {
-      formData: {
-        name: "",
-        description: "",
+  export default defineComponent({
+    name: "MajorForm",
+    setup() {
+        return { sessionStore };
       },
-      loading: false,
-      showSuccessToast: false,
-      successMessage: '',
-      showErrorToast: false,
-      errorMessage: ''
-    };
-  },
-  computed: {
-    isEditing(): boolean {
-      return !!this.$route.params.id;
+    data() {
+      return {
+        formData: {
+          name: "",
+          description: "",
+        },
+        loading: false,
+        showSuccessToast: false,
+        successMessage: '',
+        showErrorToast: false,
+        errorMessage: ''
+      };
     },
-  },
-  methods: {
-    // Methods that handle frontend/backend data handling
-    async handleSubmit() {
-      try {
-        this.loading = true;
-
-        // Creating/updating a major requires different API endpoints
-        const method = this.isEditing ? "put" : "post";
-        const url = this.isEditing
-          // If we are editing a major, we need to include it's ID in the API endpoint
-          ? `/majors/${this.$route.params.id}`
-          : "/majors";
-        // Form data includes the name and description from the relevant fields in the HTML
-        const response = await api[method](url, this.formData);
-        console.log("Major saved:", response.data);
-
-        this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`);
-      } catch (error: any) {
-        console.error("Error saving major:", error);
-        this.showToast("error", error.response?.data?.error || "An unexpected error occurred. Please try again.");
-      } finally {
-        this.loading = false;
-      }
+    computed: {
+      isEditing(): boolean {
+        return !!this.$route.params.id;
+      },
     },
-    handleCancel() {
-      this.$router.push("/majors");
-    },
-    // Success toast that informs the user of success or failure, and redirects to the major page if successful
-    showToast(type: 'success' | 'error', message: string) {
-      if (type === 'success') {
-        this.successMessage = message;
-        this.showSuccessToast = true;
+    methods: {
+      // Methods that handle frontend/backend data handling
+      async handleSubmit() {
+        try {
+          this.loading = true;
 
-        setTimeout(() => {
-          this.showSuccessToast = false;
-          this.$router.push("/majors")
-        }, 3000); // Toast disappears after 3 seconds
-      } else if (type === 'error') {
-        this.errorMessage = message;
-        this.showErrorToast = true;
+          // Creating/updating a major requires different API endpoints
+          const method = this.isEditing ? "put" : "post";
+          const url = this.isEditing
+            // If we are editing a major, we need to include it's ID in the API endpoint
+            ? `/majors/${this.$route.params.id}`
+            : "/majors";
+          // Form data includes the name and description from the relevant fields in the HTML
+          const response = await api[method](url, this.formData);
+          console.log("Major saved:", response.data);
 
-        setTimeout(() => {
-          this.showErrorToast = false;
-        }, 3000); // Toast disappears after 3 seconds
-      }
+          this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`);
+        } catch (error: unknown) {
+          if (isAxiosError(error)) {
+              // Handle Axios-specific errors
+              console.error("Axios error saving major:", error);
+              this.showToast("error", error.response?.data?.error || "An unexpected error occurred. Please try again.");
+            } else if (error instanceof Error) {
+              // Handle generic JavaScript errors
+              console.error("Unexpected error saving major:", error);
+              this.showToast("error", error.message || "An unexpected error occurred. Please try again.");
+            } else {
+              // Handle any other types of thrown values
+              console.error("Non-Error thrown:", error);
+              this.showToast("error", "An unexpected error occurred. Please try again.");
+            }
+        } finally {
+          this.loading = false;
+        }
+      },
+      handleCancel() {
+        this.$router.push("/majors");
+      },
+      // Success toast that informs the user of success or failure, and redirects to the major page if successful
+      showToast(type: 'success' | 'error', message: string) {
+        if (type === 'success') {
+          this.successMessage = message;
+          this.showSuccessToast = true;
+
+          setTimeout(() => {
+            this.showSuccessToast = false;
+            this.$router.push("/majors")
+          }, 3000); // Toast disappears after 3 seconds
+        } else if (type === 'error') {
+          this.errorMessage = message;
+          this.showErrorToast = true;
+
+          setTimeout(() => {
+            this.showErrorToast = false;
+          }, 3000); // Toast disappears after 3 seconds
+        }
+      },
     },
-  },
-});
+  });
 </script>
 
 <style scoped>
