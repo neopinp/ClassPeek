@@ -1,5 +1,5 @@
 <template>
-  <div class="my-courses-page">
+  <div class="courses-page">
     <!-- Search and Filter Section -->
     <div class="search-section">
       <input 
@@ -128,107 +128,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.my-courses-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.search-section {
-  margin-bottom: 30px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 12px 20px;
-  font-size: 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
-}
-
-.courses-list {
-  display: grid;
-  gap: 20px;
-}
-
-.course-title-link {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 10px;
-}
-
-.course-code {
-  font-size: 14px;
-  font-weight: 500;
-  color: #4a5568;
-  margin-bottom: 8px;
-}
-
-.course-description {
-  font-size: 14px;
-  color: #718096;
-  line-height: 1.5;
-}
-
-.course-card {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.course-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 4px 8px rgba(0, 0, 0, 0.12),
-      0 8px 16px rgba(0, 0, 0, 0.08);
-  }
-
-.course-card h3 {
-  margin-bottom: 10px;
-}
-
-.actions {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.edit-button,
-.delete-button {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.edit-button:hover {
-  background-color: #2563eb;
-}
-
-.delete-button {
-  background-color: #ef4444;
-}
-
-.delete-button:hover {
-  background-color: #dc2626;
-}
-
-.link {
-  text-decoration: none;
-  color: inherit;
-  display: inline-block;
-}
+  @import 'styles/Courses.css';
 </style>
