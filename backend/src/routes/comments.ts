@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { CommentService } from '../services/commentService';
+import { ReportService } from '../services/reportService';
 import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 const commentService = new CommentService();
+const reportService = new ReportService();
 
 /**
  * @swagger
@@ -247,6 +249,92 @@ router.put("/comments/:id", requireAuth, async (req, res) => {
     console.error("Error updating comment:", error);
     res.status(400).json({ error: (error as Error).message });
   }
+});
+
+/**
+ * @swagger
+ * /api/comments/{id}/report:
+ *   post:
+ *     tags:
+ *       - Comments
+ *     summary: Report a comment
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         description: The ID of the comment to report
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       description: Reason for reporting the comment.
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 example: "This comment is inappropriate."
+ *     responses:
+ *       200:
+ *         description: Report created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 comment_id:
+ *                   type: integer
+ *                   example: 2
+ *                 reported_by_user_id:
+ *                   type: integer
+ *                   example: 3
+ *                 reason:
+ *                   type: string
+ *                   example: "This comment is inappropriate."
+ *                 status:
+ *                   type: string
+ *                   example: "OPEN"
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/comments/:id/report", requireAuth, (req, res) => {
+  const reportComment = async () => {
+    const { reason } = req.body;
+    const commentId = Number(req.params.id);
+    const userId = req.session?.userId; 
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!reason) {
+      return res.status(400).json({ error: "Reason is required to report a comment." });
+    }
+
+    try {
+      // Ensure the comment exists before reporting
+      const comment = await commentService.getCommentById(commentId);
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found." });
+      }
+
+      const report = await reportService.createReport({ commentId, userId, reason });
+      res.json(report);
+    } catch (error) {
+      console.error("Error reporting comment:", error);
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+  reportComment();
 });
 
 /**
