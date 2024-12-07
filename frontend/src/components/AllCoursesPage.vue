@@ -23,7 +23,7 @@
         </router-link>
         <p class="course-code"><strong>Code:</strong> {{ course.course_code }}</p>
         <p class="course-description"><strong>Description:</strong> {{ course.description || "No description avaliable."}} </p>
-        <div class="actions">
+        <div v-if="canEditOrDelete(course.id)" class="actions">
           <button class="edit-button">
             <router-link
               :to="{ name: 'CourseForm', params: { id: course.id } }"
@@ -54,6 +54,7 @@ interface Course {
   title: string;
   course_code: string;
   description: string;
+  professor_id?: number;  // Optional here since we only require it for checking course ownership, included in API response
 }
 
 export default defineComponent({
@@ -69,6 +70,16 @@ export default defineComponent({
   computed: {
     isProfessor(): boolean {
       return sessionStore.user.user_type === "PROFESSOR";
+    },
+    isAdmin(): boolean {
+      return sessionStore.user.user_type === "ADMIN";
+    },
+    canEditOrDelete() {
+      return (courseId: number) => {
+        const course = this.courses.find((c) => c.id === courseId);
+        if (!course) return false;
+        return this.isAdmin || course.professor_id === sessionStore.user.id;
+      }
     },
     filteredCourses(): Course[] {
       if (!this.searchQuery) return this.courses;
@@ -118,10 +129,10 @@ export default defineComponent({
     },
   },
   mounted() {
-    if (this.isProfessor) {
+    if (this.isProfessor || this.isAdmin) {
       this.fetchCourses();
     } else {
-      this.error = "Unauthorized: Only professors can access this page.";
+      this.error = "Unauthorized: Only professors and admins can access this page.";
     }
   },
 });
