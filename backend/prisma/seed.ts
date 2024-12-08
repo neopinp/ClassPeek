@@ -1,9 +1,232 @@
-import { PrismaClient, UserType } from '@prisma/client';
+import { PrismaClient, UserType, Course, ProfessorPage, Rating, Comment } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
+// Define interfaces for generated data
+interface GeneratedComment {
+  userId: number;
+  courseId?: number;
+  professorPageId?: number;
+  content: string;
+  parentId?: number;
+}
+
+interface GeneratedRating {
+  userId: number;
+  courseId?: number;
+  professorPageId?: number;
+  value: number;
+}
+
+// Comment template for courses and professors
+const courseCommentTemplates = [
+  "I really enjoyed {courseTitle} taught by Professor {professorName}. The course material was engaging and the assignments were challenging.",
+  "{courseTitle} was one of my favorite courses. Professor {professorName} explained complex concepts clearly.",
+  "The practical applications in {courseTitle} were excellent. Kudos to Professor {professorName} for making the class interactive.",
+  "I found {courseTitle} to be very informative. Professor {professorName}'s teaching style is outstanding.",
+  "Professor {professorName} made {courseTitle} a truly enjoyable experience. Looking forward to more courses like this.",
+  "The hands-on projects in {courseTitle} were invaluable. Professor {professorName} provided excellent guidance.",
+  "{courseTitle} challenged me to think critically. I highly recommend it to fellow students.",
+  "Understanding the theoretical aspects of {courseTitle} was easier thanks to Professor {professorName}.",
+  "The collaborative environment in {courseTitle} fostered great teamwork and learning.",
+  "I gained a lot from {courseTitle}, especially in areas related to data analysis and software design."
+];
+const professorCommentTemplates = [
+  "Professor {professorName} is excellent at explaining complex topics. Their office hours are very helpful.",
+  "I appreciate how Professor {professorName} encourages student participation and critical thinking.",
+  "Learning under Professor {professorName} has been a rewarding experience. Highly recommend their classes.",
+  "Professor {professorName} has a knack for making difficult subjects understandable.",
+  "The mentorship from Professor {professorName} has greatly benefited my academic journey.",
+  "Professor {professorName} always provides insightful feedback on assignments.",
+  "The lectures by Professor {professorName} are both informative and engaging.",
+  "Professor {professorName} encourages students to explore topics beyond the syllabus.",
+  "I appreciate Professor {professorName}'s dedication to student success.",
+  "Learning from Professor {professorName} has significantly enhanced my understanding of the subject."
+];
+
+// Helper functions for generating random comments and ratings
+function populateTemplate(template: string, data: { [key: string]: string }): string {
+  let populated = template;
+  for (const key in data) {
+    const placeholder = `{${key}}`;
+    populated = populated.replace(new RegExp(placeholder, 'g'), data[key]);
+  }
+  return populated;
+}
+
+// Select a random element from an array (used to randomly choose comment templates)
+function getRandomElement<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+// Generate random comments, replies and ratings
+function generateRandomComments(
+  count: number,
+  students: any[],
+  allCourses: Course[],
+  allProfessorPages: ProfessorPage[],
+  professorsMap: Map<number, string>
+): GeneratedComment[] {
+  const comments: GeneratedComment[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const user = getRandomElement(students);
+    const isCourseComment = faker.datatype.boolean(); // 50% chance
+
+    let course: Course | undefined = undefined;
+    let professorPage: ProfessorPage | undefined = undefined;
+    let content: string = '';
+
+    if (isCourseComment && allCourses.length > 0) {
+      course = getRandomElement(allCourses);
+      const professorName = professorsMap.get(course.professor_id) || "Prof.";
+      const template = getRandomElement(courseCommentTemplates);
+      content = populateTemplate(template, {
+        courseTitle: course.title,
+        professorName: professorName
+      });
+    } else if (allProfessorPages.length > 0) {
+      professorPage = getRandomElement(allProfessorPages);
+      const professorName = professorsMap.get(professorPage.professor_id) || "Prof.";
+      const template = getRandomElement(professorCommentTemplates);
+      content = populateTemplate(template, {
+        professorName: professorName
+      });
+    }
+
+    // Ensure at least one association and content
+    if ((!course && !professorPage) || !content) continue;
+
+    comments.push({
+      userId: user.id,
+      courseId: course ? course.id : undefined,
+      professorPageId: professorPage ? professorPage.id : undefined,
+      content: content,
+      parentId: undefined, // For top-level comments; can be set later for replies
+    });
+  }
+
+  return comments;
+}
+
+function generateRandomReplies(
+  comments: Comment[],
+  count: number,
+  students: any[],
+  allCourses: Course[],
+  allProfessorPages: ProfessorPage[],
+  professorsMap: Map<number, string>
+): GeneratedComment[] {
+  const replies: GeneratedComment[] = [];
+
+  for (let i = 0; i < count; i++) {
+    if (comments.length === 0) break;
+
+    const parentComment = getRandomElement(comments);
+    const user = getRandomElement(students);
+    const isCourseReply = faker.datatype.boolean(); // 50% chance
+
+    let course: Course | undefined = undefined;
+    let professorPage: ProfessorPage | undefined = undefined;
+    let content: string = '';
+
+    if (isCourseReply && allCourses.length > 0) {
+      course = getRandomElement(allCourses);
+      const professorName = professorsMap.get(course.professor_id) || "Prof.";
+      const template = getRandomElement(courseCommentTemplates);
+      content = populateTemplate(template, {
+        courseTitle: course.title,
+        professorName: professorName
+      });
+    } else if (allProfessorPages.length > 0) {
+      professorPage = getRandomElement(allProfessorPages);
+      const professorName = professorsMap.get(professorPage.professor_id) || "Prof.";
+      const template = getRandomElement(professorCommentTemplates);
+      content = populateTemplate(template, {
+        professorName: professorName
+      });
+    }
+
+    // Ensure at least one association and content
+    if ((!course && !professorPage) || !content) continue;
+
+    replies.push({
+      userId: user.id,
+      courseId: course ? course.id : undefined,
+      professorPageId: professorPage ? professorPage.id : undefined,
+      content: content,
+      parentId: parentComment.id, // Associate with parent comment
+    });
+  }
+
+  return replies;
+}
+
+function generateRandomRatings(
+  count: number,
+  students: any[],
+  allCourses: Course[],
+  allProfessorPages: ProfessorPage[],
+  existingRatings: Rating[]
+): GeneratedRating[] {
+  const ratings: GeneratedRating[] = [];
+  const userCourseMap = new Map<string, boolean>();
+  const userProfessorMap = new Map<string, boolean>();
+
+  // Populate maps with existing ratings to ensure uniqueness
+  existingRatings.forEach((rating) => {
+    if (rating.courseId) {
+      userCourseMap.set(`${rating.userId}-${rating.courseId}`, true);
+    }
+    if (rating.professorPageId) {
+      userProfessorMap.set(`${rating.userId}-${rating.professorPageId}`, true);
+    }
+  });
+
+  while (ratings.length < count) {
+    const user = getRandomElement(students);
+    const isCourseRating = faker.datatype.boolean(); // 50% chance
+
+    let course: Course | undefined = undefined;
+    let professorPage: ProfessorPage | undefined = undefined;
+
+    if (isCourseRating && allCourses.length > 0) {
+      course = getRandomElement(allCourses);
+    } else if (allProfessorPages.length > 0) {
+      professorPage = getRandomElement(allProfessorPages);
+    }
+
+    // Ensure at least one association
+    if (!course && !professorPage) continue;
+
+    // Check for unique constraints
+    if (course) {
+      const key = `${user.id}-${course.id}`;
+      if (userCourseMap.has(key)) continue; // Already rated
+      userCourseMap.set(key, true);
+    }
+
+    if (professorPage) {
+      const key = `${user.id}-${professorPage.id}`;
+      if (userProfessorMap.has(key)) continue; // Already rated
+      userProfessorMap.set(key, true);
+    }
+
+    ratings.push({
+      userId: user.id,
+      courseId: course ? course.id : undefined,
+      professorPageId: professorPage ? professorPage.id : undefined,
+      value: parseFloat((faker.number.float({ min: 1, max: 5, fractionDigits: 1 })).toFixed(1)),
+    });
+  }
+
+  return ratings;
+}
+
 async function seed() {
+  // ===== CREATE USERS =====
   const testUsers = await Promise.all([
     prisma.user.create({
       data: {
@@ -77,102 +300,102 @@ async function seed() {
     })
   ]);
 
- // ===== PROFESSORS =====
- const professorData = [
-  {
-    name: 'Mary Johnson',
-    email: 'mary.johnson@university.edu',
-    blurb: 'Dedicated to making abstract mathematics accessible to students.',
-    dob: new Date('1980-03-20'),
-    bio: 'PhD in Mathematics, specializing in Abstract Algebra',
-    officeHours: 'TR 1-3PM',
-    officeLocation: 'HC3020'
-  },
-  {
-    name: 'John Smith',
-    email: 'john.smith@university.edu',
-    blurb: 'Passionate about teaching algorithms and data-driven problem-solving.',
-    dob: new Date('1975-05-15'),
-    bio: 'PhD in Computer Science with focus on algorithms',
-    officeHours: 'MWF 2-4PM',
-    officeLocation: 'HC4050'
-  },
-  {
-    name: 'Sarah Chen',
-    email: 'sarah.chen@university.edu',
-    blurb: 'Inspiring students to explore quantum physics with hands-on research.',
-    dob: new Date('1982-08-10'),
-    bio: 'PhD in Physics, research focus on Quantum Computing',
-    officeHours: 'MW 10AM-12PM',
-    officeLocation: 'SC2010'
-  },
-  {
-    name: 'Michael Brown',
-    email: 'michael.brown@university.edu',
-    blurb: 'Bringing organic chemistry to life with real-world applications',
-    dob: new Date('1978-11-25'),
-    bio: 'PhD in Chemistry, specializing in Organic Chemistry',
-    officeHours: 'TR 9-11AM',
-    officeLocation: 'SC1050'
-  },
-  {
-    name: 'Emily Taylor',
-    email: 'emily.taylor@university.edu',
-    blurb: 'Engaging students with the wonders of genetics and biology.',
-    dob: new Date('1983-04-30'),
-    bio: 'PhD in Biology, research in Genetics',
-    officeHours: 'MWF 1-3PM',
-    officeLocation: 'SC3030'
-  },
-  {
-    name: 'David Wilson',
-    email: 'david.wilson@university.edu',
-    blurb: 'Engaging students with the wonders of genetics and biology.',
-    dob: new Date('1977-09-05'),
-    bio: 'PhD in Computer Science, specializing in Operating Systems and Computer Architecture',
-    officeHours: 'MW 3-5PM',
-    officeLocation: 'HC4070'
-  }
-];
+  // ===== PROFESSORS =====
+  const professorData = [
+    {
+      name: 'Peter Krog',
+      email: 'peter.krog@university.edu',
+      blurb: 'Dedicated to making abstract mathematics accessible to students.',
+      dob: new Date('1980-03-20'),
+      bio: 'PhD in Mathematics, specializing in Abstract Algebra',
+      officeHours: 'TR 1-3PM',
+      officeLocation: 'HC3020'
+    },
+    {
+      name: 'Alan Labouser',
+      email: 'alan.labouser@university.edu',
+      blurb: 'Passionate about teaching algorithms and data-driven problem-solving, dislikes Python.',
+      dob: new Date('1975-05-15'),
+      bio: 'PhD in Computer Science with focus on algorithms',
+      officeHours: 'MWF 2-4PM',
+      officeLocation: 'HC4050'
+    },
+    {
+      name: 'Sarah Chen',
+      email: 'sarah.chen@university.edu',
+      blurb: 'Inspiring students to explore quantum physics with hands-on research.',
+      dob: new Date('1982-08-10'),
+      bio: 'PhD in Physics, research focus on Quantum Computing',
+      officeHours: 'MW 10AM-12PM',
+      officeLocation: 'SC2010'
+    },
+    {
+      name: 'Michael Brown',
+      email: 'michael.brown@university.edu',
+      blurb: 'Bringing organic chemistry to life with real-world applications',
+      dob: new Date('1978-11-25'),
+      bio: 'PhD in Chemistry, specializing in Organic Chemistry',
+      officeHours: 'TR 9-11AM',
+      officeLocation: 'SC1050'
+    },
+    {
+      name: 'Emily Taylor',
+      email: 'emily.taylor@university.edu',
+      blurb: 'Engaging students with the wonders of genetics and biology.',
+      dob: new Date('1983-04-30'),
+      bio: 'PhD in Biology, research in Genetics',
+      officeHours: 'MWF 1-3PM',
+      officeLocation: 'SC3030'
+    },
+    {
+      name: 'Brian Gormanly',
+      email: 'brian.gormanly@university.edu',
+      blurb: 'Exploring the depths of computer architecture and system design.',
+      dob: new Date('1977-09-05'),
+      bio: 'PhD in Computer Science, specializing in Operating Systems and Computer Architecture',
+      officeHours: 'MW 3-5PM',
+      officeLocation: 'HC4070'
+    }
+  ];
 
-const professors = await Promise.all(
-  professorData.map(async (prof) => {
-    // Create the user first
-    const user = await prisma.user.create({
-      data: {
-        name: prof.name,
-        user_type: UserType.PROFESSOR,
-        dob: prof.dob,
-        profile: {
-          create: {
-            blurb: prof.blurb,
+  const professors = await Promise.all(
+    professorData.map(async (prof) => {
+      // Create the user first
+      const user = await prisma.user.create({
+        data: {
+          name: prof.name,
+          user_type: UserType.PROFESSOR,
+          dob: prof.dob,
+          profile: {
+            create: {
+              blurb: prof.blurb,
+            }
+          },
+          credentials: {
+            create: {
+              school_email: prof.email,
+              password: await bcrypt.hash('password123', 10)
+            }
+          },
+        },
+      });
+
+      // Create the professor page separately and explicitly connect it
+      const professorPage = await prisma.professorPage.create({
+        data: {
+          bio: prof.bio,
+          office_hours: prof.officeHours,
+          office_location: prof.officeLocation,
+          professor: {
+            connect: { id: user.id }
           }
         },
-        credentials: {
-          create: {
-            school_email: prof.email,
-            password: await bcrypt.hash('password123', 10)
-          }
-        },
-      },
-    });
+      });
 
-    // Create the professor page separately and explicitly connect it
-    const professorPage = await prisma.professorPage.create({
-      data: {
-        bio: prof.bio,
-        office_hours: prof.officeHours,
-        office_location: prof.officeLocation,
-        professor: {
-          connect: { id: user.id }
-        }
-      },
-    });
-
-    // Return both for reference
-    return { user, professorPage };
-  })
-);
+      // Return both for reference
+      return { user, professorPage };
+    })
+  );
 
   // ===== SUBJECTS =====
   const subjects = await Promise.all([
@@ -250,13 +473,13 @@ const professors = await Promise.all(
   // For easier reference in course creation
   const [cs, math, physics, chemistry, biology] = subjects;
   // Updated professor references - since professors now has both user and professorPage
-  const profMary = professors[0].user;
-  const profJohn = professors[1].user;
+  const profKrog = professors[0].user;
+  const profAlan = professors[1].user;
   const profSarah = professors[2].user;
   const profMichael = professors[3].user;
   const profEmily = professors[4].user;
-  const profDavid = professors[5].user;
-  
+  const profBrian = professors[5].user;
+
   const [csMajor, mathMajor, physicsMajor, chemistryMajor, bioMajor] = majors;
 
   // ===== COURSES =====
@@ -268,7 +491,7 @@ const professors = await Promise.all(
         title: 'Introduction to Programming',
         description: 'Basic concepts of programming using Python',
         credits: 3,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] }
       }
@@ -279,7 +502,7 @@ const professors = await Promise.all(
         title: 'Introduction to Programming',
         description: 'Basic concepts of programming using Python - Afternoon Section',
         credits: 3,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] }
       }
@@ -294,7 +517,7 @@ const professors = await Promise.all(
         title: 'Calculus I',
         description: 'Introduction to differential calculus - Morning Section',
         credits: 4,
-        professor_id: profMary.id,
+        professor_id: profKrog.id,
         subject_id: math.id,
         majors: { connect: [{ id: mathMajor.id }] }
       }
@@ -305,7 +528,7 @@ const professors = await Promise.all(
         title: 'Calculus I',
         description: 'Introduction to differential calculus - Afternoon Section',
         credits: 4,
-        professor_id: profMary.id,
+        professor_id: profKrog.id,
         subject_id: math.id,
         majors: { connect: [{ id: mathMajor.id }] }
       }
@@ -360,7 +583,7 @@ const professors = await Promise.all(
         title: 'Data Structures',
         description: 'Advanced programming concepts and data structures',
         credits: 4,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: csBasicCourses.map(c => ({ id: c.id })) }
@@ -372,7 +595,7 @@ const professors = await Promise.all(
         title: 'Object-Oriented Programming',
         description: 'Advanced programming paradigms using Java and C++',
         credits: 4,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: [{ id: csBasicCourses[0].id }] }
@@ -384,7 +607,7 @@ const professors = await Promise.all(
         title: 'Database Systems',
         description: 'Introduction to database design and SQL',
         credits: 3,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: [{ id: csBasicCourses[0].id }] }
@@ -412,7 +635,7 @@ const professors = await Promise.all(
         title: 'Algorithms',
         description: 'Design and analysis of algorithms',
         credits: 4,
-        professor_id: profJohn.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: [{ id: cs200Courses[0].id }] } // Requires Data Structures
@@ -424,7 +647,7 @@ const professors = await Promise.all(
         title: 'Operating Systems',
         description: 'Process management, memory management, and file systems',
         credits: 4,
-        professor_id: profDavid.id,
+        professor_id: profAlan.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: [{ id: cs200Courses[0].id }] } // Requires Data Structures
@@ -436,7 +659,7 @@ const professors = await Promise.all(
         title: 'Computer Organization and Architecture',
         description: 'Computer hardware organization and architectural principles',
         credits: 4,
-        professor_id: profDavid.id,
+        professor_id: profBrian.id,
         subject_id: cs.id,
         majors: { connect: [{ id: csMajor.id }] },
         prerequisites: { connect: [{ id: cs200Courses[0].id }] } // Requires Data Structures
@@ -453,7 +676,7 @@ const professors = await Promise.all(
         title: 'Calculus II',
         description: 'Introduction to integral calculus',
         credits: 4,
-        professor_id: profMary.id,
+        professor_id: profKrog.id,
         subject_id: math.id,
         majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
@@ -465,7 +688,7 @@ const professors = await Promise.all(
         title: 'Linear Algebra',
         description: 'Vector spaces, matrices, and linear transformations',
         credits: 3,
-        professor_id: profMary.id,
+        professor_id: profKrog.id,
         subject_id: math.id,
         majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
@@ -477,7 +700,7 @@ const professors = await Promise.all(
         title: 'Discrete Mathematics',
         description: 'Logic, sets, relations, and graph theory',
         credits: 3,
-        professor_id: profMary.id,
+        professor_id: profKrog.id,
         subject_id: math.id,
         majors: { connect: [{ id: mathMajor.id }] },
         prerequisites: { connect: mathBasicCourses.map(c => ({ id: c.id })) }
@@ -563,7 +786,105 @@ const professors = await Promise.all(
     })
   ]);
 
-  console.log("Successfully seeded database with expanded test data.");
+  // ===== COMMENTS AND RATINGS =====
+
+  // Extract users, create students for comments, get courses and professor pages
+  const [johnDoe, janeDoe, bobSmith] = testUsers;
+  const students = [johnDoe, janeDoe, bobSmith];
+  const allCoursesFetched = await prisma.course.findMany();
+  const allProfessorPagesFetched = await prisma.professorPage.findMany({
+    include: { professor: true } // Include the related User (professor)
+  });
+
+  // Create a map of professor IDs to names for easy lookup
+  const professorsMap = new Map<number, string>();
+  allProfessorPagesFetched.forEach((pp) => {
+    professorsMap.set(pp.professor_id, pp.professor.name);
+  });
+
+  // Fetch existing ratings to enforce uniqueness
+  const existingRatings = await prisma.rating.findMany();
+
+  // Generate Comments
+  const numberOfComments = 50;
+  const generatedComments: GeneratedComment[] = generateRandomComments(
+    numberOfComments,
+    students,
+    allCoursesFetched,
+    allProfessorPagesFetched,
+    professorsMap
+  );
+
+  // Insert Comments into the Database
+  const insertedComments: Comment[] = await Promise.all(
+    generatedComments.map(async (comment) => {
+      return await prisma.comment.create({
+        data: {
+          content: comment.content,
+          user: { connect: { id: comment.userId } },
+          course: comment.courseId ? { connect: { id: comment.courseId } } : undefined,
+          professor_page: comment.professorPageId ? { connect: { id: comment.professorPageId } } : undefined,
+          parent_comment: comment.parentId ? { connect: { id: comment.parentId } } : undefined,
+        },
+      });
+    })
+  );
+
+  // Generate Replies
+  const numberOfReplies = 30;
+  const generatedReplies: GeneratedComment[] = generateRandomReplies(
+    insertedComments,
+    numberOfReplies,
+    students,
+    allCoursesFetched,
+    allProfessorPagesFetched,
+    professorsMap
+  );
+
+  // Insert Replies into the Database
+  const insertedReplies: Comment[] = await Promise.all(
+    generatedReplies.map(async (reply) => {
+      return await prisma.comment.create({
+        data: {
+          content: reply.content,
+          user: { connect: { id: reply.userId } },
+          course: reply.courseId ? { connect: { id: reply.courseId } } : undefined,
+          professor_page: reply.professorPageId ? { connect: { id: reply.professorPageId } } : undefined,
+          parent_comment: reply.parentId ? { connect: { id: reply.parentId } } : undefined,
+        },
+      });
+    })
+  );
+
+  // Generate Ratings
+  const numberOfRatings = 50;
+  const generatedRatings: GeneratedRating[] = generateRandomRatings(
+    numberOfRatings,
+    students,
+    allCoursesFetched,
+    allProfessorPagesFetched,
+    existingRatings
+  );
+
+  // Insert Ratings into the Database
+  await Promise.all(
+    generatedRatings.map(async (rating) => {
+      try {
+        await prisma.rating.create({
+          data: {
+            value: rating.value,
+            user: { connect: { id: rating.userId } },
+            course: rating.courseId ? { connect: { id: rating.courseId } } : undefined,
+            professorPage: rating.professorPageId ? { connect: { id: rating.professorPageId } } : undefined,
+          },
+        });
+      } catch (error) {
+        console.error(`Failed to create rating for user ${rating.userId}:`, error);
+      }
+    })
+  );
+
+  console.log("Successfully seeded database with expanded test data, including comments and ratings.");
 }
 
 seed()
