@@ -410,7 +410,8 @@
 
     data() {
       return {
-        data: null as any,
+        // Since the page can be one of two data types, we ignore type safety in this one instance
+        data: null as any,  // eslint-disable-line @typescript-eslint/no-explicit-any
         editedData: {
           bio: "",
           office_hours: "",
