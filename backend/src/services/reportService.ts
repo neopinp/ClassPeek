@@ -37,7 +37,10 @@ export class ReportService {
         where: whereClause,
         include: {
           comment: {
-            include: {
+            select: {
+              id: true,
+              content: true,
+              created_at: true,
               user: { select: { id: true, name: true } },
             },
           },
@@ -46,7 +49,7 @@ export class ReportService {
         },
         orderBy: {
           created_at: 'desc',
-        }
+        },
       });
     } catch (error) {
       console.error("Error fetching reports:", error);

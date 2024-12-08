@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { CommentService } from '../services/commentService';
 import { ReportService } from '../services/reportService';
 import { requireAuth } from '../middleware/auth.middleware';
+import { get } from 'http';
 
 const router = Router();
 const commentService = new CommentService();
@@ -85,6 +86,65 @@ router.get("/comments", async (req, res) => {
     console.error("Error getting comments:", error);
     res.status(400).json({ error: (error as Error).message });
   }
+});
+
+/**
+ * @swagger
+ * /api/comments/{id}:
+ *   get:
+ *     tags:
+ *       - Comments
+ *     summary: Get a comment by its ID
+ *     description: Retrieve a specific comment by its unique identifier.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The ID of the comment to retrieve.
+ *     responses:
+ *       200:
+ *         description: A single comment object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Bad request or invalid input.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Error message"
+ *       404:
+ *         description: Comment not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Comment not found."
+ */
+router.get("/comments/:id", (req, res) => {
+  const getComment = async () => {
+    try {
+      const comment = await commentService.getCommentById(Number(req.params.id));
+      if (!comment) {
+        return res.status(404).json({ error: "Comment not found." });
+      }
+      res.json(comment);
+    } catch (error) {
+      console.error("Error getting comment:", error);
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+  getComment();
 });
 
 /**
