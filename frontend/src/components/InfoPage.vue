@@ -81,7 +81,7 @@
               <router-link
                 v-if="data?.professor?.id"
                 :to="{ name: 'Info', params: { type: 'professor', id: data?.professor?.id } }"
-                class="course-title-link"
+                class="user-name-link"
               >
               {{ data?.professor?.name }}
               </router-link>
@@ -239,10 +239,11 @@
 
                 <div class="comment-actions">
                   <button class="btn btn-primary" @click="startReply(comment)">Reply</button>
-                  <div v-if="isCurrentUser(comment.user.id) || isUserProfessor" class="user-actions">
+                  <div v-if="isCurrentUser(comment.user.id) || isUserProfessor">
                     <button class="btn btn-primary" @click="startCommentEdit(comment)">Edit</button>
                     <button class="btn btn-tertiary" @click="deleteComment(comment.id)">Delete</button>
                   </div>
+                  <button class="btn btn-tertiary" @click="startReport(comment)">Report</button>
                 </div>
 
                 <!-- Reply Form -->
@@ -287,10 +288,6 @@
                       </span>
                     </div>
 
-                    <!--<div class="comment-content">
-                      {{ reply.content }}
-                    </div>-->
-
                     <div class="comment-content">
                       <div v-if="editingReply?.id === reply.id" class="editable-field">
                         <textarea v-model="editingReply.content"></textarea>
@@ -301,10 +298,12 @@
                       </div>
                       <div v-else>{{ reply.content }}</div>
                     </div>
-
-                    <div v-if="isCurrentUser(reply.user.id) || isUserProfessor" class="comment-actions">
-                      <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
-                      <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
+                    <div class="comment-actions">
+                      <div v-if="isCurrentUser(reply.user.id) || isUserProfessor">
+                        <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
+                        <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
+                      </div>
+                      <button class="btn btn-tertiary" @click="startReport(reply)">Report</button>
                     </div>
                   </div>
                 </div>
@@ -319,6 +318,37 @@
         </div>
       </article>
     </main>
+
+    <!-- Report Modal -->
+    <div v-if="showReportModal" class="modal-overlay" @click.self="closeReportModal">
+      <div class="modal-content">
+        <h3 v-if="!reportSubmitted">Report Comment</h3>
+        <h3 v-else>Thank You!</h3>
+
+        <!-- Report Form -->
+        <div v-if="!reportSubmitted">
+          <p>Why are you reporting this comment?</p>
+          <p style="font-style: italic; color: #333333;">{{ commentToReport?.content }}</p>
+          <textarea
+            v-model="reportContent"
+            placeholder="Provide a reason..."
+            class="report-textarea"
+          ></textarea>
+          <div class="modal-actions">
+            <button class="btn btn-primary" @click="submitReport">Submit Report</button>
+            <button class="btn btn-secondary" @click="closeReportModal">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div v-else class="success-message">
+          <p>Your report has been submitted successfully.</p>
+          <div class="modal-actions">
+            <button class="btn btn-primary" @click="closeReportModal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -396,6 +426,10 @@
         editingReply: null as Comment | null,
         replyingTo: null as number | null,
         replyContent: '',
+        reportContent: '',
+        showReportModal: false,
+        commentToReport: null as Comment | null,
+        reportSubmitted: false,
         comments: [] as Comment[],
         averageRating: 0.0 as number,
         userRating: null as number | null,
@@ -895,6 +929,63 @@
           alert('Failed to submit rating. Please try again.');
         }
       },
+
+      // Comment reporting methods
+      startReport(comment: Comment) {
+        this.commentToReport = comment;
+        this.reportContent = '';
+        this.showReportModal = true;
+        this.reportSubmitted = false;
+      },
+
+      async submitReport() {
+        if (!this.commentToReport) {
+          alert('No comment selected for reporting.');
+          return;
+        }
+
+        if (!this.reportContent.trim()) {
+          alert('Please provide a reason for reporting.');
+          return;
+        }
+
+        try {
+          // Prepare the report payload
+          const reportData = {
+            reason: this.reportContent,
+          };
+
+          // Send the report to the backend API
+          await api.post(`/comments/${this.commentToReport.id}/report`, reportData);
+
+          // Provide feedback to the user
+          this.reportSubmitted = true;
+
+          // Close the modal after a long delay
+          setTimeout(() => {
+            this.closeReportModal();
+          }, 10000);
+        } catch (error) {
+          // Handle errors appropriately
+          if (axios.isAxiosError(error)) {
+            console.error('Axios error submitting report:', error.response?.data);
+            alert(error.response?.data?.error || 'Failed to report comment. Please try again.');
+          } else if (error instanceof Error) {
+            console.error('Error submitting report:', error.message);
+            alert('An unexpected error occurred. Please try again.');
+          } else {
+            console.error('Unknown error submitting report:', error);
+            alert('An unknown error occurred. Please try again.');
+          }
+        }
+      },
+
+      closeReportModal() {
+        this.showReportModal = false;
+        this.commentToReport = null;
+        this.reportContent = '';
+        this.reportSubmitted = false;
+      },
     },
 
     // Vue structure that runs functions before the page is loaded, handy for getting the data needed before populating the page
@@ -914,6 +1005,13 @@
 </script>
 
 <style scoped>
+  /* ===== Global Styles ===== */
+  
+  /* Apply box-sizing globally for consistent sizing */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   /* ===== Base Page Layout ===== */
   .info-page {
     margin: 50px 0 0 0;
@@ -921,7 +1019,7 @@
     display: flex;
     flex-direction: column;
     background: rgb(249, 187, 187);
-    /*background-image: url("images/download.jpg");*/
+    /* background-image: url("images/download.jpg"); */
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
     font-size: 16px;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -964,15 +1062,17 @@
       0 16px 24px rgba(0, 0, 0, 0.06);
   }
 
-   /* ===== Editable items ===== */
-
+  /* ===== Editable Items ===== */
   .editable-field {
     margin-bottom: 20px;
   }
+
   .editable-field strong {
     display: block;
     margin-bottom: 5px;
+    color: #2c3e50;
   }
+
   .editable-field textarea,
   .editable-field input {
     width: 100%;
@@ -994,7 +1094,7 @@
     box-shadow: 0 0 5px rgba(66, 153, 225, 0.5); /* Subtle glow */
   }
 
-  /* Profile Image */
+  /* ===== Profile Image ===== */
   .image-container {
     width: 100%;
     height: 200px;
@@ -1053,7 +1153,7 @@
     line-height: 1.6;
   }
 
-  /* Prerequisites Section */
+  /* ===== Prerequisites Section ===== */
   .prerequisites {
     margin-top: 20px;
     padding: 15px;
@@ -1093,7 +1193,7 @@
     margin-bottom: 1.5rem;
   }
 
-  /* Comment Form */
+  /* ===== Comment Form ===== */
   .comment-form {
     background: #f8f9fa;
     padding: 1.5rem;
@@ -1122,9 +1222,15 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 
-  /* Comment Thread and Items */
+  /* ===== Comment Thread and Items ===== */
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
   .comment-thread {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .comment-item {
@@ -1145,56 +1251,22 @@
       0 6px 12px rgba(0, 0, 0, 0.05);
   }
 
-  /* User Information */
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .user-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .user-name-link {
-    font-weight: 600;
-    color: #2c3e50;
-  }
-
-  .timestamp {
-    color: #6b7280;
-    font-size: 0.875rem;
-  }
-
-  /* User Type Badges */
-  .user-type-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-weight: 500;
-  }
-
-  .user-type-badge.professor {
-    background-color: #dbeafe;
-    color: #1e40af;
-  }
-
-  .user-type-badge.student {
-    background-color: #dcfce7;
-    color: #166534;
-  }
-
-  /* Comment Actions */
+  /* ===== Comment Actions ===== */
   .comment-actions {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
     justify-content: flex-end;
+    align-items: center;
   }
 
-  /* Reply Section */
+  .comment-actions > div {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* ===== Replies ===== */
   .replies {
     margin-top: 1rem;
     margin-left: 2rem;
@@ -1225,6 +1297,52 @@
     min-height: 80px;
   }
 
+  /* ===== User Information ===== */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .user-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .user-name-link {
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+  }
+
+  .user-name-link:hover {
+    text-decoration: underline;
+  }
+
+  .timestamp {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  /* ===== User Type Badges ===== */
+  .user-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+
+  .user-type-badge.professor {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  .user-type-badge.student {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
   /* ===== Ratings Section ===== */
   .ratings-section {
     margin-top: 2rem;
@@ -1251,13 +1369,13 @@
   }
 
   .average-rating .stars {
-    color: #f59e0b; /* Amber-400 for stars */
+    color: #f59e0b;
     font-size: 1.25rem;
   }
 
   .average-rating .numeric-rating {
     font-weight: 600;
-    color: #374151; /* Gray-700 */
+    color: #374151;
   }
 
   .user-rating {
@@ -1306,14 +1424,18 @@
     gap: 0.5rem;
   }
 
-  /* Buttons */
+  /* ===== Buttons ===== */
   .btn {
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
     font-weight: 500;
     transition: all 0.2s;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
   }
 
+  /* Primary Button */
   .btn-primary {
     background-color: #3b82f6;
     color: white;
@@ -1324,6 +1446,7 @@
     transform: translateY(-1px);
   }
 
+  /* Secondary Button */
   .btn-secondary {
     background-color: #6b7280;
     color: white;
@@ -1334,9 +1457,13 @@
     transform: translateY(-1px);
   }
 
+  /* Tertiary Button */
   .btn-tertiary {
     background-color: #f63b3b;
     color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
   }
 
   .btn-tertiary:hover {
@@ -1344,7 +1471,7 @@
     transform: translateY(-1px);
   }
 
-  /* Empty State */
+  /* ===== Empty State ===== */
   .no-comments {
     text-align: center;
     padding: 2rem;
@@ -1355,7 +1482,7 @@
     border: 1px solid #e5e7eb;
   }
 
-  /* Info Cards Content */
+  /* ===== Info Cards Content ===== */
   .professor-info, .course-info {
     display: flex;
     flex-direction: column;
@@ -1373,6 +1500,7 @@
     font-weight: bold;
     transition: color 0.3s ease;
   }
+
   .course-info .course-title-link:hover {
     color: #0056b3; /* Hover color */
     text-decoration: underline;
@@ -1400,5 +1528,74 @@
     .comment-item {
       padding: 1rem;
     }
+  }
+
+  /* ===== Report Modal ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-20px);
+    animation: slideDown 0.3s forwards;
+  }
+
+  @keyframes slideDown {
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .success-message p {
+    font-size: 1rem;
+    color: #16a34a; /* Green color for success */
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .report-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    resize: vertical;
+    margin-top: 0.5rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  /* ===== Disabled Button Styles ===== */
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
