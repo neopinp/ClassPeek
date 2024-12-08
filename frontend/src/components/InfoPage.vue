@@ -450,7 +450,8 @@
 
       // Generic check for user permissions (Professors and Admins)
       isUserPrivileged(): boolean {
-        return sessionStore.user.user_type === "PROFESSOR" || sessionStore.user.user_type === "ADMIN";
+        // Professors can only edit and delete comments on a page if it is their own course
+        return (sessionStore.user.user_type === "PROFESSOR" && this.data?.professor?.id === sessionStore.user.id) || sessionStore.user.user_type === "ADMIN";
       },
 
       // Only professors can edit their own page
