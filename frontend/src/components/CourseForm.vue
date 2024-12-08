@@ -1,5 +1,5 @@
 <template>
-  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="form-page">
+  <div v-if="sessionStore.user.user_type === 'PROFESSOR' || sessionStore.user.user_type === 'ADMIN'" class="form-page">
     <div class="form-card">
       <h2 class="form-title">{{ isEditing ? "Edit Course" : "Create Course" }}</h2>
 
@@ -147,6 +147,7 @@
   import { defineComponent } from 'vue';
   import sessionStore from '@/store/session';
   import api from '@/api';
+import { isAxiosError } from 'axios';
 
   interface Professor {
     id: number;
@@ -275,9 +276,20 @@
           console.log("Course saved:", response.data);
 
           this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`);
-        } catch (error: any) {
-          console.error("Error saving course:", error);
-          this.showToast("error", error.response?.data?.error || "An unexpected error occurred. Please try again.");
+        } catch (error: unknown) {
+          if (isAxiosError(error)) {
+            // Handle Axios-specific errors
+            console.error("Axios error saving course:", error);
+            this.showToast("error", error.response?.data?.error || "An unexpected error occurred. Please try again.");
+          } else if (error instanceof Error) {
+            // Handle generic JavaScript errors
+            console.error("Unexpected error saving course:", error);
+            this.showToast("error", error.message || "An unexpected error occurred. Please try again.");
+          } else {
+            // Handle any other types of thrown values
+            console.error("Non-Error thrown:", error);
+            this.showToast("error", "An unexpected error occurred. Please try again.");
+          }
         } finally {
           this.loading = false;
         }

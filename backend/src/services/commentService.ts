@@ -69,6 +69,26 @@ export class CommentService {
     }
   }
 
+  // Get a comment by ID (used for reports)
+  async getCommentById(id: number) {
+    try {
+      return await this.prisma.comment.findUnique({
+        where: { id },
+        include: {
+          user: { select: { id: true, name: true, user_type: true } },
+          replies: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching comment by ID:", error);
+      throw new Error("Failed to fetch comment");
+    }
+  }
+
     // Update a comment
   async updateComment(id: number, content: string) {
       try {

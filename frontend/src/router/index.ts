@@ -7,6 +7,7 @@ import SubjectsPage from '@/components/SubjectsPage.vue'
 import MajorsPage from '@/components/MajorsPage.vue'
 import MyCoursesPage from '@/components/MyCoursesPage.vue'
 import AllCoursesPage from '@/components/AllCoursesPage.vue'
+import ReportsPage from '@/components/ReportsPage.vue'
 import CourseForm from '@/components/CourseForm.vue'
 import MajorForm from '@/components/MajorForm.vue'
 import SubjectForm from '@/components/SubjectForm.vue'
@@ -14,7 +15,6 @@ import ProfilePage from '@/components/ProfilePage.vue'
 import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
-import EditProfilePage from '@/components/EditProfilePage.vue'
 import api from '../api'
 
 const routes: Array<RouteRecordRaw> = [
@@ -59,6 +59,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'AllCoursesPage',
     component: AllCoursesPage,
     meta: { title: 'All Courses - ClassPeek'}
+  },
+  {
+    path: '/reports',
+    name: 'ReportsPage',
+    component: ReportsPage,
+    meta: { title: 'Reports - ClassPeek'}
   },
   {
     path: '/course-form/:id?',
@@ -110,12 +116,6 @@ const routes: Array<RouteRecordRaw> = [
     name: 'SignUpPage',
     component: SignUpPage, 
     meta: { title: 'Sign In - ClassPeek' }
-  },
-  {
-    path: '/profile/edit',
-    name: "EditProfilePage",
-    component: EditProfilePage, 
-    meta: { title: 'Edit Profile - ClassPeek' }
   }
 ]
 

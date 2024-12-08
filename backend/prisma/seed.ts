@@ -7,6 +7,19 @@ async function seed() {
   const testUsers = await Promise.all([
     prisma.user.create({
       data: {
+        name: 'Admin',
+        user_type: UserType.ADMIN,
+        dob: new Date('1990-01-01'),
+        credentials: {
+          create: {
+            school_email: 'admin@university.edu',
+            password: await bcrypt.hash('password123', 10)
+          }
+        }
+      }
+    }),
+    prisma.user.create({
+      data: {
         name: 'John Doe',
         user_type: UserType.STUDENT,
         dob: new Date('2000-01-01'),

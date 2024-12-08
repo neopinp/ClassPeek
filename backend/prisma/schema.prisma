@@ -16,6 +16,14 @@ datasource db {
 enum UserType {
   STUDENT
   PROFESSOR
+  ADMIN
+}
+
+enum ReportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  DISMISSED
 }
 
 model User {
@@ -39,7 +47,13 @@ model User {
   ratings       Rating[]
 
   // User Uploaded Files
-  files File[]
+  files         File[]
+
+  // Reports made (users)
+  reports_made    Report[]       @relation("ReportsByUser")
+  
+  // Reports handled (admins)
+  handled_reports Report[]       @relation("HandledReports")
   
   created_at    DateTime        @default(now())
   updated_at    DateTime        @updatedAt
@@ -167,10 +181,35 @@ model Comment {
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
 
+  // Reports referencing this comment
+  reports           Report[]
+
   @@index([user_id])
   @@index([course_id])
   @@index([professor_page_id])
   @@index([parent_id])
+}
+
+model Report {
+  id                    Int       @id @default(autoincrement())
+  comment               Comment   @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  comment_id            Int
+
+  reported_by           User      @relation("ReportsByUser", fields: [reported_by_user_id], references: [id])
+  reported_by_user_id   Int
+
+  reason                String    @db.Text
+  status                ReportStatus @default(OPEN)
+
+  handled_by            User?     @relation("HandledReports", fields: [handled_by_user_id], references: [id])
+  handled_by_user_id    Int?
+
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([comment_id])
+  @@index([reported_by_user_id])
+  @@index([handled_by_user_id])
 }
 
 model Rating {

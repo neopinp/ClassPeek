@@ -60,7 +60,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, render } from "vue";
+import { defineComponent } from "vue";
 import sessionStore from "@/store/session";
 import api from "@/api";
 

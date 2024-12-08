@@ -9,6 +9,7 @@ import majorRoutes from './routes/majors';
 import userRoutes from './routes/users';
 import professorRoutes from './routes/professors';
 import commentRoutes from './routes/comments';
+import reportRoutes from './routes/reports';
 import ratingRoutes from './routes/ratings';
 import fileRoutes from './routes/file';
 
@@ -88,6 +89,7 @@ app.use('/api', majorRoutes);
 app.use('/api', userRoutes);
 app.use('/api', professorRoutes);
 app.use('/api', commentRoutes);
+app.use('/api', reportRoutes);
 app.use('/api', ratingRoutes);
 app.use('/api', fileRoutes);
 

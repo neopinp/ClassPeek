@@ -51,7 +51,7 @@ export default defineComponent({
 
         setTimeout(() => {
           this.showSuccessToast = false;
-          this.$router.push("/profile");
+          this.$router.push("/");
         }, 2000)
         
       } catch (error) {

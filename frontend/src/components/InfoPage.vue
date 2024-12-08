@@ -81,7 +81,7 @@
               <router-link
                 v-if="data?.professor?.id"
                 :to="{ name: 'Info', params: { type: 'professor', id: data?.professor?.id } }"
-                class="course-title-link"
+                class="user-name-link"
               >
               {{ data?.professor?.name }}
               </router-link>
@@ -239,10 +239,11 @@
 
                 <div class="comment-actions">
                   <button class="btn btn-primary" @click="startReply(comment)">Reply</button>
-                  <div v-if="isCurrentUser(comment.user.id) || isUserProfessor" class="user-actions">
+                  <div v-if="isCurrentUser(comment.user.id) || isUserPrivileged">
                     <button class="btn btn-primary" @click="startCommentEdit(comment)">Edit</button>
                     <button class="btn btn-tertiary" @click="deleteComment(comment.id)">Delete</button>
                   </div>
+                  <button class="btn btn-tertiary" @click="startReport(comment)">Report</button>
                 </div>
 
                 <!-- Reply Form -->
@@ -287,10 +288,6 @@
                       </span>
                     </div>
 
-                    <!--<div class="comment-content">
-                      {{ reply.content }}
-                    </div>-->
-
                     <div class="comment-content">
                       <div v-if="editingReply?.id === reply.id" class="editable-field">
                         <textarea v-model="editingReply.content"></textarea>
@@ -301,10 +298,12 @@
                       </div>
                       <div v-else>{{ reply.content }}</div>
                     </div>
-
-                    <div v-if="isCurrentUser(reply.user.id) || isUserProfessor" class="comment-actions">
-                      <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
-                      <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
+                    <div class="comment-actions">
+                      <div v-if="isCurrentUser(reply.user.id) || isUserPrivileged">
+                        <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
+                        <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
+                      </div>
+                      <button class="btn btn-tertiary" @click="startReport(reply)">Report</button>
                     </div>
                   </div>
                 </div>
@@ -319,586 +318,701 @@
         </div>
       </article>
     </main>
+
+    <!-- Report Modal -->
+    <div v-if="showReportModal" class="modal-overlay" @click.self="closeReportModal">
+      <div class="modal-content">
+        <h3 v-if="!reportSubmitted">Report Comment</h3>
+        <h3 v-else>Thank You!</h3>
+
+        <!-- Report Form -->
+        <div v-if="!reportSubmitted">
+          <p>Why are you reporting this comment?</p>
+          <p style="font-style: italic; color: #333333;">{{ commentToReport?.content }}</p>
+          <textarea
+            v-model="reportContent"
+            placeholder="Provide a reason..."
+            class="report-textarea"
+          ></textarea>
+          <div class="modal-actions">
+            <button class="btn btn-primary" @click="submitReport">Submit Report</button>
+            <button class="btn btn-secondary" @click="closeReportModal">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div v-else class="success-message">
+          <p>Your report has been submitted successfully.</p>
+          <div class="modal-actions">
+            <button class="btn btn-primary" @click="closeReportModal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted } from "vue";
-import api from "../api";
-import sessionStore from "../store/session";
-import axios from 'axios';
+  import { defineComponent, onMounted } from "vue";
+  import api from "../api";
+  import sessionStore from "../store/session";
+  import axios from 'axios';
 
-// Interfaces to store User and Comment data
-interface User {
-  id: number;
-  name: string;
-  user_type: 'STUDENT' | 'PROFESSOR';
-}
+  // Interfaces to store User and Comment data
+  interface User {
+    id: number;
+    name: string;
+    user_type: 'STUDENT' | 'PROFESSOR';
+  }
 
-interface Comment {
-  id: number;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user: User;
-  parent_id?: number | null;
-  replies?: Comment[];
-}
+  interface Comment {
+    id: number;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    user: User;
+    parent_id?: number | null;
+    replies?: Comment[];
+  }
 
-export default defineComponent({
-  name: "InfoPage",
+  interface Rating {
+    // Properties for submission
+    value: number;
+    professorPageId?: number;
+    courseId?: number;
 
-  setup() {
-    // Upon loading the page, we use fetchSession to get all of the relevant data needed to populate the page ...
-    onMounted(() => {
-      sessionStore.fetchSession();
-    });
+    // Properties received in responses
+    id?: number;
+    user?: User;
+    averageRating?: number;
+    allRatings?: UserRating[];
+  }
 
-    // ... and note the current user for various permissions
-    return {
-      user: sessionStore.user,
-    };
-  },
+  interface UserRating {
+    user: User;
+    value: number;
+  }
 
-  data() {
-    return {
-      data: null as any,
-      editedData: {
-        bio: "",
-        office_hours: "",
-        office_location: "",
+  export default defineComponent({
+    name: "InfoPage",
+
+    setup() {
+      // Upon loading the page, we use fetchSession to get all of the relevant data needed to populate the page ...
+      onMounted(() => {
+        sessionStore.fetchSession();
+      });
+
+      // ... and note the current user for various permissions
+      return {
+        user: sessionStore.user,
+      };
+    },
+
+    data() {
+      return {
+        data: null as any,
+        editedData: {
+          bio: "",
+          office_hours: "",
+          office_location: "",
+        },
+        loading: false,
+        error: null as string | null,
+        isEditing: false,
+        isEditingField:  null as "bio" | "office_hours" | "office_location" | null,
+        type: '' as 'professor' | 'course',
+        newComment: '',
+        editingComment: null as Comment | null,
+        editingReply: null as Comment | null,
+        replyingTo: null as number | null,
+        replyContent: '',
+        reportContent: '',
+        showReportModal: false,
+        commentToReport: null as Comment | null,
+        reportSubmitted: false,
+        comments: [] as Comment[],
+        averageRating: 0.0 as number,
+        userRating: null as number | null,
+        ratingValue: 5 as number,
+        showRatingForm: false,
+      };
+    },
+
+    computed: {
+      isAuthenticated(): boolean {
+        return !!this.user.id;
       },
-      loading: false,
-      error: null as string | null,
-      isEditing: false,
-      isEditingField:  null as "bio" | "office_hours" | "office_location" | null,
-      type: '' as 'professor' | 'course',
-      newComment: '',
-      editingComment: null as Comment | null,
-      editingReply: null as Comment | null,
-      replyingTo: null as number | null,
-      replyContent: '',
-      comments: [] as Comment[],
-      averageRating: 0.0 as number,
-      userRating: null as number | null,
-      ratingValue: 5 as number,
-      showRatingForm: false,
-    };
-  },
+      // If the page is a professor_page, we use this check to include additional fields
+      isProfessor(): boolean {
+        return this.type === 'professor';
+      },
 
-  computed: {
-    isAuthenticated(): boolean {
-      return !!this.user.id;
-    },
-    // If the page is a professor_page, we use this check to include additional fields
-    isProfessor(): boolean {
-      return this.type === 'professor';
-    },
+      // Generic check for user permissions (Professors and Admins)
+      isUserPrivileged(): boolean {
+        return sessionStore.user.user_type === "PROFESSOR" || sessionStore.user.user_type === "ADMIN";
+      },
 
-    isUserProfessor(): boolean {
-      return sessionStore.user.user_type === "PROFESSOR";
-    },
+      // Only professors can edit their own page
+      isCurrentProfessor(): boolean {
+        return (
+          sessionStore.user.user_type === "PROFESSOR" &&
+          sessionStore.user.id === this.data?.professor_page?.professor_id
+        );
+      },
 
-    // Only professors can edit their own page
-    isCurrentProfessor(): boolean {
-      return (
-        sessionStore.user.user_type === "PROFESSOR" &&
-        sessionStore.user.id === this.data?.professor_page?.professor_id
-      );
-    },
-
-    entityId(): number | null {
-      return this.data?.id || null;
-    }
-  },
-
-  methods: {
-    // Various functions that change the structure of the page depending on the type of info page being rendered
-    getTitle() {
-      if (!this.data) return '';
-      return this.isProfessor ? this.data.name : this.data.title;
-    },
-
-    getTopicTitle() {
-      if (!this.data) return '';
-      return this.isProfessor ? 'Professor Bio' : 'Course Description';
-    },
-
-    getMainContent() {
-      if (!this.data) return '';
-      return this.isProfessor ? this.data.professor_page?.bio : this.data.description;
-    },
-
-    // Data Fetching Methods
-    async fetchData() {
-      this.loading = true;
-      try {
-        // Gets the information for the page from the URL parameters
-        this.type = this.$route.params.type as 'professor' | 'course';
-        const id = this.$route.params.id;
-        
-        if (!['professor', 'course'].includes(this.type)) {
-          this.error = 'Invalid type';
-          return;
-        }
-
-        // Constructs the API request from the type of page and the unique ID for it
-        const response = await api.get(`/${this.type}s/${id}`);
-        this.data = response.data;
-        
-        // Gets associated comments and ratings for the course/professor
-        await this.fetchComments();
-        await this.fetchRatings();
-        document.title = `${this.getTitle()} - ClassPeek`;
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        this.error = 'Failed to load data';
-      } finally {
-        this.loading = false;
+      entityId(): number | null {
+        return this.data?.id || null;
       }
     },
 
-    // Changes part of the page that is being edited into editable fields respectively
-    startEdit(field: "bio" | "office_hours" | "office_location") {
-      this.isEditingField = field;
-      if (this.data?.professor_page) {
-        this.editedData[field] = this.data.professor_page[field];
-      }
-    },
+    methods: {
+      // Various functions that change the structure of the page depending on the type of info page being rendered
+      getTitle() {
+        if (!this.data) return '';
+        return this.isProfessor ? this.data.name : this.data.title;
+      },
 
-    cancelEdit() {
-      this.isEditingField = null;
-    },
-    
-    // Gets the edited data from the page, creates an API put for the professor_page, and updates the data on the page
-    async saveEdit(field: "bio" | "office_hours" | "office_location") {
-      if (!this.isEditingField) return;
+      getTopicTitle() {
+        if (!this.data) return '';
+        return this.isProfessor ? 'Professor Bio' : 'Course Description';
+      },
 
-      try {
+      getMainContent() {
+        if (!this.data) return '';
+        return this.isProfessor ? this.data.professor_page?.bio : this.data.description;
+      },
+
+      // Data Fetching Methods
+      async fetchData() {
         this.loading = true;
+        try {
+          // Gets the information for the page from the URL parameters
+          this.type = this.$route.params.type as 'professor' | 'course';
+          const id = this.$route.params.id;
+          
+          if (!['professor', 'course'].includes(this.type)) {
+            this.error = 'Invalid type';
+            return;
+          }
 
-        const updateData: Partial<typeof this.editedData> = {
-          [field]: this.editedData[field],
-        };
+          // Constructs the API request from the type of page and the unique ID for it
+          const response = await api.get(`/${this.type}s/${id}`);
+          this.data = response.data;
+          
+          // Gets associated comments and ratings for the course/professor
+          await this.fetchComments();
+          await this.fetchRatings();
+          document.title = `${this.getTitle()} - ClassPeek`;
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          this.error = 'Failed to load data';
+        } finally {
+          this.loading = false;
+        }
+      },
 
-        const professorId = this.data?.id;
-        if (!professorId) throw new Error("Professor ID is missing");
-
-        const response = await api.put(`/professors/${professorId}/page`, updateData);
-        console.log("Updated Professor Page:", response.data);
-
-        // Update local data
+      // Changes part of the page that is being edited into editable fields respectively
+      startEdit(field: "bio" | "office_hours" | "office_location") {
+        this.isEditingField = field;
         if (this.data?.professor_page) {
-          this.data.professor_page[field] = this.editedData[field];
+          this.editedData[field] = this.data.professor_page[field];
         }
+      },
 
+      cancelEdit() {
         this.isEditingField = null;
-      } catch (error) {
-        console.error("Error updating professor page:", error);
-        alert("Failed to save changes. Please try again.");
-      } finally {
-        this.loading = false;
-      }
-    },
+      },
+      
+      // Gets the edited data from the page, creates an API put for the professor_page, and updates the data on the page
+      async saveEdit(field: "bio" | "office_hours" | "office_location") {
+        if (!this.isEditingField) return;
 
-    // Populates the page with comments associated with the page
-    async fetchComments() {
-      try {
-        if (!this.data) {
-          console.log('No data available for comments');
-          return;
+        try {
+          this.loading = true;
+
+          const updateData: Partial<typeof this.editedData> = {
+            [field]: this.editedData[field],
+          };
+
+          const professorId = this.data?.id;
+          if (!professorId) throw new Error("Professor ID is missing");
+
+          const response = await api.put(`/professors/${professorId}/page`, updateData);
+          console.log("Updated Professor Page:", response.data);
+
+          // Update local data
+          if (this.data?.professor_page) {
+            this.data.professor_page[field] = this.editedData[field];
+          }
+
+          this.isEditingField = null;
+        } catch (error) {
+          console.error("Error updating professor page:", error);
+          alert("Failed to save changes. Please try again.");
+        } finally {
+          this.loading = false;
         }
+      },
 
-        let params = {};
-        
-        // Professors and Courses have different comment relations that need to be handlesd here
-        if (this.isProfessor) {
-          if (this.data.professor_page?.id) {
-            params = { professorPageId: this.data.professor_page.id };
-            console.log('Fetching professor comments for page:', this.data.professor_page.id);
-          } else {
-            console.error('Professor page ID not found:', this.data);
+      // Populates the page with comments associated with the page
+      async fetchComments() {
+        try {
+          if (!this.data) {
+            console.log('No data available for comments');
             return;
           }
-        } else {
-          if (this.data.id) {
-            params = { courseId: this.data.id };
-            console.log('Fetching course comments for course:', this.data.id);
+
+          let params = {};
+          
+          // Professors and Courses have different comment relations that need to be handlesd here
+          if (this.isProfessor) {
+            if (this.data.professor_page?.id) {
+              params = { professorPageId: this.data.professor_page.id };
+              console.log('Fetching professor comments for page:', this.data.professor_page.id);
+            } else {
+              console.error('Professor page ID not found:', this.data);
+              return;
+            }
           } else {
-            console.error('Course ID not found:', this.data);
-            return;
+            if (this.data.id) {
+              params = { courseId: this.data.id };
+              console.log('Fetching course comments for course:', this.data.id);
+            } else {
+              console.error('Course ID not found:', this.data);
+              return;
+            }
           }
+
+          const response = await api.get('/comments', { params });
+          this.comments = response.data;
+
+          // Comments are finicky, so debugging output
+          console.log('Fetched comments with replies:', JSON.stringify(this.comments, null, 2));
+        } catch (error) {
+          console.error('Error fetching comments:', error);
         }
+      },
 
-        const response = await api.get('/comments', { params });
-        this.comments = response.data;
+      // Comment Sorting and Formatting Methods
+      sortComments(comments: Comment[]) {
+        // Sorts comments by most recent
+        return [...comments].sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      },
 
-        // Comments are finicky, so debugging output
-        console.log('Fetched comments with replies:', JSON.stringify(this.comments, null, 2));
-      } catch (error) {
-        console.error('Error fetching comments:', error);
-      }
-    },
+      formatDate(dateString: string) {
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) {
+            console.error('Invalid date string:', dateString);
+            return 'Invalid date';
+          }
 
-    // Comment Sorting and Formatting Methods
-    sortComments(comments: Comment[]) {
-      // Sorts comments by most recent
-      return [...comments].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    },
-
-    formatDate(dateString: string) {
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) {
-          console.error('Invalid date string:', dateString);
+          return new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          }).format(date);
+        } catch (error) {
+          console.error('Error formatting date:', error);
           return 'Invalid date';
         }
+      },
 
-        return new Intl.DateTimeFormat('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        }).format(date);
-      } catch (error) {
-        console.error('Error formatting date:', error);
-        return 'Invalid date';
-      }
-    },
-
-    // Creates timestamps for the comments that are read nicely as (x minutes ago) instead of the MM/DD/YYYY HH:MM usual
-    formatRelativeTime(dateString: string): string {
-      try {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInMilliseconds = now.getTime() - date.getTime();
-        const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
-        
-        if (diffInSeconds < 60) return 'just now';
-        
-        const diffInMinutes = Math.floor(diffInSeconds / 60);
-        if (diffInMinutes < 60) {
-          return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
-        }
-        
-        const diffInHours = Math.floor(diffInMinutes / 60);
-        if (diffInHours < 24) {
-          return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
-        }
-        
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 7) {
-          return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
-        }
-
-        if (diffInDays < 30) {
-          const diffInWeeks = Math.floor(diffInDays / 7);
-          return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
-        }
-
-        const diffInMonths = Math.floor(diffInDays / 30);
-        if (diffInMonths < 12) {
-          return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
-        }
-
-        const diffInYears = Math.floor(diffInDays / 365);
-        return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
-      } catch (error) {
-        // In case we can't calculate the relative time, display the timestamp directly
-        console.error('Error formatting relative time:', error);
-        return this.formatDate(dateString);
-      }
-    },
-
-    // User Permission Methods
-    isCurrentUser(userId: number) {
-      return sessionStore.user.id === userId;
-    },
-
-    // Comment CRUD Methods
-    async submitComment() {
-      if (!this.newComment.trim() || !this.entityId) return;
-
-      try {
-        // Creates the relation for the comment with the page it is being commented under ...
-        const commentData = {
-          content: this.newComment,
-          ...(this.isProfessor 
-            ? { professorPageId: this.data.professor_page?.id }
-            : { courseId: this.data.id }
-          )
-        };
-        
-        // ... then create the comment and post it with the API
-        await api.post(`/comments`, commentData);
-        this.newComment = '';
-        // Update the comment section after submitting a comment
-        await this.fetchComments();
-      } catch (error) {
-        // Narrow down the type of `error`
-        if (axios.isAxiosError(error)) {
-          // Handle Axios-specific errors
-          console.error("Axios error:", error.response?.data);
-          if (error.response?.status === 401) {
-            alert("You must be signed in to post a comment.");
-          } else {
-            alert("An error occurred while submitting your comment.");
+      // Creates timestamps for the comments that are read nicely as (x minutes ago) instead of the MM/DD/YYYY HH:MM usual
+      formatRelativeTime(dateString: string): string {
+        try {
+          const date = new Date(dateString);
+          const now = new Date();
+          const diffInMilliseconds = now.getTime() - date.getTime();
+          const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+          
+          if (diffInSeconds < 60) return 'just now';
+          
+          const diffInMinutes = Math.floor(diffInSeconds / 60);
+          if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
           }
-        } else if (error instanceof Error) {
-          // Handle general errors
-          console.error("Error:", error.message);
-          alert("An unexpected error occurred. Please try again.");
-        } else {
-          // Handle unknown errors
-          console.error("Unexpected error:", error);
-          alert("An unknown error occurred.");
-        }
-      }
-    },
-
-    async deleteComment(commentId: number) {
-      if (!confirm('Are you sure you want to delete this comment?')) return;
-
-      try {
-        await api.delete(`/comments/${commentId}`);
-        await this.fetchComments();
-      } catch (error) {
-        // Narrow down the type of `error`
-        if (axios.isAxiosError(error)) {
-          // Handle Axios-specific errors
-          console.error("Axios error:", error.response?.data);
-          if (error.response?.status === 401) {
-            alert("You must be signed in to delete a comment.");
-          } else {
-            alert("An error occurred while deleting your comment.");
+          
+          const diffInHours = Math.floor(diffInMinutes / 60);
+          if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
           }
-        } else if (error instanceof Error) {
-          // Handle general errors
-          console.error("Error:", error.message);
-          alert("An unexpected error occurred. Please try again.");
-        } else {
-          // Handle unknown errors
-          console.error("Unexpected error:", error);
-          alert("An unknown error occurred.");
-        }
-      }
-    },
-
-    // Comment Edit Methods
-    startCommentEdit(comment: Comment) {
-      // We can tell if it is an reply if the comment has a parent
-      if (comment.parent_id) {
-        this.editingReply = { ...comment };
-      } else {
-        this.editingComment = { ...comment };
-      }
-    },
-
-    async saveCommentEdit() {
-      // Somehow if we call this without anything being edited, this catches it and prevents erronous edits
-      if (!this.editingComment && !this.editingReply) return;
-
-      try {
-        // Changes the comment field being saved depending on if a comment or reply is being edited
-        if (this.editingComment) {
-          await api.put(`/comments/${this.editingComment.id}`, {
-            content: this.editingComment.content,
-          });
-          this.editingComment = null;
-        }
-        if (this.editingReply) {
-          await api.put(`/comments/${this.editingReply.id}`, {
-            content: this.editingReply.content,
-          });
-          this.editingReply = null;
-        }
-        await this.fetchComments();
-      } catch (error) {
-        // Narrow down the type of `error`
-        if (axios.isAxiosError(error)) {
-          // Handle Axios-specific errors
-          console.error("Axios error:", error.response?.data);
-          if (error.response?.status === 401) {
-            alert("You must be signed in to edit a comment.");
-          } else {
-            alert("An error occurred while editing your comment.");
+          
+          const diffInDays = Math.floor(diffInHours / 24);
+          if (diffInDays < 7) {
+            return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
           }
-        } else if (error instanceof Error) {
-          // Handle general errors
-          console.error("Error:", error.message);
-          alert("An unexpected error occurred. Please try again.");
-        } else {
-          // Handle unknown errors
-          console.error("Unexpected error:", error);
-          alert("An unknown error occurred.");
+
+          if (diffInDays < 30) {
+            const diffInWeeks = Math.floor(diffInDays / 7);
+            return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+          }
+
+          const diffInMonths = Math.floor(diffInDays / 30);
+          if (diffInMonths < 12) {
+            return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+          }
+
+          const diffInYears = Math.floor(diffInDays / 365);
+          return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
+        } catch (error) {
+          // In case we can't calculate the relative time, display the timestamp directly
+          console.error('Error formatting relative time:', error);
+          return this.formatDate(dateString);
         }
-      }
-    },
+      },
 
-    cancelCommentEdit() {
-      // Clear both fields
-      this.editingComment = null;
-      this.editingReply = null;
-    },
+      // User Permission Methods
+      isCurrentUser(userId: number) {
+        return sessionStore.user.id === userId;
+      },
 
-    // Reply Methods
-    startReply(comment: Comment) {
-      // Make sure that we are replying to an actual comment
-      const userName = comment?.user?.name;
-      if (!userName) {
-        console.error('Invalid comment object or missing user name:', comment);
-        return;
-      }
-      this.replyingTo = comment.id;
-      this.replyContent = '';
-    },
+      // Comment CRUD Methods
+      async submitComment() {
+        if (!this.newComment.trim() || !this.entityId) return;
 
-    cancelReply() {
-      this.replyingTo = null;
-      this.replyContent = '';
-    },
+        try {
+          // Creates the relation for the comment with the page it is being commented under ...
+          const commentData = {
+            content: this.newComment,
+            ...(this.isProfessor 
+              ? { professorPageId: this.data.professor_page?.id }
+              : { courseId: this.data.id }
+            )
+          };
+          
+          // ... then create the comment and post it with the API
+          await api.post(`/comments`, commentData);
+          this.newComment = '';
+          // Update the comment section after submitting a comment
+          await this.fetchComments();
+        } catch (error) {
+          // Narrow down the type of `error`
+          if (axios.isAxiosError(error)) {
+            // Handle Axios-specific errors
+            console.error("Axios error:", error.response?.data);
+            if (error.response?.status === 401) {
+              alert("You must be signed in to post a comment.");
+            } else {
+              alert("An error occurred while submitting your comment.");
+            }
+          } else if (error instanceof Error) {
+            // Handle general errors
+            console.error("Error:", error.message);
+            alert("An unexpected error occurred. Please try again.");
+          } else {
+            // Handle unknown errors
+            console.error("Unexpected error:", error);
+            alert("An unknown error occurred.");
+          }
+        }
+      },
 
-    async submitReply(parentId: number) {
-      if (!this.replyContent.trim() || !this.entityId) return;
+      async deleteComment(commentId: number) {
+        if (!confirm('Are you sure you want to delete this comment?')) return;
 
-      try {
-        // Create the comment, and link it to both the 'parent' comment it is replying to and the page it is a comment under
-        const commentData = {
-          content: this.replyContent,
-          parentId,
-          [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
-        };
+        try {
+          await api.delete(`/comments/${commentId}`);
+          await this.fetchComments();
+        } catch (error) {
+          // Narrow down the type of `error`
+          if (axios.isAxiosError(error)) {
+            // Handle Axios-specific errors
+            console.error("Axios error:", error.response?.data);
+            if (error.response?.status === 401) {
+              alert("You must be signed in to delete a comment.");
+            } else {
+              alert("An error occurred while deleting your comment.");
+            }
+          } else if (error instanceof Error) {
+            // Handle general errors
+            console.error("Error:", error.message);
+            alert("An unexpected error occurred. Please try again.");
+          } else {
+            // Handle unknown errors
+            console.error("Unexpected error:", error);
+            alert("An unknown error occurred.");
+          }
+        }
+      },
 
-        // Post the reply
-        await api.post(`/comments`, commentData);
+      // Comment Edit Methods
+      startCommentEdit(comment: Comment) {
+        // We can tell if it is an reply if the comment has a parent
+        if (comment.parent_id) {
+          this.editingReply = { ...comment };
+        } else {
+          this.editingComment = { ...comment };
+        }
+      },
 
+      async saveCommentEdit() {
+        // Somehow if we call this without anything being edited, this catches it and prevents erronous edits
+        if (!this.editingComment && !this.editingReply) return;
+
+        try {
+          // Changes the comment field being saved depending on if a comment or reply is being edited
+          if (this.editingComment) {
+            await api.put(`/comments/${this.editingComment.id}`, {
+              content: this.editingComment.content,
+            });
+            this.editingComment = null;
+          }
+          if (this.editingReply) {
+            await api.put(`/comments/${this.editingReply.id}`, {
+              content: this.editingReply.content,
+            });
+            this.editingReply = null;
+          }
+          await this.fetchComments();
+        } catch (error) {
+          // Narrow down the type of `error`
+          if (axios.isAxiosError(error)) {
+            // Handle Axios-specific errors
+            console.error("Axios error:", error.response?.data);
+            if (error.response?.status === 401) {
+              alert("You must be signed in to edit a comment.");
+            } else {
+              alert("An error occurred while editing your comment.");
+            }
+          } else if (error instanceof Error) {
+            // Handle general errors
+            console.error("Error:", error.message);
+            alert("An unexpected error occurred. Please try again.");
+          } else {
+            // Handle unknown errors
+            console.error("Unexpected error:", error);
+            alert("An unknown error occurred.");
+          }
+        }
+      },
+
+      cancelCommentEdit() {
+        // Clear both fields
+        this.editingComment = null;
+        this.editingReply = null;
+      },
+
+      // Reply Methods
+      startReply(comment: Comment) {
+        // Make sure that we are replying to an actual comment
+        const userName = comment?.user?.name;
+        if (!userName) {
+          console.error('Invalid comment object or missing user name:', comment);
+          return;
+        }
+        this.replyingTo = comment.id;
         this.replyContent = '';
+      },
+
+      cancelReply() {
         this.replyingTo = null;
-        await this.fetchComments();
-      } catch (error) {
-        console.error('Error submitting reply:', error);
-      }
-    },
+        this.replyContent = '';
+      },
 
-    // Ratings Methods
-    async fetchRatings() {
-      if (!this.data) return;
+      async submitReply(parentId: number) {
+        if (!this.replyContent.trim() || !this.entityId) return;
 
-      try {
-        // Determine the type and ID for fetching ratings
-        const params: any = {};
-        let endpoint = '';
+        try {
+          // Create the comment, and link it to both the 'parent' comment it is replying to and the page it is a comment under
+          const commentData = {
+            content: this.replyContent,
+            parentId,
+            [this.isProfessor ? 'professorPageId' : 'courseId']: this.entityId
+          };
 
-        if (this.isProfessor) {
-          const professorPageId = this.data.professor_page?.id;
-          if (!professorPageId) {
-            console.error('ProfessorPage ID is missing');
-            return;
+          // Post the reply
+          await api.post(`/comments`, commentData);
+
+          this.replyContent = '';
+          this.replyingTo = null;
+          await this.fetchComments();
+        } catch (error) {
+          console.error('Error submitting reply:', error);
+        }
+      },
+
+      // Ratings Methods
+      async fetchRatings() {
+        if (!this.data) return;
+
+        try {
+          // Determine the type and ID for fetching ratings
+          const params: { professorPageId?: number; courseId?: number } = {};
+
+          if (this.isProfessor) {
+            const professorPageId = this.data.professor_page?.id;
+            if (!professorPageId) {
+              console.error('ProfessorPage ID is missing');
+              return;
+            }
+            params.professorPageId = professorPageId;
+          } else {
+            const courseId = this.data.id;
+            if (!courseId) {
+              console.error('Course ID is missing');
+              return;
+            }
+            params.courseId = courseId;
           }
-          params.professorPageId = professorPageId;
-          endpoint = `/ratings`;
-        } else {
-          const courseId = this.data.id;
-          if (!courseId) {
-            console.error('Course ID is missing');
-            return;
+
+          // Fetch average rating
+          const averageResponse = await api.get('/ratings', { params });
+          this.averageRating = averageResponse.data.averageRating;
+
+          // If authenticated, fetch user's rating
+          if (this.isAuthenticated) {
+            const userId = sessionStore.user.id;
+            // Since ratings are unique per user per entity, fetch the user's rating
+            // Currently the API returns every rating, maybe tweak to fetch user rating seperately?
+
+            const ratingsResponse = await api.get<Rating>('/ratings', { params });
+            const allRatings: UserRating[] = ratingsResponse.data.allRatings ?? [];
+
+            const userRatingObj = allRatings.find(r => r.user.id === userId);
+            this.userRating = userRatingObj ? userRatingObj.value : null;
           }
-          params.courseId = courseId;
-          endpoint = `/ratings`;
+        } catch (error) {
+          console.error('Error fetching ratings:', error);
         }
+      },
 
-        // Fetch average rating
-        const averageResponse = await api.get(endpoint, { params });
-        this.averageRating = averageResponse.data.averageRating;
+      renderStars(rating: number): string {
+        // Determine how many stars are present given the average rating (calculated in the backend)
+        const fullStars = Math.floor(rating);
+        const halfStar = rating - fullStars >= 0.5;
+        let stars = '★'.repeat(fullStars);
+        if (halfStar) stars += '½';
+        stars = stars.padEnd(5, '☆'); // Ensure total of 5 stars
+        return stars;
+      },
 
-        // If authenticated, fetch user's rating
-        if (this.isAuthenticated) {
-          const userId = sessionStore.user.id;
-          // Since ratings are unique per user per entity, fetch the user's rating
-          // Currently the API returns every rating, maybe tweak to fetch user rating seperately?
-
-          const ratingsResponse = await api.get(endpoint, { params });
-          const allRatings = ratingsResponse.data.allRatings;
-
-          const userRatingObj = allRatings.find((r: any) => r.userId === userId);
-          this.userRating = userRatingObj ? userRatingObj.value : null;
-        }
-      } catch (error) {
-        console.error('Error fetching ratings:', error);
-      }
-    },
-
-    renderStars(rating: number): string {
-      // Determine how many stars are present given the average rating (calculated in the backend)
-      const fullStars = Math.floor(rating);
-      const halfStar = rating - fullStars >= 0.5;
-      let stars = '★'.repeat(fullStars);
-      if (halfStar) stars += '½';
-      stars = stars.padEnd(5, '☆'); // Ensure total of 5 stars
-      return stars;
-    },
-
-    toggleRatingForm() {
-      this.showRatingForm = !this.showRatingForm;
-      if (this.userRating) {
-        this.ratingValue = this.userRating;
-      } else {
-        this.ratingValue = 5;
-      }
-    },
-
-    async submitRating() {
-      try {
-        const payload: any = {
-          value: this.ratingValue,
-        };
-
-        if (this.isProfessor) {
-          payload.professorPageId = this.data.professor_page.id;
-        } else {
-          payload.courseId = this.data.id;
-        }
-
-        // Post the new rating, and update the courses averageRating
-        const response = await api.post('/ratings', payload);
-        this.averageRating = response.data.averageRating;
-
-        // Update user's rating
+      toggleRatingForm() {
+        this.showRatingForm = !this.showRatingForm;
         if (this.userRating) {
-          this.userRating = this.ratingValue;
+          this.ratingValue = this.userRating;
         } else {
-          this.userRating = this.ratingValue;
+          this.ratingValue = 5;
+        }
+      },
+
+      async submitRating() {
+        try {
+          const payload: Rating = {
+            value: this.ratingValue,
+          };
+
+          if (this.isProfessor) {
+            payload.professorPageId = this.data.professor_page.id;
+          } else {
+            payload.courseId = this.data.id;
+          }
+
+          // Post the new rating, and update the courses averageRating
+          const response = await api.post('/ratings', payload);
+          this.averageRating = response.data.averageRating;
+
+          // Update user's rating
+          if (this.userRating) {
+            this.userRating = this.ratingValue;
+          } else {
+            this.userRating = this.ratingValue;
+          }
+
+          this.showRatingForm = false;
+        } catch (error) {
+          console.error('Error submitting rating:', error);
+          alert('Failed to submit rating. Please try again.');
+        }
+      },
+
+      // Comment reporting methods
+      startReport(comment: Comment) {
+        this.commentToReport = comment;
+        this.reportContent = '';
+        this.showReportModal = true;
+        this.reportSubmitted = false;
+      },
+
+      async submitReport() {
+        if (!this.commentToReport) {
+          alert('No comment selected for reporting.');
+          return;
         }
 
-        this.showRatingForm = false;
-      } catch (error) {
-        console.error('Error submitting rating:', error);
-        alert('Failed to submit rating. Please try again.');
-      }
+        if (!this.reportContent.trim()) {
+          alert('Please provide a reason for reporting.');
+          return;
+        }
+
+        try {
+          // Prepare the report payload
+          const reportData = {
+            reason: this.reportContent,
+          };
+
+          // Send the report to the backend API
+          await api.post(`/comments/${this.commentToReport.id}/report`, reportData);
+
+          // Provide feedback to the user
+          this.reportSubmitted = true;
+
+          // Close the modal after a long delay
+          setTimeout(() => {
+            this.closeReportModal();
+          }, 10000);
+        } catch (error) {
+          // Handle errors appropriately
+          if (axios.isAxiosError(error)) {
+            console.error('Axios error submitting report:', error.response?.data);
+            alert(error.response?.data?.error || 'Failed to report comment. Please try again.');
+          } else if (error instanceof Error) {
+            console.error('Error submitting report:', error.message);
+            alert('An unexpected error occurred. Please try again.');
+          } else {
+            console.error('Unknown error submitting report:', error);
+            alert('An unknown error occurred. Please try again.');
+          }
+        }
+      },
+
+      closeReportModal() {
+        this.showReportModal = false;
+        this.commentToReport = null;
+        this.reportContent = '';
+        this.reportSubmitted = false;
+      },
     },
-  },
 
-  // Vue structure that runs functions before the page is loaded, handy for getting the data needed before populating the page
-  mounted() {
-    this.fetchData();
-  },
+    // Vue structure that runs functions before the page is loaded, handy for getting the data needed before populating the page
+    mounted() {
+      this.fetchData();
+    },
 
-  watch: {
-    // When the user goes to another info page from within an info page (clicking on the professor profile from the comment, etc...), refetch data
-    '$route'(to, from) {
-      if (to.params.id !== from.params.id || to.params.type !== from.params.type) {
-        this.fetchData();
+    watch: {
+      // When the user goes to another info page from within an info page (clicking on the professor profile from the comment, etc...), refetch data
+      '$route'(to, from) {
+        if (to.params.id !== from.params.id || to.params.type !== from.params.type) {
+          this.fetchData();
+        }
       }
     }
-  }
-});
+  });
 </script>
 
 <style scoped>
+  /* ===== Global Styles ===== */
+  
+  /* Apply box-sizing globally for consistent sizing */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   /* ===== Base Page Layout ===== */
   .info-page {
     margin: 50px 0 0 0;
@@ -906,7 +1020,7 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     background: rgb(249, 187, 187);
-    /*background-image: url("images/download.jpg");*/
+    /* background-image: url("images/download.jpg"); */
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.02);
     font-size: 16px;
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -949,15 +1063,17 @@ export default defineComponent({
       0 16px 24px rgba(0, 0, 0, 0.06);
   }
 
-   /* ===== Editable items ===== */
-
+  /* ===== Editable Items ===== */
   .editable-field {
     margin-bottom: 20px;
   }
+
   .editable-field strong {
     display: block;
     margin-bottom: 5px;
+    color: #2c3e50;
   }
+
   .editable-field textarea,
   .editable-field input {
     width: 100%;
@@ -979,7 +1095,7 @@ export default defineComponent({
     box-shadow: 0 0 5px rgba(66, 153, 225, 0.5); /* Subtle glow */
   }
 
-  /* Profile Image */
+  /* ===== Profile Image ===== */
   .image-container {
     width: 100%;
     height: 200px;
@@ -1038,7 +1154,7 @@ export default defineComponent({
     line-height: 1.6;
   }
 
-  /* Prerequisites Section */
+  /* ===== Prerequisites Section ===== */
   .prerequisites {
     margin-top: 20px;
     padding: 15px;
@@ -1078,7 +1194,7 @@ export default defineComponent({
     margin-bottom: 1.5rem;
   }
 
-  /* Comment Form */
+  /* ===== Comment Form ===== */
   .comment-form {
     background: #f8f9fa;
     padding: 1.5rem;
@@ -1107,9 +1223,15 @@ export default defineComponent({
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
   }
 
-  /* Comment Thread and Items */
+  /* ===== Comment Thread and Items ===== */
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
   .comment-thread {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .comment-item {
@@ -1130,56 +1252,22 @@ export default defineComponent({
       0 6px 12px rgba(0, 0, 0, 0.05);
   }
 
-  /* User Information */
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .user-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .user-name-link {
-    font-weight: 600;
-    color: #2c3e50;
-  }
-
-  .timestamp {
-    color: #6b7280;
-    font-size: 0.875rem;
-  }
-
-  /* User Type Badges */
-  .user-type-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-weight: 500;
-  }
-
-  .user-type-badge.professor {
-    background-color: #dbeafe;
-    color: #1e40af;
-  }
-
-  .user-type-badge.student {
-    background-color: #dcfce7;
-    color: #166534;
-  }
-
-  /* Comment Actions */
+  /* ===== Comment Actions ===== */
   .comment-actions {
     display: flex;
-    gap: 0.75rem;
-    margin-top: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
     justify-content: flex-end;
+    align-items: center;
   }
 
-  /* Reply Section */
+  .comment-actions > div {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* ===== Replies ===== */
   .replies {
     margin-top: 1rem;
     margin-left: 2rem;
@@ -1210,6 +1298,52 @@ export default defineComponent({
     min-height: 80px;
   }
 
+  /* ===== User Information ===== */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .user-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .user-name-link {
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+  }
+
+  .user-name-link:hover {
+    text-decoration: underline;
+  }
+
+  .timestamp {
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+
+  /* ===== User Type Badges ===== */
+  .user-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 500;
+  }
+
+  .user-type-badge.professor {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+
+  .user-type-badge.student {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
   /* ===== Ratings Section ===== */
   .ratings-section {
     margin-top: 2rem;
@@ -1236,13 +1370,13 @@ export default defineComponent({
   }
 
   .average-rating .stars {
-    color: #f59e0b; /* Amber-400 for stars */
+    color: #f59e0b;
     font-size: 1.25rem;
   }
 
   .average-rating .numeric-rating {
     font-weight: 600;
-    color: #374151; /* Gray-700 */
+    color: #374151;
   }
 
   .user-rating {
@@ -1291,14 +1425,18 @@ export default defineComponent({
     gap: 0.5rem;
   }
 
-  /* Buttons */
+  /* ===== Buttons ===== */
   .btn {
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
     font-weight: 500;
     transition: all 0.2s;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
   }
 
+  /* Primary Button */
   .btn-primary {
     background-color: #3b82f6;
     color: white;
@@ -1309,6 +1447,7 @@ export default defineComponent({
     transform: translateY(-1px);
   }
 
+  /* Secondary Button */
   .btn-secondary {
     background-color: #6b7280;
     color: white;
@@ -1319,9 +1458,13 @@ export default defineComponent({
     transform: translateY(-1px);
   }
 
+  /* Tertiary Button */
   .btn-tertiary {
     background-color: #f63b3b;
     color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
   }
 
   .btn-tertiary:hover {
@@ -1329,7 +1472,7 @@ export default defineComponent({
     transform: translateY(-1px);
   }
 
-  /* Empty State */
+  /* ===== Empty State ===== */
   .no-comments {
     text-align: center;
     padding: 2rem;
@@ -1340,7 +1483,7 @@ export default defineComponent({
     border: 1px solid #e5e7eb;
   }
 
-  /* Info Cards Content */
+  /* ===== Info Cards Content ===== */
   .professor-info, .course-info {
     display: flex;
     flex-direction: column;
@@ -1358,6 +1501,7 @@ export default defineComponent({
     font-weight: bold;
     transition: color 0.3s ease;
   }
+
   .course-info .course-title-link:hover {
     color: #0056b3; /* Hover color */
     text-decoration: underline;
@@ -1385,5 +1529,74 @@ export default defineComponent({
     .comment-item {
       padding: 1rem;
     }
+  }
+
+  /* ===== Report Modal ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-20px);
+    animation: slideDown 0.3s forwards;
+  }
+
+  @keyframes slideDown {
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .success-message p {
+    font-size: 1rem;
+    color: #16a34a; /* Green color for success */
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .report-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    resize: vertical;
+    margin-top: 0.5rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  /* ===== Disabled Button Styles ===== */
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
