@@ -239,7 +239,7 @@
 
                 <div class="comment-actions">
                   <button class="btn btn-primary" @click="startReply(comment)">Reply</button>
-                  <div v-if="isCurrentUser(comment.user.id) || isUserProfessor">
+                  <div v-if="isCurrentUser(comment.user.id) || isUserPrivileged">
                     <button class="btn btn-primary" @click="startCommentEdit(comment)">Edit</button>
                     <button class="btn btn-tertiary" @click="deleteComment(comment.id)">Delete</button>
                   </div>
@@ -299,7 +299,7 @@
                       <div v-else>{{ reply.content }}</div>
                     </div>
                     <div class="comment-actions">
-                      <div v-if="isCurrentUser(reply.user.id) || isUserProfessor">
+                      <div v-if="isCurrentUser(reply.user.id) || isUserPrivileged">
                         <button class="btn btn-primary" @click="startCommentEdit(reply)">Edit</button>
                         <button class="btn btn-tertiary" @click="deleteComment(reply.id)">Delete</button>
                       </div>
@@ -447,8 +447,9 @@
         return this.type === 'professor';
       },
 
-      isUserProfessor(): boolean {
-        return sessionStore.user.user_type === "PROFESSOR";
+      // Generic check for user permissions (Professors and Admins)
+      isUserPrivileged(): boolean {
+        return sessionStore.user.user_type === "PROFESSOR" || sessionStore.user.user_type === "ADMIN";
       },
 
       // Only professors can edit their own page
