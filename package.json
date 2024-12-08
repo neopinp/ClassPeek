@@ -54,7 +54,7 @@
     "typescript": "^5.6.3"
   },
   "scripts": {
-    "install-all": "npm install && (cd frontend && npm install) && (cd ../backend && npm install)",
+    "install-all": "npm install && npm --prefix frontend install && npm --prefix backend install",
     "prisma-generate": "cd backend && npx prisma generate",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
