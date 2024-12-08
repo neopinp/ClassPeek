@@ -1,5 +1,5 @@
 <template>
-  <div v-if="sessionStore.user.user_type === 'PROFESSOR'" class="form-page">
+  <div v-if="sessionStore.user.user_type === 'PROFESSOR' || sessionStore.user.user_type === 'ADMIN'" class="form-page">
     <div class="form-card">
       <h2 class="form-title">{{ isEditing ? "Edit Course" : "Create Course" }}</h2>
 

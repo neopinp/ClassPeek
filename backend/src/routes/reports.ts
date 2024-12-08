@@ -8,7 +8,7 @@ const reportService = new ReportService();
 
 /**
  * @swagger
- * /api/admin/reports:
+ * /api/reports:
  *   get:
  *     tags:
  *       - Admin
@@ -44,7 +44,7 @@ router.get("/reports", requireAuth, restrictTo(['ADMIN']), async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/reports/{id}:
+ * /api/reports/{id}:
  *   put:
  *     tags:
  *       - Admin

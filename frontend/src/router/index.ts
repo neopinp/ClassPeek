@@ -7,6 +7,7 @@ import SubjectsPage from '@/components/SubjectsPage.vue'
 import MajorsPage from '@/components/MajorsPage.vue'
 import MyCoursesPage from '@/components/MyCoursesPage.vue'
 import AllCoursesPage from '@/components/AllCoursesPage.vue'
+import ReportsPage from '@/components/ReportsPage.vue'
 import CourseForm from '@/components/CourseForm.vue'
 import MajorForm from '@/components/MajorForm.vue'
 import SubjectForm from '@/components/SubjectForm.vue'
@@ -58,6 +59,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'AllCoursesPage',
     component: AllCoursesPage,
     meta: { title: 'All Courses - ClassPeek'}
+  },
+  {
+    path: '/reports',
+    name: 'ReportsPage',
+    component: ReportsPage,
+    meta: { title: 'Reports - ClassPeek'}
   },
   {
     path: '/course-form/:id?',

@@ -13,9 +13,10 @@
         <!-- Protected links (We can restrict these based on the user.user.user_type and using Vue's v-if)-->
         <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/my-courses">My Courses</router-link></li>
         <li v-if="user.user.user_type === 'PROFESSOR' || user.user.user_type === 'ADMIN'"><router-link to="/all-courses">All Courses</router-link></li>
-        <li v-if="user.user.user_type === 'PROFESSOR'"><router-link to="/course-form">Course Form</router-link></li>
+        <li v-if="user.user.user_type === 'PROFESSOR' || user.user.user_type === 'ADMIN'"><router-link to="/course-form">Course Form</router-link></li>
         <li v-if="user.user.user_type === 'ADMIN'"><router-link to="/major-form">Major Form</router-link></li>
         <li v-if="user.user.user_type === 'ADMIN'"><router-link to="/subject-form">Subject Form</router-link></li>
+        <li v-if="user.user.user_type === 'ADMIN'"><router-link to="/reports">Reports</router-link></li>
 
         <!-- Profile icon -->
         <li id="profileDropdown">
