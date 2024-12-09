@@ -1,7 +1,7 @@
 // src/routes/courses.ts
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { restrictTo } from '../middleware/auth.middleware';
+import { requireAuth, restrictTo } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -646,6 +646,84 @@ router.post('/courses', restrictTo(["PROFESSOR", "ADMIN"]), async (req: Request,
       }
     }
     updateCourse();
+  });
+
+  /**
+ * @swagger
+ * /api/courses/{id}/syllabus:
+ *   get:
+ *     tags:
+ *       - Courses
+ *     summary: Get the syllabus PDF for a course
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The course ID
+ *     responses:
+ *       200:
+ *         description: Returns the syllabus data as base64 encoded string.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 syllabus_data:
+ *                   type: string
+ *                   description: "Base64 encoded PDF string"
+ *       404:
+ *         description: "Course not found or no syllabus uploaded"
+ *       500:
+ *         description: "Failed to fetch syllabus"
+ */
+  router.get('/courses/:id/syllabus', (req: Request, res: Response) => {
+    const getSyllabus = async () => {
+      try {
+        const courseId = parseInt(req.params.id, 10);
+        if (isNaN(courseId)) {
+          return res.status(400).json({ error: 'Invalid course ID' });
+        }
+
+        const course = await prisma.course.findUnique({
+          where: { id: courseId },
+          select: { syllabus_data: true }
+        });
+
+        if (!course) {
+          return res.status(404).json({ error: 'Course not found' });
+        }
+
+        if (!course.syllabus_data) {
+          return res.status(404).json({ error: 'No syllabus uploaded for this course' });
+        }
+
+        // Return the base64 encoded PDF
+        res.json({ syllabus_data: course.syllabus_data });
+      } catch (error) {
+        console.error("Error fetching syllabus:", error);
+        res.status(500).json({ error: 'Failed to fetch syllabus' });
+      }
+    }
+    getSyllabus();
+  });
+
+  router.put('/courses/:id/syllabus', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const { syllabus_data } = req.body;
+      
+      const course = await prisma.course.update({
+        where: { id: courseId },
+        data: { syllabus_data },
+      });
+  
+      res.json(course);
+    } catch (error) {
+      console.error("Error updating course syllabus:", error);
+      res.status(500).json({ error: "Failed to update syllabus" });
+    }
   });
 
 

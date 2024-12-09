@@ -131,6 +131,31 @@
             </div>
           </div>
 
+          <!-- Syllabus Section -->
+          <div class="syllabus-section">
+            <h3>Syllabus</h3>
+
+            <!-- Always show download if data exists -->
+            <div v-if="data?.syllabus_data">
+              <button class="btn btn-primary" @click="downloadSyllabus">Download Syllabus</button>
+            </div>
+            
+            <div v-if="isUserPrivileged">
+              <button class="btn btn-primary" @click="startEdit('syllabus_data')">
+                {{ data?.syllabus_data ? 'Replace Syllabus' : 'Upload Syllabus' }}
+              </button>
+            </div>
+
+            <!-- If editing the syllabus -->
+            <div v-if="isEditingField === 'syllabus_data'">
+              <input type="file" accept="application/pdf" @change="handleSyllabusUpload" />
+              <div class="edit-actions">
+                <button class="btn btn-primary" @click="saveSyllabusEdit">Save</button>
+                <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Prerequisites Section -->
           <div v-if="!isProfessor && data?.prerequisites?.length" class="prerequisites">
             <h3>Prerequisites:</h3>
@@ -430,11 +455,12 @@
           office_hours: "",
           office_location: "",
           image_data: "",
+          syllabus_data: "",
         },
         loading: false,
         error: null as string | null,
         isEditing: false,
-        isEditingField:  null as "bio" | "office_hours" | "office_location" | "image_data" | null,
+        isEditingField:  null as "bio" | "office_hours" | "office_location" | "image_data" | "syllabus_data" | null,
         type: '' as 'professor' | 'course',
         newComment: '',
         editingComment: null as Comment | null,
@@ -468,11 +494,12 @@
         return (sessionStore.user.user_type === "PROFESSOR" && this.data?.professor?.id === sessionStore.user.id) || sessionStore.user.user_type === "ADMIN";
       },
 
-      // Only professors can edit their own page
+      // Only professors can edit their own page or their own course
       isCurrentProfessor(): boolean {
+        console.log(`CurrID: ${sessionStore.user.id} PID: ${this.data?.professor_page?.professor_id}`)
         return (
           sessionStore.user.user_type === "PROFESSOR" &&
-          sessionStore.user.id === this.data?.professor_page?.professor_id
+          (sessionStore.user.id === this.data?.professor_page?.professor_id || sessionStore.user.id === this.data?.professor?.id)
         );
       },
 
@@ -528,11 +555,14 @@
       },
 
       // Changes part of the page that is being edited into editable fields respectively
-      startEdit(field: "bio" | "office_hours" | "office_location" | "image_data") {
+      startEdit(field: "bio" | "office_hours" | "office_location" | "syllabus_data" | "image_data") {
         this.isEditingField = field;
         if (field === 'image_data') {
           // Set current image data if available
           this.editedData.image_data = this.data.professor_page?.image_data || "";
+        } else if (field === 'syllabus_data') {
+          // Set current syllabus data if available
+          this.editedData.syllabus_data = this.data?.syllabus_data || "";
         } else {
           this.editedData[field] = this.data.professor_page[field];
         }
@@ -540,7 +570,7 @@
 
       cancelEdit() {
         this.isEditingField = null;
-        this.editedData = { bio: "", office_hours: "", office_location: "", image_data: "" };
+        this.editedData = { bio: "", office_hours: "", office_location: "", syllabus_data: "", image_data: "" };
       },
 
       uploadImg() {
@@ -552,6 +582,20 @@
         reader.onload = () => {
           if (reader.result) {
             this.editedData.image_data = reader.result.toString();
+          }
+        };
+        reader.readAsDataURL(file);
+      },
+
+      handleSyllabusUpload(event: Event) {
+        const input = event.target as HTMLInputElement;
+        if (!input.files || input.files.length === 0) return;
+
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (reader.result) {
+            this.editedData.syllabus_data = reader.result.toString();
           }
         };
         reader.readAsDataURL(file);
@@ -585,6 +629,55 @@
           alert("Failed to save changes. Please try again.");
         } finally {
           this.loading = false;
+        }
+      },
+
+      async saveSyllabusEdit() {
+        if (!this.entityId) return;
+        try {
+          this.loading = true;
+          const response = await api.put(`/courses/${this.entityId}/syllabus`, {
+            syllabus_data: this.editedData.syllabus_data
+          });
+          console.log("Updated Course Syllabus:", response.data);
+          this.data.syllabus_data = this.editedData.syllabus_data;
+          this.isEditingField = null;
+        } catch (error) {
+          console.error("Error updating course syllabus:", error);
+          alert("Failed to save syllabus. Please try again.");
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      async downloadSyllabus() {
+        if (!this.entityId) return;
+
+        try {
+          const response = await api.get(`/courses/${this.entityId}/syllabus`);
+          const base64Data = response.data.syllabus_data;
+          
+          // Convert base64 to blob
+          const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+
+          // Create a link and trigger download
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'syllabus.pdf');
+          document.body.appendChild(link);
+          link.click();
+          URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error("Error downloading syllabus:", error);
+          alert("Failed to download syllabus. Please try again.");
         }
       },
 
