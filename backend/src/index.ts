@@ -45,7 +45,13 @@ app.use((req, res, next) => {
 });
 
 // Middleware for parsing UI
-app.use(express.json());
+//app.use(express.json());
+app.use(express.json({ limit: '250mb' }));
+app.use(express.urlencoded({ limit: '250mb', extended: true }));
+
+// Middleware for handling json size limits (image uploads)
+//app.use(express.json({ limit: '50mb' }));
+//app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Middleware for using Swagger for API documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
