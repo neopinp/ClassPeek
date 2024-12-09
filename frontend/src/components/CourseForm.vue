@@ -145,9 +145,9 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue';
+  import { isAxiosError } from 'axios';
   import sessionStore from '@/store/session';
   import api from '@/api';
-import { isAxiosError } from 'axios';
 
   interface Professor {
     id: number;
@@ -177,6 +177,7 @@ import { isAxiosError } from 'axios';
     },
     data() {
       return {
+        // Store form data from the site
         formData: {
           title: '',
           course_code: '',
@@ -187,6 +188,7 @@ import { isAxiosError } from 'axios';
           majors: [] as number[],
           prerequisites: [] as number[],
         },
+        // Context holders for form options and relationships
         professors: [] as Professor[],
         subjects: [] as Subject[],
         majors: [] as Major[],
@@ -199,6 +201,7 @@ import { isAxiosError } from 'axios';
       };
     },
     computed: {
+      // Faciliates the editing of a course using the same page if the ID of a course is present
       isEditing(): boolean {
         return !!this.$route.params.id;
       },
@@ -208,6 +211,7 @@ import { isAxiosError } from 'axios';
         try {
           this.loading = true;
 
+          // Fetch all relevant reference data for the form (professors, subjects, majors, prerequisite courses)
           const [professorsRes, subjectsRes, majorsRes, coursesRes] = await Promise.all([
             api.get<Professor[]>('/professors'),
             api.get<Subject[]>('/subjects'),
@@ -265,7 +269,8 @@ import { isAxiosError } from 'axios';
             majors: this.formData.majors.length > 0 ? { connect: this.formData.majors.map(id => ({ id })) } : undefined,
             user_type: sessionStore.user.user_type // Include user_type for validation in the backend
           };
-
+          
+          // Dynamically construct the API request URL and method based on whether the user is editing or creating a course
           const url = this.isEditing
             ? `/courses/${this.$route.params.id}`
             : `/courses`;
@@ -275,7 +280,7 @@ import { isAxiosError } from 'axios';
           const response = await api[method](url, payload);
           console.log("Course saved:", response.data);
 
-          this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`);
+          this.showToast("success", `Successfully ${this.isEditing ? "updated" : "created"}!`, response.data.id);
         } catch (error: unknown) {
           if (isAxiosError(error)) {
             // Handle Axios-specific errors
@@ -299,15 +304,15 @@ import { isAxiosError } from 'axios';
         this.$router.push('/my-courses');
       },
 
-      showToast(type: 'success' | 'error', message: string) {
+      showToast(type: 'success' | 'error', message: string, id?: number) {
         if (type === 'success') {
           this.successMessage = message;
           this.showSuccessToast = true;
 
           setTimeout(() => {
             this.showSuccessToast = false;
-            // TODO: Route this to created course
-            this.$router.push(`/all-courses`)
+            // Route to created/edited course
+            this.$router.push(`/info/course/${id}`);
           }, 3000); // Toast disappears after 3 seconds
         } else if (type === 'error') {
           this.errorMessage = message;
