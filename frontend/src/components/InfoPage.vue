@@ -6,8 +6,8 @@
         <div class="profile-card">
           <div class="image-container">
             <img 
-              v-if="data?.image_url" 
-              :src="data.image_url" 
+            v-if="data?.professor_page?.image_data" 
+            :src="data.professor_page.image_data" 
               :alt="getTitle()"
               class="profile-image"
             />
@@ -15,8 +15,21 @@
               <span>No Image Available</span>
             </div>
           </div>
-          <h4 class="title">{{ getTitle() }}</h4>
-        </div>
+            <h4 class="title">{{ getTitle() }}</h4>
+            <!-- Add Edit Image button if current professor -->
+            <div v-if="isCurrentProfessor && !isEditingField" class="edit-actions">
+              <button class="btn btn-primary" @click="startEdit('image_data')">Edit Image</button>
+            </div>
+            <!-- When editing image_data -->
+            <div v-else-if="isEditingField === 'image_data'" class="editable-field">
+              <strong>Profile Image:</strong>
+              <input type="file" @change="uploadImg"/>
+              <div class="edit-actions">
+                <button class="btn btn-primary" @click="saveEdit('image_data')">Save</button>
+                <button class="btn btn-secondary" @click="cancelEdit">Cancel</button>
+              </div>
+            </div>
+          </div>
         <div class="info-card">
           <h4>Additional Information</h4>
           <!-- Professor Specific Information (v-if checks if the info page is rendering for a professor) -->
@@ -416,11 +429,12 @@
           bio: "",
           office_hours: "",
           office_location: "",
+          image_data: "",
         },
         loading: false,
         error: null as string | null,
         isEditing: false,
-        isEditingField:  null as "bio" | "office_hours" | "office_location" | null,
+        isEditingField:  null as "bio" | "office_hours" | "office_location" | "image_data" | null,
         type: '' as 'professor' | 'course',
         newComment: '',
         editingComment: null as Comment | null,
@@ -514,19 +528,37 @@
       },
 
       // Changes part of the page that is being edited into editable fields respectively
-      startEdit(field: "bio" | "office_hours" | "office_location") {
+      startEdit(field: "bio" | "office_hours" | "office_location" | "image_data") {
         this.isEditingField = field;
-        if (this.data?.professor_page) {
+        if (field === 'image_data') {
+          // Set current image data if available
+          this.editedData.image_data = this.data.professor_page?.image_data || "";
+        } else {
           this.editedData[field] = this.data.professor_page[field];
         }
       },
 
       cancelEdit() {
         this.isEditingField = null;
+        this.editedData = { bio: "", office_hours: "", office_location: "", image_data: "" };
+      },
+
+      uploadImg() {
+        const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (!input.files || input.files.length === 0) return;
+
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (reader.result) {
+            this.editedData.image_data = reader.result.toString();
+          }
+        };
+        reader.readAsDataURL(file);
       },
       
       // Gets the edited data from the page, creates an API put for the professor_page, and updates the data on the page
-      async saveEdit(field: "bio" | "office_hours" | "office_location") {
+      async saveEdit(field: "bio" | "office_hours" | "office_location" | "image_data") {
         if (!this.isEditingField) return;
 
         try {

@@ -384,7 +384,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
  *   get:
  *     tags:
  *       - Users
- *     summary: Get a list of all users (admins only)
+ *     summary: Get a list of all users
  *     responses:
  *       200:
  *         description: "A list of users"
@@ -418,7 +418,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
  *       500:
  *         description: "Internal server error"
  */
-router.get('/users/:id?', restrictTo(["ADMIN"]), (req: Request, res: Response) => {
+router.get('/users/:id?', (req: Request, res: Response) => {
   const fetchUsers = async () => {
     try {
       const { id } = req.params;
@@ -427,7 +427,10 @@ router.get('/users/:id?', restrictTo(["ADMIN"]), (req: Request, res: Response) =
         // Fetch a single user by ID
         const user = await prisma.user.findUnique({
           where: { id: parseInt(id) },
-          include: { credentials: true },
+          include: { 
+            credentials: true,
+            profile: true,
+          },
         });
 
         if (!user) {

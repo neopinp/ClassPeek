@@ -78,6 +78,11 @@ router.get('/professors', async (req: Request, res: Response) => {
           select: {
             school_email: true
           }
+        },
+        profile: {
+          select: {
+            image_data: true
+          }
         }
       }
     });
@@ -163,11 +168,8 @@ router.get('/professors/:id', async (req: Request, res: Response) => {
       include: {
         professor_page: true,
         courses_taught: true,
-        credentials: {
-          select: {
-            school_email: true
-          }
-        }
+        credentials: { select: { school_email: true } },
+        profile: { select: { image_data: true } }
       }
     });
     res.json(professor);
