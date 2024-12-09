@@ -533,7 +533,7 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
  *   put:
  *     tags:
  *       - Users
- *     summary: Reset the user's password (requires authentication)
+ *     summary: Reset the user's password
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -572,14 +572,15 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
  *       500:
  *         description: "Failed to update password"
  */
-router.put("/users/passwordreset", requireAuth, (req: Request, res: Response) => {
+router.put("/users/passwordreset", (req: Request, res: Response) => {
   const passwordReset = async () => {
-    const { password } = req.body;
-    const userId = req.session?.userId;
-
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const { email, password } = req.body;
+    // Normally this would have to be sent to an email. We can't use requireAuth here so we assume the user is not malicious.
+    // This is horribly insecure and should never be used in an actual production.
+    //const userId = req.session?.userId;
+    //if (!userId) {
+    //  return res.status(401).json({ error: "Unauthorized" });
+    //}
 
     if (!password) {
       return res.status(400).json({ error: "Password field is required" });
@@ -590,7 +591,7 @@ router.put("/users/passwordreset", requireAuth, (req: Request, res: Response) =>
 
     try {
       const updatedUserCredentials = await prisma.user_Credentials.update({
-        where: { id: userId },
+        where: { school_email: email },
         data: { password:hashedPassword },
       });
 

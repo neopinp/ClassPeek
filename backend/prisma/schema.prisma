@@ -61,7 +61,7 @@ model User {
 
 model User_Credentials {
   id            Int      @id @default(autoincrement())
-  school_email  String   @db.VarChar(50)
+  school_email  String   @db.VarChar(50) @unique
   password      String   @db.VarChar(255)
   
   user          User     @relation(fields: [user_id], references: [id])

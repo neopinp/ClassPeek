@@ -17,8 +17,38 @@
       <input type="password" id="password" v-model.trim="password" required />
       
       <p v-if="errorMessage" style="color:red; font-style:italic">{{ errorMessage }}</p>
-      <button type="submit">Sign In</button>
+      <button type="submit" class="btn btn-tertiary">Sign In</button>
     </form>
+    <div style="margin-top: 10px; text-align: center;">
+      <a href="javascript:void(0)" @click="openResetModal" style="color:#3b82f6;text-decoration:underline;">Forgot Password?</a>
+    </div>
+  </div>
+
+  <!-- Password Reset Modal -->
+  <div v-if="showResetModal" class="modal-overlay" @click.self="closeResetModal">
+    <div class="modal-content">
+      <h3>Reset Password</h3>
+      <p>Enter your account email and a new password:</p>
+      <input 
+        type="email" 
+        v-model.trim="resetEmail" 
+        placeholder="Your email" 
+        style="width:100%;margin-bottom:15px;" 
+      />
+      <input 
+        type="password" 
+        v-model.trim="resetPasswordField" 
+        placeholder="New password" 
+        style="width:100%;margin-bottom:15px;" 
+      />
+      
+      <div class="modal-actions" style="margin-top:1rem;">
+        <button class="btn btn-tertiary" @click="resetPassword">Update Password</button>
+        <button class="btn btn-secondary" @click="closeResetModal">Cancel</button>
+      </div>
+
+      <p v-if="errorMessage" style="color:red; font-style:italic; margin-top:10px;">{{ errorMessage }}</p>
+    </div>
   </div>
 </template>
 
@@ -37,6 +67,9 @@
         successMessage: '',
         errorMessage: '',
         showSuccessToast: false,
+        showResetModal: false,
+        resetEmail: '',
+        resetPasswordField: '',
       };
     },
     methods: {
@@ -86,6 +119,49 @@
           } else {
             console.error("Non-Error thrown during sign in:", error);
             this.errorMessage = "Failed to sign in.";
+          }
+        }
+      },
+      openResetModal() {
+        this.errorMessage = '';
+        this.resetEmail = '';
+        this.resetPasswordField = '';
+        this.showResetModal = true;
+      },
+
+      closeResetModal() {
+        this.showResetModal = false;
+        this.errorMessage = '';
+        this.resetEmail = '';
+        this.resetPasswordField = '';
+      },
+
+      async resetPassword() {
+        if (!this.resetEmail || !this.resetPasswordField) {
+          this.errorMessage = "Email and password fields are required.";
+          return;
+        }
+
+        try {
+          const response = await api.put("/users/passwordreset", {
+            email: this.resetEmail,
+            password: this.resetPasswordField
+          });
+
+          if (response.status === 200) {
+            this.showToast("Password updated successfully!");
+            this.closeResetModal();
+          }
+        } catch (error: unknown) {
+          if (isAxiosError(error)) {
+            console.error("Axios error updating password:", error);
+            this.errorMessage = error.response?.data?.error || "Failed to update password.";
+          } else if (error instanceof Error) {
+            console.error("Unexpected error updating password:", error);
+            this.errorMessage = error.message || "Failed to update password.";
+          } else {
+            console.error("Non-Error thrown:", error);
+            this.errorMessage = "Failed to update password.";
           }
         }
       },
