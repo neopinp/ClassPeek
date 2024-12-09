@@ -313,7 +313,7 @@
             this.showSuccessToast = false;
             // Route to created/edited course
             this.$router.push(`/info/course/${id}`);
-          }, 3000); // Toast disappears after 3 seconds
+          }, 1500); // Toast disappears after 1.5 seconds
         } else if (type === 'error') {
           this.errorMessage = message;
           this.showErrorToast = true;
