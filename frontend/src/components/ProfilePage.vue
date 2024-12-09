@@ -6,9 +6,9 @@
           <div class="image-container">
             <!-- TODO: Add images for users too -->
             <div class="image-placeholder">
-              <span v-if="!isEditing && editableProfile.image_data != ''">No Image Available</span>
+              <span v-if="!isEditing && editableProfile.image_data == ''">No Image Available</span>
               <img v-if="!isEditing && editableProfile.image_data != ''" id="image" style="width:200px;height:200px;object-fit:contain">
-              <input v-else id="input" type="file" @change="uploadImg">
+              <input v-if="isEditing" id="input" type="file" @change="uploadImg">
             </div>
           </div>
           <h4 class="title">{{ user.name }}</h4>
@@ -92,11 +92,15 @@ export default defineComponent({
       const reader = new FileReader();
       (file) ? reader.readAsDataURL(file) : {};
       reader.onload = () => {
+        console.log("Data \n" + reader.result);
         this.new_image = (reader.result) as string || ""
       }
       
     },
-
+    loadImg() {
+      let img = document.getElementById("image");
+      (img) ? img.setAttribute("src",sessionStore.user.image_data) : {};
+    },
     startEditing() {
       this.isEditing = true;
       this.editableProfile = {
@@ -109,11 +113,13 @@ export default defineComponent({
       try {
         (this.new_image != "") ? this.editableProfile.image_data = this.new_image : {};
         const response = await api.put("/users/profile", this.editableProfile);
+        console.log("Save: " + response.data.image_data);
         sessionStore.user.image_data = response.data.image_data;
         sessionStore.user.blurb = response.data.blurb;
         sessionStore.user.description = response.data.description;
         this.isEditing = false;
         this.new_image = "";
+        this.loadImg();
         this.errorMessage = null;
       } catch (error) {
         console.error("Failed to save changes:", error);
@@ -132,6 +138,7 @@ export default defineComponent({
   },
   mounted() {
     document.title = sessionStore.user.name;
+    (sessionStore.user.image_data) ? this.loadImg() : {};
   },
 });
 </script>
