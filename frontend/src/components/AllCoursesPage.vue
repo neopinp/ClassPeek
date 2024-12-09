@@ -34,10 +34,22 @@
           </button>
           <button
             class="delete-button"
-            @click="deleteCourse(course.id)"
+            @click="openDeleteModal(course)"
           >
             Delete
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="closeDeleteModal">
+      <div class="modal-content">
+        <h3>Confirm Deletion</h3>
+        <p>Are you sure you want to delete course <strong>{{ selectedCourse?.title }}</strong>?</p>
+        <div class="modal-actions" style="margin-top:1rem;">
+          <button class="delete-button" @click="confirmDeleteCourse">Delete</button>
+          <button class="cancel-button" @click="closeDeleteModal">Cancel</button>
         </div>
       </div>
     </div>
@@ -69,6 +81,8 @@
         loading: false,
         error: null as string | null,
         userLoading: true,
+        showDeleteModal: false,
+        selectedCourse: null as Course | null,
       };
     },
     computed: {
@@ -136,13 +150,24 @@
           this.loading = false;
         }
       },
-      async deleteCourse(courseId: number) {
-        if (!confirm("Are you sure you want to delete this course?")) return;
+      openDeleteModal(course: Course) {
+        this.selectedCourse = course;
+        this.showDeleteModal = true;
+      },
+      closeDeleteModal() {
+        this.showDeleteModal = false;
+        this.selectedCourse = null;
+      },
+      async confirmDeleteCourse() {
+        if (!this.selectedCourse) return;
+
         try {
-          await api.delete(`/courses/${courseId}`);
-          this.courses = this.courses.filter((course) => course.id !== courseId);
+          await api.delete(`/courses/${this.selectedCourse.id}`);
+          this.courses = this.courses.filter((course) => course.id !== this.selectedCourse?.id);
         } catch (error) {
           console.error("Error deleting course:", error);
+        } finally {
+          this.closeDeleteModal();
         }
       },
     },
