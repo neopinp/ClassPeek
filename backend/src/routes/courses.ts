@@ -255,7 +255,7 @@ router.get('/courses/:id', (req: Request, res: Response) => {
   fetchCourse();
 });
 
-// PROFESSOR restricted actions
+// PROFESSOR/ADMIN restricted actions
 
 /**
  * @swagger
@@ -263,7 +263,7 @@ router.get('/courses/:id', (req: Request, res: Response) => {
  *   post:
  *     tags:
  *       - Courses
- *     summary: Create a new course
+ *     summary: Create a new course (professors and admins only)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -383,11 +383,11 @@ router.get('/courses/:id', (req: Request, res: Response) => {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can create courses
+ *         description: Forbidden - Only professors and admins can create courses
  *       500:
  *         description: Failed to create course
  */
-router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+router.post('/courses', restrictTo(["PROFESSOR", "ADMIN"]), async (req: Request, res: Response) => {
   const createCourse = async () => {
     try {
       // Log the incoming payload for debugging
@@ -437,7 +437,7 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
  *   put:
  *     tags:
  *       - Courses
- *     summary: Update a course by ID
+ *     summary: Update a course by ID (professors and admins only)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -571,13 +571,13 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can update courses
+ *         description: Forbidden - Only professors and admins can update courses
  *       404:
  *         description: Course not found
  *       500:
  *         description: Failed to update course
  */
-  router.put('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+  router.put('/courses/:id', restrictTo(["PROFESSOR", "ADMIN"]), async (req: Request, res: Response) => {
     const updateCourse = async () => {
       try {
         const { title, course_code, description, credits, professor, subject, prerequisites, majors } = req.body;
@@ -655,7 +655,7 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
  *   delete:
  *     tags:
  *       - Courses
- *     summary: Delete a course by ID
+ *     summary: Delete a course by ID (professors and admins only)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -671,13 +671,13 @@ router.post('/courses', restrictTo(["PROFESSOR"]), async (req: Request, res: Res
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can delete courses
+ *         description: Forbidden - Only professors and admins can delete courses
  *       404:
  *         description: Course not found
  *       500:
  *         description: Failed to delete course
  */
-router.delete('/courses/:id', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+router.delete('/courses/:id', restrictTo(["PROFESSOR", "ADMIN"]), async (req: Request, res: Response) => {
   try {
     console.log("Deleting course w/ payload:", req.body);
     await prisma.course.delete({

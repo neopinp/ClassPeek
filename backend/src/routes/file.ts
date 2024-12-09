@@ -57,8 +57,7 @@ router.get("/files", async (req, res) => {
  *   get:
  *     tags:
  *       - Files
- *     summary: Retrieve a specific file by title
- *     description: Retrieve a specific file by its title. Can optionally filter by user ID.
+ *     summary: Retrieve a specific file by title, can optionally filter by user ID
  *     parameters:
  *       - in: path
  *         name: title
@@ -114,8 +113,7 @@ router.get("/files/:title", async (req, res) => {
  *   post:
  *     tags:
  *       - Files
- *     summary: Create a new file
- *     description: Create a new file. Authentication required.
+ *     summary: Create a new file (authentication required)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -195,8 +193,7 @@ router.post("/files", requireAuth, (req, res) => {
  *   delete:
  *     tags:
  *       - Files
- *     summary: Delete a file by ID
- *     description: Delete a specific file by its ID. Authentication required.
+ *     summary: Delete a file by ID (authentication required)
  *     security:
  *       - bearerAuth: []
  *     parameters:

@@ -73,7 +73,7 @@ router.get('/ratings', (req: Request, res: Response) => {
  *   post:
  *     tags:
  *       - Ratings
- *     summary: Submit or update a rating for a course or professor
+ *     summary: Submit or update a rating for a course or professor (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -172,7 +172,7 @@ router.post('/ratings', requireAuth, (req: Request, res: Response) => {
  *   delete:
  *     tags:
  *       - Ratings
- *     summary: Delete a rating
+ *     summary: Delete a rating (requies authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:

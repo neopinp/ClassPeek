@@ -126,7 +126,7 @@ router.get('/majors/:id', async (req: Request, res: Response) => {
   }
 });
 
-// PROFESSOR restricted actions
+// ADMIN restricted actions
 
 /**
  * @swagger
@@ -134,7 +134,7 @@ router.get('/majors/:id', async (req: Request, res: Response) => {
  *   post:
  *     tags:
  *       - Majors
- *     summary: Create a new major
+ *     summary: Create a new major (admin only)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -173,11 +173,11 @@ router.get('/majors/:id', async (req: Request, res: Response) => {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can create majors
+ *         description: Forbidden - Only admins can create majors
  *       500:
  *         description: Failed to create major
  */
-router.post('/majors', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+router.post('/majors', restrictTo(["ADMIN"]), async (req: Request, res: Response) => {
   try {
     console.log("Incoming major payload:", req.body);
     const major = await prisma.major.create({
@@ -195,7 +195,7 @@ router.post('/majors', restrictTo(["PROFESSOR"]), async (req: Request, res: Resp
  *   delete:
  *     tags:
  *       - Majors
- *     summary: Delete a major by ID
+ *     summary: Delete a major by ID (admin only)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -229,13 +229,13 @@ router.post('/majors', restrictTo(["PROFESSOR"]), async (req: Request, res: Resp
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can delete majors
+ *         description: Forbidden - Only admins can delete majors
  *       404:
  *         description: Major not found
  *       500:
  *         description: Failed to delete major
  */
-router.delete('/majors/:id', restrictTo(["PROFESSOR"]), (req, res) => {
+router.delete('/majors/:id', restrictTo(["ADMIN"]), (req, res) => {
   const deleteMajor = async () => {
     try {
       // First check how many courses are associated

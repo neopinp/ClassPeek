@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient, UserType } from '@prisma/client';
-import { requireAuth } from '../middleware/auth.middleware';
+import { requireAuth, restrictTo } from '../middleware/auth.middleware';
 import bcrypt from 'bcrypt';
 
 
@@ -250,14 +250,14 @@ router.post('/auth/login', (req: Request, res: Response) => {
  *   post:
  *     tags:
  *       - Authentication
- *     summary: Logout user
+ *     summary: Logout user (requires authentication)
  *     responses:
  *       200:
  *         description: "Logged out successfully"
  *       500:
  *         description: "Failed to log out"
  */
-router.post('/auth/logout', (req: Request, res: Response) => {
+router.post('/auth/logout', requireAuth, (req: Request, res: Response) => {
   const logoutUser = async () => {
     try {
       if (req.session) {
@@ -278,7 +278,7 @@ router.post('/auth/logout', (req: Request, res: Response) => {
  *   get:
  *     tags:
  *       - Users
- *     summary: Get the current user's information
+ *     summary: Get the current user's information (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     responses:
@@ -382,7 +382,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
  *   get:
  *     tags:
  *       - Users
- *     summary: Get a list of all users
+ *     summary: Get a list of all users (admins only)
  *     responses:
  *       200:
  *         description: "A list of users"
@@ -416,7 +416,7 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
  *       500:
  *         description: "Internal server error"
  */
-router.get('/users/:id?', (req: Request, res: Response) => {
+router.get('/users/:id?', restrictTo(["ADMIN"]), (req: Request, res: Response) => {
   const fetchUsers = async () => {
     try {
       const { id } = req.params;
@@ -456,7 +456,7 @@ router.get('/users/:id?', (req: Request, res: Response) => {
  *   put:
  *     tags:
  *       - Users
- *     summary: Update the user's profile
+ *     summary: Update the user's profile (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -527,6 +527,51 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
   updateUserProfile();
 });
 
+/**
+ * @swagger
+ * /api/users/passwordreset:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Reset the user's password (requires authentication)
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: "newSecurePassword123"
+ *     responses:
+ *       200:
+ *         description: "Password updated successfully"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                   example: 1
+ *                 school_email:
+ *                   type: string
+ *                   example: "user@university.edu"
+ *                 password:
+ *                   type: string
+ *                   example: "$2b$10$hashedpasswordexample..."
+ *       400:
+ *         description: "Password field is required"
+ *       401:
+ *         description: "Unauthorized"
+ *       500:
+ *         description: "Failed to update password"
+ */
 router.put("/users/passwordreset", requireAuth, (req: Request, res: Response) => {
   const passwordReset = async () => {
     const { password } = req.body;

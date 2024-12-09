@@ -119,7 +119,7 @@ router.get('/subjects/:id', async (req: Request, res: Response) => {
   }
 });
 
-// PROFESSOR restricted actions
+// ADMIN restricted actions
 
 /**
  * @swagger
@@ -127,7 +127,7 @@ router.get('/subjects/:id', async (req: Request, res: Response) => {
  *   post:
  *     tags:
  *       - Subjects
- *     summary: Create a new subject
+ *     summary: Create a new subject (admin only)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -159,11 +159,11 @@ router.get('/subjects/:id', async (req: Request, res: Response) => {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can create subjects
+ *         description: Forbidden - Only admins can create subjects
  *       500:
  *         description: Failed to create subject
  */
-router.post('/subjects', restrictTo(["PROFESSOR"]), async (req: Request, res: Response) => {
+router.post('/subjects', restrictTo(["ADMIN"]), async (req: Request, res: Response) => {
   try {
     console.log("Incoming subject payload:", req.body);
     const subject = await prisma.subject.create({
@@ -181,7 +181,7 @@ router.post('/subjects', restrictTo(["PROFESSOR"]), async (req: Request, res: Re
  *   delete:
  *     tags:
  *       - Subjects
- *     summary: Delete a subject by ID
+ *     summary: Delete a subject by ID (restricted to admins)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -215,13 +215,13 @@ router.post('/subjects', restrictTo(["PROFESSOR"]), async (req: Request, res: Re
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Only professors can delete subjects
+ *         description: Forbidden - Only admins can delete subjects
  *       404:
  *         description: Subject not found
  *       500:
  *         description: Failed to delete subject
  */
-router.delete('/subjects/:id', restrictTo(["PROFESSOR"]), (req, res) => {
+router.delete('/subjects/:id', restrictTo(["ADMIN"]), (req, res) => {
   const deleteSubject = async () => {
     try {
       // First check how many courses are associated

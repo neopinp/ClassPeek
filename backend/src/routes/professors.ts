@@ -182,7 +182,7 @@ router.get('/professors/:id', async (req: Request, res: Response) => {
  *   put:
  *     tags:
  *       - Professors
- *     summary: Update a professor's page
+ *     summary: Update a professor's page (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -259,7 +259,7 @@ router.put('/professors/:id/page', requireAuth, async (req: Request, res: Respon
  *   delete:
  *     tags:
  *       - Professors
- *     summary: Delete a professor's page
+ *     summary: Delete a professor's page (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:

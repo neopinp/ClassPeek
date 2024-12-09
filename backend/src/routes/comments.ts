@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { CommentService } from '../services/commentService';
 import { ReportService } from '../services/reportService';
 import { requireAuth } from '../middleware/auth.middleware';
-import { get } from 'http';
 
 const router = Router();
 const commentService = new CommentService();
@@ -153,7 +152,7 @@ router.get("/comments/:id", (req, res) => {
  *   post:
  *     tags:
  *       - Comments
- *     summary: Create a new comment
+ *     summary: Create a new comment (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -250,7 +249,7 @@ router.post("/comments", requireAuth, (req, res) => {
  *   put:
  *     tags:
  *       - Comments
- *     summary: Update a comment
+ *     summary: Update a comment (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -317,7 +316,7 @@ router.put("/comments/:id", requireAuth, async (req, res) => {
  *   post:
  *     tags:
  *       - Comments
- *     summary: Report a comment
+ *     summary: Report a comment (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -403,7 +402,7 @@ router.post("/comments/:id/report", requireAuth, (req, res) => {
  *   delete:
  *     tags:
  *       - Comments
- *     summary: Delete a comment
+ *     summary: Delete a comment (requires authentication)
  *     security:
  *       - cookieAuth: []
  *     parameters:
