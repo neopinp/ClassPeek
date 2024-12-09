@@ -17,7 +17,7 @@
           </div>
             <h4 class="title">{{ getTitle() }}</h4>
             <!-- Add Edit Image button if current professor -->
-            <div v-if="isCurrentProfessor && !isEditingField" class="edit-actions">
+            <div v-if="isCurrentProfessor && type === 'professor' && !isEditingField" class="edit-actions">
               <button class="btn btn-primary" @click="startEdit('image_data')">Edit Image</button>
             </div>
             <!-- When editing image_data -->
@@ -112,7 +112,7 @@
             <div v-if="!isEditingField || isEditingField !== 'bio'">
               <p>{{ getMainContent() }}</p>
               <button 
-                v-if="isCurrentProfessor && !isEditingField" 
+                v-if="isCurrentProfessor && type === 'professor' && !isEditingField" 
                 class="btn btn-primary" 
                 @click="startEdit('bio')">
                 Edit Bio
@@ -132,7 +132,7 @@
           </div>
 
           <!-- Syllabus Section -->
-          <div class="syllabus-section">
+          <div v-if="type === 'course'" class="syllabus-section">
             <h3>Syllabus</h3>
 
             <!-- Always show download if data exists -->

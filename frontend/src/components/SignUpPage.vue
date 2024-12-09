@@ -66,8 +66,8 @@
 
         try {
           const response = await api.post("/auth/signup", this.userData);
-          // 200: Success
-          if (response.status === 200) {
+          // 201: Created
+          if (response.status === 201) {
             this.successMessage = "Account created successfully!";
             this.showSuccessToast = true;
             setTimeout(() => {
