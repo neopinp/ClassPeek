@@ -139,6 +139,9 @@
             <div v-if="data?.syllabus_data">
               <button class="btn btn-primary" @click="downloadSyllabus">Download Syllabus</button>
             </div>
+            <div v-else>
+              <p>No syllabus available.</p>
+            </div>
             
             <div v-if="isUserPrivileged">
               <button class="btn btn-primary" @click="startEdit('syllabus_data')">
