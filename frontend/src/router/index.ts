@@ -16,6 +16,7 @@ import InfoPage from '@/components/InfoPage.vue'
 import SignInPage from '@/components/SignInPage.vue'
 import SignUpPage from '@/components/SignUpPage.vue'
 import api from '../api'
+import sessionStore from '@/store/session'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -46,6 +47,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/profile',
     name: 'ProfilePage',
     component: ProfilePage,
+    beforeEnter: async (to, from, next) => {
+      // Fetch user session to populate profile page
+      await sessionStore.fetchSession();
+      next();
+    },
     meta: { title: 'Profile - ClassPeek' }
   },
   {

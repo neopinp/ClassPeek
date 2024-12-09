@@ -363,9 +363,11 @@ router.get('/users/me', requireAuth, (req: Request, res: Response) => {
         blurb: user.profile?.blurb || null,
         description: user.profile?.description || null,
         email: user.credentials?.school_email || null,
+        image_data: user.profile?.image_data || null,
         professor_page: user.professor_page || null,
       };
 
+      console.log("Image data length from backend", responseData.image_data ? responseData.image_data.length : 0);
       res.json(responseData);
     } catch (error) {
       console.error('Error fetching logged-in user:', error);
@@ -518,6 +520,7 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
         data: { image_data, blurb, description },
       });
 
+      console.log("Image data length to backend", image_data ? image_data.length : 0);
       res.json(updatedProfile);
     } catch (error) {
       console.error("Error updating profile:", error);

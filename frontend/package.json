@@ -12,6 +12,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "axios": "^1.7.7",
+    "classpeek": "file:..",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3"
   },
