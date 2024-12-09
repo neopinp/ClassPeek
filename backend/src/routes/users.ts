@@ -501,7 +501,7 @@ router.get('/users/:id?', restrictTo(["ADMIN"]), (req: Request, res: Response) =
  */
 router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
   const updateUserProfile = async () => {
-    const { blurb, description } = req.body;
+    const { image_data, blurb, description } = req.body;
     const userId = req.session?.userId;
 
     if (!userId) {
@@ -515,7 +515,7 @@ router.put("/users/profile", requireAuth, (req: Request, res: Response) => {
     try {
       const updatedProfile = await prisma.profile.update({
         where: { user_id: userId },
-        data: { blurb, description },
+        data: { image_data, blurb, description },
       });
 
       res.json(updatedProfile);
