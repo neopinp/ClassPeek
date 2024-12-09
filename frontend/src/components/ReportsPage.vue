@@ -385,7 +385,7 @@ export default defineComponent({
     },
   },
   mounted() {
-    // Keep the same mounted logic as requested
+    // Upon refresh, preemptively authenticate admin user and fetch reports
     this.$watch(() => sessionStore.user, (user) => {
       if (user) {
         this.loading = false;
